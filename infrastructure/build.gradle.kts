@@ -1,5 +1,4 @@
 plugins {
-    kotlin("jvm")
     kotlin("plugin.spring")
     kotlin("plugin.jpa")
     id("io.spring.dependency-management")
@@ -7,7 +6,7 @@ plugins {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.boot:spring-boot-dependencies:3.5.7")
+        mavenBom("org.springframework.boot:spring-boot-dependencies:${libs.versions.springBoot.get()}")
     }
 }
 
@@ -15,17 +14,9 @@ dependencies {
     implementation(project(":domain"))
 
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:${libs.versions.kotlin.get()}")
 
     runtimeOnly("com.h2database:h2")
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(testFixtures(project(":domain")))
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict")
-    }
 }

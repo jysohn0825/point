@@ -1,0 +1,4 @@
+[versions]
+kotlin = "1.9.25"
+springBoot = "3.5.7"
+springDependencyManagement = "1.1.7"

@@ -1,38 +1,45 @@
+val kotestVersion = "5.9.1"
+
 plugins {
-    kotlin("jvm") version "2.2.21"
-    kotlin("plugin.spring") version "2.2.21"
-    id("org.springframework.boot") version "4.0.7"
-    id("io.spring.dependency-management") version "1.1.7"
+    kotlin("jvm") version libs.versions.kotlin.get() apply false
+    kotlin("plugin.spring") version libs.versions.kotlin.get() apply false
+    kotlin("plugin.jpa") version libs.versions.kotlin.get() apply false
+    id("org.springframework.boot") version libs.versions.springBoot.get() apply false
+    id("io.spring.dependency-management") version libs.versions.springDependencyManagement.get() apply false
 }
 
-group = "com.jysohn0825"
-version = "0.0.1-SNAPSHOT"
-description = "point"
+allprojects {
+    group = "com.jysohn0825"
+    version = "0.0.1-SNAPSHOT"
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+    repositories {
+        mavenCentral()
     }
 }
 
-repositories {
-    mavenCentral()
-}
+subprojects {
+    apply(plugin = "java")
+    apply(plugin = "org.jetbrains.kotlin.jvm")
 
-dependencies {
-    implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
+    configure<JavaPluginExtension> {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        }
     }
-}
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+    configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
+        compilerOptions {
+            freeCompilerArgs.addAll("-Xjsr305=strict")
+        }
+    }
+
+    dependencies {
+        "testImplementation"("io.kotest:kotest-runner-junit5:$kotestVersion")
+        "testImplementation"("io.kotest:kotest-assertions-core:$kotestVersion")
+        "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
 }
