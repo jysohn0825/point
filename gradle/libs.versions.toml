@@ -1,4 +1,15 @@
 [versions]
 kotlin = "1.9.25"
 springBoot = "3.5.7"
-springDependencyManagement = "1.1.7"
+ktlint = "14.2.0"
+
+[libraries]
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+spring-boot-dependencies-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "springBoot" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-plugin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+kotlin-plugin-jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
+spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
