@@ -1,11 +1,11 @@
-val kotestVersion = "5.9.1"
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 plugins {
-    kotlin("jvm") version libs.versions.kotlin.get() apply false
-    kotlin("plugin.spring") version libs.versions.kotlin.get() apply false
-    kotlin("plugin.jpa") version libs.versions.kotlin.get() apply false
-    id("org.springframework.boot") version libs.versions.springBoot.get() apply false
-    id("io.spring.dependency-management") version libs.versions.springDependencyManagement.get() apply false
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.plugin.spring) apply false
+    alias(libs.plugins.kotlin.plugin.jpa) apply false
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.ktlint) apply false
 }
 
 allprojects {
@@ -17,9 +17,13 @@ allprojects {
     }
 }
 
+val kotestVersion = "5.9.1"
+
 subprojects {
     apply(plugin = "java")
     apply(plugin = "org.jetbrains.kotlin.jvm")
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+    apply(plugin = "jacoco")
 
     configure<JavaPluginExtension> {
         toolchain {
@@ -27,7 +31,7 @@ subprojects {
         }
     }
 
-    configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
+    configure<KotlinJvmProjectExtension> {
         compilerOptions {
             freeCompilerArgs.addAll("-Xjsr305=strict")
         }
@@ -41,5 +45,19 @@ subprojects {
 
     tasks.withType<Test> {
         useJUnitPlatform()
+        finalizedBy(tasks.named("jacocoTestReport"))
+    }
+
+    tasks.named<JacocoReport>("jacocoTestReport") {
+        dependsOn(tasks.named("test"))
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+            csv.required.set(false)
+        }
+    }
+
+    tasks.named("check") {
+        dependsOn(tasks.named("jacocoTestReport"))
     }
 }
