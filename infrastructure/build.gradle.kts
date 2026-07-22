@@ -1,20 +1,15 @@
 plugins {
-    kotlin("plugin.spring")
-    kotlin("plugin.jpa")
-    id("io.spring.dependency-management")
-}
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.boot:spring-boot-dependencies:${libs.versions.springBoot.get()}")
-    }
+    alias(libs.plugins.kotlin.plugin.spring)
+    alias(libs.plugins.kotlin.plugin.jpa)
 }
 
 dependencies {
+    implementation(platform(libs.spring.boot.dependencies.bom))
+
     implementation(project(":domain"))
 
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:${libs.versions.kotlin.get()}")
+    implementation(libs.kotlin.reflect)
 
     runtimeOnly("com.h2database:h2")
 
