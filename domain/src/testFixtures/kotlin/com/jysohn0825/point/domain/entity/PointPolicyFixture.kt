@@ -12,9 +12,10 @@ fun pointPolicy(
     maxEarnPerTransaction: MaxEarnPerTransaction = maxEarnPerTransaction(),
     maxHoldingAmount: MaxHoldingAmount = maxHoldingAmount(),
     defaultExpirationPeriod: DefaultExpirationPeriod = defaultExpirationPeriod(),
-): PointPolicy = PointPolicy(
-    id = id,
-    maxEarnPerTransaction = maxEarnPerTransaction,
-    maxHoldingAmount = maxHoldingAmount,
-    defaultExpirationPeriod = defaultExpirationPeriod,
-)
+): PointPolicy =
+    PointPolicy(
+        id = id,
+        maxEarnPerTransaction = maxEarnPerTransaction,
+        maxHoldingAmount = maxHoldingAmount,
+        defaultExpirationPeriod = defaultExpirationPeriod,
+    )
