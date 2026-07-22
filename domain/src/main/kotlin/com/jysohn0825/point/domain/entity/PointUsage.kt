@@ -25,20 +25,22 @@ class PointUsage private constructor(
         get() = totalAmount - cancelledAmount
 
     val status: UsageStatus
-        get() = when {
-            _cancellationLines.isEmpty() -> UsageStatus.USED
-            remainingAmount == 0L -> UsageStatus.FULLY_CANCELED
-            else -> UsageStatus.PARTIALLY_CANCELED
-        }
+        get() =
+            when {
+                _cancellationLines.isEmpty() -> UsageStatus.USED
+                remainingAmount == 0L -> UsageStatus.FULLY_CANCELED
+                else -> UsageStatus.PARTIALLY_CANCELED
+            }
 
     fun cancel(requestedLines: List<CancellationLine>) {
         require(requestedLines.isNotEmpty()) { "취소 라인은 최소 1개 이상이어야 합니다." }
         require(status != UsageStatus.FULLY_CANCELED) { "이미 전액 취소된 사용 건은 취소할 수 없습니다." }
 
-        val cancelledByLine = _cancellationLines
-            .groupingBy { it.originalLine }
-            .fold(0L) { acc, cancellationLine -> acc + cancellationLine.restoredAmount }
-            .toMutableMap()
+        val cancelledByLine =
+            _cancellationLines
+                .groupingBy { it.originalLine }
+                .fold(0L) { acc, cancellationLine -> acc + cancellationLine.restoredAmount }
+                .toMutableMap()
 
         requestedLines.forEach { requested ->
             require(lines.contains(requested.originalLine)) {
@@ -63,11 +65,13 @@ class PointUsage private constructor(
 
     override fun hashCode(): Int = id.hashCode()
 
-    override fun toString(): String =
-        "PointUsage(id=$id, orderNumber=$orderNumber, totalAmount=$totalAmount, status=$status)"
+    override fun toString(): String = "PointUsage(id=$id, orderNumber=$orderNumber, totalAmount=$totalAmount, status=$status)"
 
     companion object {
-        fun use(orderNumber: OrderNumber, lines: List<UsageLine>): PointUsage {
+        fun use(
+            orderNumber: OrderNumber,
+            lines: List<UsageLine>,
+        ): PointUsage {
             require(lines.isNotEmpty()) { "사용 라인은 최소 1개 이상이어야 합니다." }
             return PointUsage(UUID.randomUUID().toString(), orderNumber, lines.toList())
         }
