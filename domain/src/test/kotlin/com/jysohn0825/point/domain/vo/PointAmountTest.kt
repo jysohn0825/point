@@ -6,14 +6,27 @@ import io.kotest.matchers.shouldBe
 
 class PointAmountTest :
     FunSpec({
-        test("value가 0보다 크면 PointAmount를 생성한다") {
-            val amount = pointAmount(value = 500L)
+        test("양수 금액이면 정상적으로 생성된다") {
+            val amount = PointAmount(1_000L)
 
-            amount.value shouldBe 500L
+            amount.value shouldBe 1_000L
         }
 
-        test("value가 0 이하이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> { PointAmount(0L) }
-            shouldThrow<IllegalArgumentException> { PointAmount(-1L) }
+        test("최소값인 1원도 허용한다") {
+            val amount = PointAmount(1L)
+
+            amount.value shouldBe 1L
+        }
+
+        test("0원이면 예외가 발생한다") {
+            shouldThrow<IllegalArgumentException> {
+                PointAmount(0L)
+            }
+        }
+
+        test("음수이면 예외가 발생한다") {
+            shouldThrow<IllegalArgumentException> {
+                PointAmount(-1L)
+            }
         }
     })
