@@ -1,6 +1,6 @@
 package com.jysohn0825.point.domain.entity
 
-import com.jysohn0825.point.domain.vo.DefaultExpirationPeriod
+import com.jysohn0825.point.domain.vo.ExpirationPeriod
 import com.jysohn0825.point.domain.vo.MaxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.MaxHoldingAmount
 
@@ -8,7 +8,7 @@ class PointPolicy(
     val id: String,
     maxEarnPerTransaction: MaxEarnPerTransaction,
     maxHoldingAmount: MaxHoldingAmount,
-    defaultExpirationPeriod: DefaultExpirationPeriod,
+    defaultExpirationPeriod: ExpirationPeriod,
 ) {
     var maxEarnPerTransaction: MaxEarnPerTransaction = maxEarnPerTransaction
         private set
@@ -16,13 +16,13 @@ class PointPolicy(
     var maxHoldingAmount: MaxHoldingAmount = maxHoldingAmount
         private set
 
-    var defaultExpirationPeriod: DefaultExpirationPeriod = defaultExpirationPeriod
+    var defaultExpirationPeriod: ExpirationPeriod = defaultExpirationPeriod
         private set
 
     fun update(
         maxEarnPerTransaction: MaxEarnPerTransaction = this.maxEarnPerTransaction,
         maxHoldingAmount: MaxHoldingAmount = this.maxHoldingAmount,
-        defaultExpirationPeriod: DefaultExpirationPeriod = this.defaultExpirationPeriod,
+        defaultExpirationPeriod: ExpirationPeriod = this.defaultExpirationPeriod,
     ) {
         this.maxEarnPerTransaction = maxEarnPerTransaction
         this.maxHoldingAmount = maxHoldingAmount

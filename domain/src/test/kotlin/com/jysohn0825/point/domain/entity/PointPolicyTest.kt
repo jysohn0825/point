@@ -1,6 +1,6 @@
 package com.jysohn0825.point.domain.entity
 
-import com.jysohn0825.point.domain.vo.defaultExpirationPeriod
+import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.maxHoldingAmount
 import io.kotest.core.spec.style.BehaviorSpec
@@ -18,7 +18,7 @@ class PointPolicyTest :
                     sut.id shouldBe "point-policy-1"
                     sut.maxEarnPerTransaction shouldBe maxEarnPerTransaction()
                     sut.maxHoldingAmount shouldBe maxHoldingAmount()
-                    sut.defaultExpirationPeriod shouldBe defaultExpirationPeriod()
+                    sut.defaultExpirationPeriod shouldBe expirationPeriod()
                 }
             }
         }
@@ -33,7 +33,7 @@ class PointPolicyTest :
                 then("수정한 필드만 반영되고 나머지 필드는 유지된다") {
                     sut.maxEarnPerTransaction shouldBe newMaxEarnPerTransaction
                     sut.maxHoldingAmount shouldBe maxHoldingAmount()
-                    sut.defaultExpirationPeriod shouldBe defaultExpirationPeriod()
+                    sut.defaultExpirationPeriod shouldBe expirationPeriod()
                 }
             }
 
@@ -41,7 +41,7 @@ class PointPolicyTest :
                 val sut = pointPolicy()
                 val newMaxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(70_000))
                 val newMaxHoldingAmount = maxHoldingAmount(value = BigDecimal(2_000_000))
-                val newDefaultExpirationPeriod = defaultExpirationPeriod(days = 730)
+                val newDefaultExpirationPeriod = expirationPeriod(days = 730L)
 
                 sut.update(
                     maxEarnPerTransaction = newMaxEarnPerTransaction,
