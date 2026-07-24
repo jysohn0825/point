@@ -2,8 +2,6 @@ package com.jysohn0825.point.infrastructure.persistence.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
@@ -20,13 +18,12 @@ import java.time.LocalDateTime
 @Comment("포인트 사용취소 헤더")
 class PointUsageCancellationEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", length = 36)
     @Comment("사용취소 ID")
-    val id: Long = 0,
-    @Column(name = "usage_id", nullable = false)
+    val id: String,
+    @Column(name = "usage_id", nullable = false, length = 36)
     @Comment("원 사용건")
-    val usageId: Long,
+    val usageId: String,
     @Column(name = "restored_amount", nullable = false)
     @Comment("복원 총액 (라인 합계)")
     val restoredAmount: Long,

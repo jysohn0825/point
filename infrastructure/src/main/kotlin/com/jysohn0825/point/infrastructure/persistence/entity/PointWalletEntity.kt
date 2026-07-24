@@ -2,8 +2,6 @@ package com.jysohn0825.point.infrastructure.persistence.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
@@ -20,13 +18,12 @@ import java.time.LocalDateTime
 @Comment("포인트 지갑 (회원당 1행)")
 class PointWalletEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", length = 36)
     @Comment("지갑 ID")
-    val id: Long = 0,
-    @Column(name = "member_id", nullable = false)
+    val id: String,
+    @Column(name = "member_id", nullable = false, length = 36)
     @Comment("회원 ID")
-    val memberId: Long,
+    val memberId: String,
     @Column(name = "balance", nullable = false)
     @Comment("총 잔액")
     val balance: Long = 0,

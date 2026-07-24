@@ -2,8 +2,6 @@ package com.jysohn0825.point.infrastructure.persistence.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
@@ -21,10 +19,9 @@ import java.time.LocalDateTime
 @Comment("포인트 정책 (버전별 이력)")
 class PointPolicyEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", length = 36)
     @Comment("정책 ID")
-    val id: Long = 0,
+    val id: String,
     @Column(name = "policy_version", nullable = false)
     @Comment("정책 버전 (증가)")
     val policyVersion: Int,
@@ -40,9 +37,9 @@ class PointPolicyEntity(
     @Column(name = "applied_at", nullable = false)
     @Comment("적용 시각. 미래값 = 예약 등록")
     val appliedAt: LocalDateTime,
-    @Column(name = "created_by_admin_id", nullable = false)
+    @Column(name = "created_by_admin_id", nullable = false, length = 36)
     @Comment("등록 관리자")
-    val createdByAdminId: Long,
+    val createdByAdminId: String,
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     @Comment("생성 일시")
     val createdAt: LocalDateTime = LocalDateTime.now(),

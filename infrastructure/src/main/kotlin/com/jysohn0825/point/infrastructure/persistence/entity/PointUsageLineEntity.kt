@@ -2,8 +2,6 @@ package com.jysohn0825.point.infrastructure.persistence.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
@@ -24,16 +22,15 @@ import java.time.LocalDateTime
 @Comment("포인트 사용 라인")
 class PointUsageLineEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", length = 36)
     @Comment("사용 라인 ID")
-    val id: Long = 0,
-    @Column(name = "usage_id", nullable = false)
+    val id: String,
+    @Column(name = "usage_id", nullable = false, length = 36)
     @Comment("사용 ID")
-    val usageId: Long,
-    @Column(name = "earning_id", nullable = false)
+    val usageId: String,
+    @Column(name = "earning_id", nullable = false, length = 36)
     @Comment("차감 대상 적립건")
-    val earningId: Long,
+    val earningId: String,
     @Column(name = "amount", nullable = false)
     @Comment("이 적립건에서 차감한 금액")
     val amount: Long,

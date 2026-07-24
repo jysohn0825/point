@@ -2,8 +2,6 @@ package com.jysohn0825.point.infrastructure.persistence.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
@@ -23,13 +21,12 @@ import java.time.LocalDateTime
 @Comment("포인트 지갑 거래 원장")
 class PointWalletTransactionEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", length = 36)
     @Comment("거래 ID")
-    val id: Long = 0,
-    @Column(name = "wallet_id", nullable = false)
+    val id: String,
+    @Column(name = "wallet_id", nullable = false, length = 36)
     @Comment("지갑 ID")
-    val walletId: Long,
+    val walletId: String,
     @Column(name = "transaction_type", nullable = false, length = 20)
     @Comment("EARN / USE / EARN_CANCEL / USE_CANCEL / EXPIRE")
     val transactionType: String,
@@ -39,15 +36,15 @@ class PointWalletTransactionEntity(
     @Column(name = "balance_after", nullable = false)
     @Comment("기록 시점 잔액")
     val balanceAfter: Long,
-    @Column(name = "earning_id")
+    @Column(name = "earning_id", length = 36)
     @Comment("EARN / EARN_CANCEL / EXPIRE")
-    val earningId: Long? = null,
-    @Column(name = "usage_id")
+    val earningId: String? = null,
+    @Column(name = "usage_id", length = 36)
     @Comment("USE")
-    val usageId: Long? = null,
-    @Column(name = "cancellation_id")
+    val usageId: String? = null,
+    @Column(name = "cancellation_id", length = 36)
     @Comment("USE_CANCEL")
-    val cancellationId: Long? = null,
+    val cancellationId: String? = null,
     @Column(name = "occurred_at", nullable = false)
     @Comment("발생 일시")
     val occurredAt: LocalDateTime,

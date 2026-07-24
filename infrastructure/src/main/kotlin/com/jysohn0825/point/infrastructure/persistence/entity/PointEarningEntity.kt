@@ -2,8 +2,6 @@ package com.jysohn0825.point.infrastructure.persistence.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
@@ -22,16 +20,15 @@ import java.time.LocalDateTime
 @Comment("포인트 적립건")
 class PointEarningEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", length = 36)
     @Comment("적립 ID")
-    val id: Long = 0,
-    @Column(name = "wallet_id", nullable = false)
+    val id: String,
+    @Column(name = "wallet_id", nullable = false, length = 36)
     @Comment("지갑 ID")
-    val walletId: Long,
-    @Column(name = "policy_id", nullable = false)
+    val walletId: String,
+    @Column(name = "policy_id", nullable = false, length = 36)
     @Comment("적립 당시 적용 정책")
-    val policyId: Long,
+    val policyId: String,
     @Column(name = "amount", nullable = false)
     @Comment("최초 적립액 (불변)")
     val amount: Long,
@@ -41,9 +38,9 @@ class PointEarningEntity(
     @Column(name = "earn_type", nullable = false, length = 10)
     @Comment("SYSTEM / MANUAL")
     val earnType: String,
-    @Column(name = "granted_by_admin_id")
+    @Column(name = "granted_by_admin_id", length = 36)
     @Comment("수기지급 관리자. MANUAL일 때만")
-    val grantedByAdminId: Long? = null,
+    val grantedByAdminId: String? = null,
     @Column(name = "earned_at", nullable = false)
     @Comment("적립 일시")
     val earnedAt: LocalDateTime,
