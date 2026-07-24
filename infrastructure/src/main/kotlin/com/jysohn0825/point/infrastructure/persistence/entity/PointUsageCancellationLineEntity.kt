@@ -30,10 +30,10 @@ class PointUsageCancellationLineEntity(
     @Comment("취소 라인 ID")
     val id: Long = 0,
     @Column(name = "cancellation_id", nullable = false)
-    @Comment("사용취소 ID (FK: point_usage_cancellation.id, 논리적 참조)")
+    @Comment("사용취소 ID")
     val cancellationId: Long,
     @Column(name = "usage_line_id", nullable = false)
-    @Comment("복원 대상 원 사용 라인 (FK: point_usage_line.id, 논리적 참조)")
+    @Comment("복원 대상 원 사용 라인")
     val usageLineId: Long,
     @Column(name = "restored_amount", nullable = false)
     @Comment("복원액")
@@ -42,7 +42,7 @@ class PointUsageCancellationLineEntity(
     @Comment("RESTORED / RE_EARNED")
     val restoreType: String,
     @Column(name = "reearned_earning_id")
-    @Comment("RE_EARNED 시 생성된 신규 적립건 (FK: point_earning.id, 논리적 참조)")
+    @Comment("RE_EARNED 시 생성된 신규 적립건")
     val reearnedEarningId: Long? = null,
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     @Comment("생성 일시")

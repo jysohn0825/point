@@ -28,7 +28,7 @@ class PointWalletTransactionEntity(
     @Comment("거래 ID")
     val id: Long = 0,
     @Column(name = "wallet_id", nullable = false)
-    @Comment("지갑 ID (FK: point_wallet.id, 논리적 참조)")
+    @Comment("지갑 ID")
     val walletId: Long,
     @Column(name = "transaction_type", nullable = false, length = 20)
     @Comment("EARN / USE / EARN_CANCEL / USE_CANCEL / EXPIRE")
@@ -40,13 +40,13 @@ class PointWalletTransactionEntity(
     @Comment("기록 시점 잔액")
     val balanceAfter: Long,
     @Column(name = "earning_id")
-    @Comment("EARN / EARN_CANCEL / EXPIRE (FK: point_earning.id, 논리적 참조)")
+    @Comment("EARN / EARN_CANCEL / EXPIRE")
     val earningId: Long? = null,
     @Column(name = "usage_id")
-    @Comment("USE (FK: point_usage.id, 논리적 참조)")
+    @Comment("USE")
     val usageId: Long? = null,
     @Column(name = "cancellation_id")
-    @Comment("USE_CANCEL (FK: point_usage_cancellation.id, 논리적 참조)")
+    @Comment("USE_CANCEL")
     val cancellationId: Long? = null,
     @Column(name = "occurred_at", nullable = false)
     @Comment("발생 일시")

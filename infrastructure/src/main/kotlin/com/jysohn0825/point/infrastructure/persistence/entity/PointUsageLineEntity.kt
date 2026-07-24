@@ -29,10 +29,10 @@ class PointUsageLineEntity(
     @Comment("사용 라인 ID")
     val id: Long = 0,
     @Column(name = "usage_id", nullable = false)
-    @Comment("사용 ID (FK: point_usage.id, 논리적 참조)")
+    @Comment("사용 ID")
     val usageId: Long,
     @Column(name = "earning_id", nullable = false)
-    @Comment("차감 대상 적립건 (FK: point_earning.id, 논리적 참조)")
+    @Comment("차감 대상 적립건")
     val earningId: Long,
     @Column(name = "amount", nullable = false)
     @Comment("이 적립건에서 차감한 금액")

@@ -25,7 +25,7 @@ class PointUsageCancellationEntity(
     @Comment("사용취소 ID")
     val id: Long = 0,
     @Column(name = "usage_id", nullable = false)
-    @Comment("원 사용건 (FK: point_usage.id, 논리적 참조)")
+    @Comment("원 사용건")
     val usageId: Long,
     @Column(name = "restored_amount", nullable = false)
     @Comment("복원 총액 (라인 합계)")

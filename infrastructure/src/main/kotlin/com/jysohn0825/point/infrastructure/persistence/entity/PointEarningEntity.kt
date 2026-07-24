@@ -27,10 +27,10 @@ class PointEarningEntity(
     @Comment("적립 ID")
     val id: Long = 0,
     @Column(name = "wallet_id", nullable = false)
-    @Comment("지갑 ID (FK: point_wallet.id, 논리적 참조)")
+    @Comment("지갑 ID")
     val walletId: Long,
     @Column(name = "policy_id", nullable = false)
-    @Comment("적립 당시 적용 정책 (FK: point_policy.id, 논리적 참조)")
+    @Comment("적립 당시 적용 정책")
     val policyId: Long,
     @Column(name = "amount", nullable = false)
     @Comment("최초 적립액 (불변)")

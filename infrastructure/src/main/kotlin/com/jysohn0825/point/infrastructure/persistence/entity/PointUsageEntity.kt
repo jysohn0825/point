@@ -29,7 +29,7 @@ class PointUsageEntity(
     @Comment("사용 ID")
     val id: Long = 0,
     @Column(name = "wallet_id", nullable = false)
-    @Comment("지갑 ID (FK: point_wallet.id, 논리적 참조)")
+    @Comment("지갑 ID")
     val walletId: Long,
     @Column(name = "order_number", nullable = false, length = 30)
     @Comment("주문번호")
