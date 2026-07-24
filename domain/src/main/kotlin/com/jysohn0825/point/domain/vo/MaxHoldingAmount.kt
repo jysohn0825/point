@@ -1,7 +1,9 @@
 package com.jysohn0825.point.domain.vo
 
+import java.math.BigDecimal
+
 data class MaxHoldingAmount(
-    val value: Long,
+    val value: BigDecimal,
 ) {
     init {
         require(value >= MIN) {
@@ -10,6 +12,6 @@ data class MaxHoldingAmount(
     }
 
     companion object {
-        const val MIN: Long = 1
+        val MIN: BigDecimal = BigDecimal.ONE
     }
 }

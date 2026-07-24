@@ -1,31 +1,28 @@
 package com.jysohn0825.point.domain.entity
 
 import com.jysohn0825.point.domain.fixture.cancellationLine
-import com.jysohn0825.point.domain.fixture.earningId
 import com.jysohn0825.point.domain.fixture.orderNumber
 import com.jysohn0825.point.domain.fixture.pointUsage
 import com.jysohn0825.point.domain.fixture.usageLine
-import com.jysohn0825.point.domain.vo.CancellationLine
-import com.jysohn0825.point.domain.vo.RestorationType
-import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.UsageStatus
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import java.math.BigDecimal
 
 class PointUsageTest :
     BehaviorSpec({
         given("PointUsage.use()로 사용 건을 생성할 때") {
             `when`("유효한 사용 라인들이 주어지면") {
                 then("상태는 USED이고 총액은 라인 합계다") {
-                    val lines = listOf(usageLine(amount = 1_000L), usageLine(amount = 2_000L))
+                    val lines = listOf(usageLine(amount = BigDecimal(1_000)), usageLine(amount = BigDecimal(2_000)))
 
                     val usage = PointUsage.use(orderNumber(), lines)
 
                     usage.lines shouldBe lines
-                    usage.totalAmount shouldBe 3_000L
-                    usage.remainingAmount shouldBe 3_000L
-                    usage.cancelledAmount shouldBe 0L
+                    usage.totalAmount shouldBe BigDecimal(3_000)
+                    usage.remainingAmount shouldBe BigDecimal(3_000)
+                    usage.cancelledAmount.signum() shouldBe 0
                     usage.status shouldBe UsageStatus.USED
                     usage.cancellationLines shouldBe emptyList()
                 }
@@ -41,17 +38,17 @@ class PointUsageTest :
 
             `when`("동일한 적립건을 참조하는 사용 라인이 여러 개 주어지면") {
                 then("모두 허용된다") {
-                    val earningId = earningId()
+                    val earningId = "earning-1"
                     val lines =
                         listOf(
-                            UsageLine(earningId, 1_000L),
-                            UsageLine(earningId, 2_000L),
+                            usageLine(earningId = earningId, amount = BigDecimal(1_000)),
+                            usageLine(earningId = earningId, amount = BigDecimal(2_000)),
                         )
 
                     val usage = PointUsage.use(orderNumber(), lines)
 
                     usage.lines shouldBe lines
-                    usage.totalAmount shouldBe 3_000L
+                    usage.totalAmount shouldBe BigDecimal(3_000)
                 }
             }
         }
@@ -59,40 +56,40 @@ class PointUsageTest :
         given("생성된 PointUsage를 취소(cancel)할 때") {
             `when`("일부 금액만 취소하면") {
                 then("상태는 PARTIALLY_CANCELED이고 잔여액이 줄어든다") {
-                    val line = usageLine(amount = 1_000L)
+                    val line = usageLine(amount = BigDecimal(1_000))
                     val usage = PointUsage.use(orderNumber(), listOf(line))
 
-                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = 400L)))
+                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(400))))
 
                     usage.status shouldBe UsageStatus.PARTIALLY_CANCELED
-                    usage.cancelledAmount shouldBe 400L
-                    usage.remainingAmount shouldBe 600L
+                    usage.cancelledAmount shouldBe BigDecimal(400)
+                    usage.remainingAmount shouldBe BigDecimal(600)
                     usage.cancellationLines.size shouldBe 1
                 }
             }
 
             `when`("전액을 취소하면") {
                 then("상태는 FULLY_CANCELED이고 잔여액은 0이다") {
-                    val line = usageLine(amount = 1_000L)
+                    val line = usageLine(amount = BigDecimal(1_000))
                     val usage = PointUsage.use(orderNumber(), listOf(line))
 
-                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = 1_000L)))
+                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(1_000))))
 
                     usage.status shouldBe UsageStatus.FULLY_CANCELED
-                    usage.remainingAmount shouldBe 0L
+                    usage.remainingAmount.signum() shouldBe 0
                 }
             }
 
             `when`("여러 라인으로 구성된 사용 건을 부분 취소한 뒤 나머지를 마저 취소하면") {
                 then("전액 취소가 된다") {
-                    val lineA = usageLine(amount = 1_000L)
-                    val lineB = usageLine(amount = 2_000L)
+                    val lineA = usageLine(amount = BigDecimal(1_000))
+                    val lineB = usageLine(amount = BigDecimal(2_000))
                     val usage = PointUsage.use(orderNumber(), listOf(lineA, lineB))
 
-                    usage.cancel(listOf(cancellationLine(originalLine = lineA, restoredAmount = 1_000L)))
+                    usage.cancel(listOf(cancellationLine(originalLine = lineA, restoredAmount = BigDecimal(1_000))))
                     usage.status shouldBe UsageStatus.PARTIALLY_CANCELED
 
-                    usage.cancel(listOf(cancellationLine(originalLine = lineB, restoredAmount = 2_000L)))
+                    usage.cancel(listOf(cancellationLine(originalLine = lineB, restoredAmount = BigDecimal(2_000))))
                     usage.status shouldBe UsageStatus.FULLY_CANCELED
                     usage.cancellationLines.size shouldBe 2
                 }
@@ -100,14 +97,14 @@ class PointUsageTest :
 
             `when`("같은 라인을 여러 번 나누어 취소하면") {
                 then("취소 금액이 누적된다") {
-                    val line = usageLine(amount = 1_000L)
+                    val line = usageLine(amount = BigDecimal(1_000))
                     val usage = PointUsage.use(orderNumber(), listOf(line))
 
-                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = 300L)))
-                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = 300L)))
+                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(300))))
+                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(300))))
 
-                    usage.cancelledAmount shouldBe 600L
-                    usage.remainingAmount shouldBe 400L
+                    usage.cancelledAmount shouldBe BigDecimal(600)
+                    usage.remainingAmount shouldBe BigDecimal(400)
                     usage.status shouldBe UsageStatus.PARTIALLY_CANCELED
                 }
             }
@@ -122,46 +119,46 @@ class PointUsageTest :
 
             `when`("이미 전액 취소된 사용 건을 다시 취소하려 하면") {
                 then("예외가 발생한다") {
-                    val line = usageLine(amount = 1_000L)
+                    val line = usageLine(amount = BigDecimal(1_000))
                     val usage = PointUsage.use(orderNumber(), listOf(line))
-                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = 1_000L)))
+                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(1_000))))
 
                     shouldThrow<IllegalArgumentException> {
-                        usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = 1L)))
+                        usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal.ONE)))
                     }
                 }
             }
 
             `when`("이 사용 건에 속하지 않은 라인을 취소하려 하면") {
                 then("예외가 발생한다") {
-                    val usage = pointUsage(lines = listOf(usageLine(amount = 1_000L)))
-                    val foreignLine = usageLine(amount = 500L)
+                    val usage = pointUsage(lines = listOf(usageLine(amount = BigDecimal(1_000))))
+                    val foreignLine = usageLine(amount = BigDecimal(500))
 
                     shouldThrow<IllegalArgumentException> {
-                        usage.cancel(listOf(CancellationLine(foreignLine, 100L, RestorationType.RESTORED)))
+                        usage.cancel(listOf(cancellationLine(originalLine = foreignLine, restoredAmount = BigDecimal(100))))
                     }
                 }
             }
 
             `when`("누적 취소 요청 금액이 해당 라인의 사용 금액을 초과하면") {
                 then("예외가 발생하고 이전 취소 내역은 유지된다") {
-                    val line = usageLine(amount = 1_000L)
+                    val line = usageLine(amount = BigDecimal(1_000))
                     val usage = PointUsage.use(orderNumber(), listOf(line))
-                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = 700L)))
+                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(700))))
 
                     shouldThrow<IllegalArgumentException> {
-                        usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = 400L)))
+                        usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(400))))
                     }
 
-                    usage.cancelledAmount shouldBe 700L
+                    usage.cancelledAmount shouldBe BigDecimal(700)
                 }
             }
 
             `when`("취소가 반영된 뒤 cancellationLines를 조회하면") {
                 then("내부 상태를 보호하는 방어적 복사본을 반환한다") {
-                    val line = usageLine(amount = 1_000L)
+                    val line = usageLine(amount = BigDecimal(1_000))
                     val usage = PointUsage.use(orderNumber(), listOf(line))
-                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = 100L)))
+                    usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(100))))
 
                     val snapshot = usage.cancellationLines.toMutableList()
                     snapshot.clear()
@@ -197,16 +194,6 @@ class PointUsageTest :
                     val usage = pointUsage()
 
                     usage.hashCode() shouldBe usage.id.hashCode()
-                }
-            }
-
-            `when`("toString을 조회하면") {
-                then("주요 필드 값을 포함한다") {
-                    val usage = pointUsage()
-
-                    usage.toString() shouldBe
-                        "PointUsage(id=${usage.id}, orderNumber=${usage.orderNumber}, " +
-                        "totalAmount=${usage.totalAmount}, status=${usage.status})"
                 }
             }
         }

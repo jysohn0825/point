@@ -5,6 +5,7 @@ import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.maxHoldingAmount
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import java.math.BigDecimal
 
 class PointPolicyTest :
     BehaviorSpec({
@@ -25,7 +26,7 @@ class PointPolicyTest :
         given("정책이 이미 생성되어 있을 때") {
             `when`("일부 필드만 수정하면") {
                 val sut = pointPolicy()
-                val newMaxEarnPerTransaction = maxEarnPerTransaction(value = 80_000L)
+                val newMaxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(80_000))
 
                 sut.update(maxEarnPerTransaction = newMaxEarnPerTransaction)
 
@@ -38,8 +39,8 @@ class PointPolicyTest :
 
             `when`("모든 필드를 수정하면") {
                 val sut = pointPolicy()
-                val newMaxEarnPerTransaction = maxEarnPerTransaction(value = 70_000L)
-                val newMaxHoldingAmount = maxHoldingAmount(value = 2_000_000L)
+                val newMaxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(70_000))
+                val newMaxHoldingAmount = maxHoldingAmount(value = BigDecimal(2_000_000))
                 val newDefaultExpirationPeriod = defaultExpirationPeriod(days = 730)
 
                 sut.update(
@@ -67,8 +68,8 @@ class PointPolicyTest :
             }
 
             `when`("id는 같고 다른 필드 값이 다르면") {
-                val sut = pointPolicy(id = "policy-1", maxEarnPerTransaction = maxEarnPerTransaction(value = 10_000L))
-                val other = pointPolicy(id = "policy-1", maxEarnPerTransaction = maxEarnPerTransaction(value = 90_000L))
+                val sut = pointPolicy(id = "policy-1", maxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(10_000)))
+                val other = pointPolicy(id = "policy-1", maxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(90_000)))
 
                 then("같은 엔티티로 판단하고 해시코드도 같다") {
                     sut shouldBe other

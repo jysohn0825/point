@@ -1,25 +1,25 @@
 package com.jysohn0825.point.domain.entity
 
 import com.jysohn0825.point.domain.vo.Balance
-import com.jysohn0825.point.domain.vo.HoldingLimit
 import com.jysohn0825.point.domain.vo.balance
 import com.jysohn0825.point.domain.vo.holdingLimit
 import com.jysohn0825.point.domain.vo.pointAmount
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import java.math.BigDecimal
 
 class PointWalletTest :
     BehaviorSpec({
         Given("잔액을 지정하지 않으면") {
-            val limit = holdingLimit(value = 500L)
+            val limit = holdingLimit(value = BigDecimal(500))
 
             When("지갑을 개설하면") {
                 val wallet = PointWallet.open(id = "member-7", holdingLimit = limit)
 
                 Then("0원 잔액으로 개설된다") {
                     wallet.id shouldBe "member-7"
-                    wallet.holdingLimit shouldBe HoldingLimit(500L)
+                    wallet.holdingLimit shouldBe holdingLimit(value = BigDecimal(500))
                     wallet.balance shouldBe Balance.ZERO
                 }
             }
@@ -36,10 +36,11 @@ class PointWalletTest :
 
         Given("보유한도 이내의 잔액이 주어지면") {
             When("지갑을 개설하면") {
-                val wallet = pointWallet(balance = balance(amount = 100L), holdingLimit = holdingLimit(value = 100L))
+                val wallet =
+                    pointWallet(balance = balance(amount = BigDecimal(100)), holdingLimit = holdingLimit(value = BigDecimal(100)))
 
                 Then("해당 잔액으로 개설된다") {
-                    wallet.balance shouldBe Balance(100L)
+                    wallet.balance shouldBe balance(amount = BigDecimal(100))
                 }
             }
         }
@@ -48,52 +49,52 @@ class PointWalletTest :
             When("지갑을 개설하면") {
                 Then("예외가 발생한다") {
                     shouldThrow<IllegalArgumentException> {
-                        pointWallet(balance = balance(amount = 101L), holdingLimit = holdingLimit(value = 100L))
+                        pointWallet(balance = balance(amount = BigDecimal(101)), holdingLimit = holdingLimit(value = BigDecimal(100)))
                     }
                 }
             }
         }
 
         Given("한도 이내로 적립 가능한 지갑이 주어지면") {
-            val wallet = pointWallet(holdingLimit = holdingLimit(value = 1_000L))
+            val wallet = pointWallet(holdingLimit = holdingLimit(value = BigDecimal(1_000)))
 
             When("적립하면") {
-                wallet.earn(pointAmount(value = 500L))
+                wallet.earn(pointAmount(value = BigDecimal(500)))
 
                 Then("잔액이 증가한다") {
-                    wallet.balance shouldBe Balance(500L)
+                    wallet.balance shouldBe balance(amount = BigDecimal(500))
                 }
             }
         }
 
         Given("한도 초과 임계치에 근접한 잔액을 가진 지갑이 주어지면") {
-            val wallet = pointWallet(balance = balance(amount = 900L), holdingLimit = holdingLimit(value = 1_000L))
+            val wallet = pointWallet(balance = balance(amount = BigDecimal(900)), holdingLimit = holdingLimit(value = BigDecimal(1_000)))
 
             When("한도를 초과하는 금액을 적립하면") {
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalStateException> { wallet.earn(pointAmount(value = 200L)) }
+                    shouldThrow<IllegalStateException> { wallet.earn(pointAmount(value = BigDecimal(200))) }
                 }
             }
         }
 
         Given("잔액이 있는 지갑이 주어지면") {
-            val wallet = pointWallet(balance = balance(amount = 500L))
+            val wallet = pointWallet(balance = balance(amount = BigDecimal(500)))
 
             When("차감하면") {
-                wallet.decrease(pointAmount(value = 200L))
+                wallet.decrease(pointAmount(value = BigDecimal(200)))
 
                 Then("잔액이 감소한다") {
-                    wallet.balance shouldBe Balance(300L)
+                    wallet.balance shouldBe balance(amount = BigDecimal(300))
                 }
             }
         }
 
         Given("잔액이 부족한 지갑이 주어지면") {
-            val wallet = pointWallet(balance = balance(amount = 100L))
+            val wallet = pointWallet(balance = balance(amount = BigDecimal(100)))
 
             When("잔액보다 많은 금액을 차감하면") {
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalArgumentException> { wallet.decrease(pointAmount(value = 200L)) }
+                    shouldThrow<IllegalArgumentException> { wallet.decrease(pointAmount(value = BigDecimal(200))) }
                 }
             }
         }

@@ -1,10 +1,12 @@
 package com.jysohn0825.point.domain.vo
 
+import java.math.BigDecimal
+
 data class UsageLine(
-    val earningId: EarningId,
-    val amount: Long,
+    val earningId: String,
+    val amount: BigDecimal,
 ) {
     init {
-        require(amount > 0) { "차감액은 0보다 커야 합니다: $amount" }
+        require(amount > BigDecimal.ZERO) { "차감액은 0보다 커야 합니다: $amount" }
     }
 }

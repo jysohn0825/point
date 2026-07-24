@@ -3,9 +3,6 @@ package com.jysohn0825.point.domain.entity
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.domain.vo.ExpirationPeriod
-import com.jysohn0825.point.domain.vo.GrantedBy
-import com.jysohn0825.point.domain.vo.PointAmount
-import com.jysohn0825.point.domain.vo.PolicyVersion
 import com.jysohn0825.point.domain.vo.grantedBy
 import com.jysohn0825.point.domain.vo.pointAmount
 import com.jysohn0825.point.domain.vo.policyVersion
@@ -13,6 +10,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import java.math.BigDecimal
 import java.util.UUID
 
 class PointEarningTest :
@@ -21,9 +19,9 @@ class PointEarningTest :
             When("PointEarning.earn을 호출하면") {
                 val earning =
                     PointEarning.earn(
-                        amount = PointAmount(500L),
+                        amount = pointAmount(BigDecimal(500)),
                         earnType = EarnType.SYSTEM,
-                        policyVersion = PolicyVersion(1L),
+                        policyVersion = policyVersion(1L),
                     )
 
                 Then("지급 관리자 없이 기본 만료 기간(365일)이 적용된다") {
@@ -64,7 +62,7 @@ class PointEarningTest :
 
                 Then("지급 관리자 정보가 함께 저장된다") {
                     earning.earnType shouldBe EarnType.MANUAL
-                    earning.grantedBy shouldBe GrantedBy("admin-9999")
+                    earning.grantedBy shouldBe grantedBy("admin-9999")
                 }
             }
 
@@ -105,15 +103,15 @@ class PointEarningTest :
                     earning.cancelEarning()
 
                     earning.status shouldBe EarningStatus.CANCELED
-                    earning.remainingAmount.value shouldBe 0L
+                    earning.remainingAmount.value.signum() shouldBe 0
                 }
             }
         }
 
         Given("일부가 사용된 적립건이 있을 때") {
             When("적립취소를 시도하면") {
-                val earning = pointEarning(amount = pointAmount(1_000L))
-                earning.use(1L)
+                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                earning.use(BigDecimal.ONE)
 
                 Then("취소할 수 없다") {
                     earning.canCancelEarning() shouldBe false
@@ -142,7 +140,7 @@ class PointEarningTest :
 
                 Then("예외가 발생한다") {
                     shouldThrow<IllegalStateException> {
-                        earning.restoreUsage(1L)
+                        earning.restoreUsage(BigDecimal.ONE)
                     }
                 }
             }
@@ -161,23 +159,23 @@ class PointEarningTest :
 
         Given("잔여액이 1,000원인 ACTIVE 적립건이 있을 때") {
             When("잔여액 이내로 사용하면") {
-                val earning = pointEarning(amount = pointAmount(1_000L))
+                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
 
-                earning.use(300L)
+                earning.use(BigDecimal(300))
 
                 Then("잔여액이 차감되고 ACTIVE 상태를 유지한다") {
-                    earning.remainingAmount.value shouldBe 700L
+                    earning.remainingAmount.value shouldBe BigDecimal(700)
                     earning.status shouldBe EarningStatus.ACTIVE
                 }
             }
 
             When("잔여액을 모두 사용하면") {
-                val earning = pointEarning(amount = pointAmount(1_000L))
+                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
 
-                earning.use(1_000L)
+                earning.use(BigDecimal(1_000))
 
                 Then("EXHAUSTED 상태가 된다") {
-                    earning.remainingAmount.value shouldBe 0L
+                    earning.remainingAmount.value.signum() shouldBe 0
                     earning.status shouldBe EarningStatus.EXHAUSTED
                 }
             }
@@ -190,7 +188,7 @@ class PointEarningTest :
 
                 Then("예외가 발생한다") {
                     shouldThrow<IllegalStateException> {
-                        earning.use(1L)
+                        earning.use(BigDecimal.ONE)
                     }
                 }
             }
@@ -198,38 +196,38 @@ class PointEarningTest :
 
         Given("잔여액을 모두 사용한 EXHAUSTED 적립건이 있을 때") {
             When("사용취소로 일부를 복원하면") {
-                val earning = pointEarning(amount = pointAmount(1_000L))
-                earning.use(1_000L)
+                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                earning.use(BigDecimal(1_000))
 
-                earning.restoreUsage(400L)
+                earning.restoreUsage(BigDecimal(400))
 
                 Then("ACTIVE 상태로 돌아오고 잔여액이 복원된다") {
                     earning.status shouldBe EarningStatus.ACTIVE
-                    earning.remainingAmount.value shouldBe 400L
+                    earning.remainingAmount.value shouldBe BigDecimal(400)
                 }
             }
         }
 
         Given("일부만 사용된 ACTIVE 적립건이 있을 때") {
             When("사용취소로 일부를 복원하면") {
-                val earning = pointEarning(amount = pointAmount(1_000L))
-                earning.use(300L)
+                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                earning.use(BigDecimal(300))
 
-                earning.restoreUsage(100L)
+                earning.restoreUsage(BigDecimal(100))
 
                 Then("잔여액이 복원된다") {
                     earning.status shouldBe EarningStatus.ACTIVE
-                    earning.remainingAmount.value shouldBe 800L
+                    earning.remainingAmount.value shouldBe BigDecimal(800)
                 }
             }
 
             When("최초 적립액을 초과하여 복원을 시도하면") {
-                val earning = pointEarning(amount = pointAmount(1_000L))
-                earning.use(300L)
+                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                earning.use(BigDecimal(300))
 
                 Then("예외가 발생한다") {
                     shouldThrow<IllegalArgumentException> {
-                        earning.restoreUsage(301L)
+                        earning.restoreUsage(BigDecimal(301))
                     }
                 }
             }
@@ -252,8 +250,8 @@ class PointEarningTest :
 
             When("서로 다른 상태를 갖더라도") {
                 val earning1 = pointEarning(id = id)
-                val earning2 = pointEarning(id = id, amount = pointAmount(2_000L))
-                earning2.use(500L)
+                val earning2 = pointEarning(id = id, amount = pointAmount(BigDecimal(2_000)))
+                earning2.use(BigDecimal(500))
 
                 Then("동일한 적립건으로 취급한다") {
                     earning1 shouldBe earning2

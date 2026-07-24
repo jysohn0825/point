@@ -1,7 +1,9 @@
 package com.jysohn0825.point.domain.vo
 
+import java.math.BigDecimal
+
 data class MaxEarnPerTransaction(
-    val value: Long,
+    val value: BigDecimal,
 ) {
     init {
         require(value in MIN..MAX) {
@@ -10,7 +12,7 @@ data class MaxEarnPerTransaction(
     }
 
     companion object {
-        const val MIN: Long = 1
-        const val MAX: Long = 100_000
+        val MIN: BigDecimal = BigDecimal.ONE
+        val MAX: BigDecimal = BigDecimal(100_000)
     }
 }
