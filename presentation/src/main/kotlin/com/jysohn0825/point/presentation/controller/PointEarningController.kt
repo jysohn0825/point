@@ -7,12 +7,10 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "Point Earning", description = "포인트 적립/적립취소 API")
@@ -20,9 +18,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/members/{memberId}/point-earnings")
 class PointEarningController {
     @Operation(summary = "포인트 적립", description = "회원에게 포인트를 적립한다.")
-    @ApiResponse(responseCode = "201", description = "적립 성공")
+    @ApiResponse(responseCode = "200", description = "적립 성공")
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
     fun earn(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Valid @RequestBody request: EarnPointRequest,

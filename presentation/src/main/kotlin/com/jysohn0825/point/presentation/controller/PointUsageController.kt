@@ -9,12 +9,10 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "Point Usage", description = "포인트 사용/사용취소 API")
@@ -22,9 +20,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/members/{memberId}/point-usages")
 class PointUsageController {
     @Operation(summary = "포인트 사용", description = "주문번호와 함께 포인트를 사용한다. 수기지급 포인트가 우선, 만료일이 짧은 순으로 차감된다.")
-    @ApiResponse(responseCode = "201", description = "사용 성공")
+    @ApiResponse(responseCode = "200", description = "사용 성공")
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
     fun use(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Valid @RequestBody request: UsePointRequest,
