@@ -1,0 +1,6 @@
+package com.jysohn0825.point.infrastructure
+
+import org.springframework.boot.autoconfigure.SpringBootApplication
+
+@SpringBootApplication
+class InfrastructureTestApplication
