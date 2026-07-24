@@ -6,7 +6,6 @@ import com.jysohn0825.point.domain.vo.ExpirationDate
 import com.jysohn0825.point.domain.vo.ExpirationPeriod
 import com.jysohn0825.point.domain.vo.GrantedBy
 import com.jysohn0825.point.domain.vo.PointAmount
-import com.jysohn0825.point.domain.vo.PolicyVersion
 import com.jysohn0825.point.domain.vo.RemainingAmount
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -19,7 +18,6 @@ class PointEarning private constructor(
     val grantedBy: GrantedBy?,
     val earnedAt: LocalDateTime,
     val expirationDate: ExpirationDate,
-    val policyVersion: PolicyVersion,
     remainingAmount: RemainingAmount,
     status: EarningStatus,
 ) {
@@ -72,7 +70,6 @@ class PointEarning private constructor(
         fun earn(
             amount: PointAmount,
             earnType: EarnType,
-            policyVersion: PolicyVersion,
             id: String = UUID.randomUUID().toString(),
             grantedBy: GrantedBy? = null,
             earnedAt: LocalDateTime = LocalDateTime.now(),
@@ -89,7 +86,6 @@ class PointEarning private constructor(
                 grantedBy = grantedBy,
                 earnedAt = earnedAt,
                 expirationDate = ExpirationDate.from(earnedAt, period),
-                policyVersion = policyVersion,
                 remainingAmount = RemainingAmount(amount.value),
                 status = EarningStatus.ACTIVE,
             )

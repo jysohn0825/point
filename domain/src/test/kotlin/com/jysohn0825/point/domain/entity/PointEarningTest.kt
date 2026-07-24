@@ -5,7 +5,6 @@ import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.domain.vo.ExpirationPeriod
 import com.jysohn0825.point.domain.vo.grantedBy
 import com.jysohn0825.point.domain.vo.pointAmount
-import com.jysohn0825.point.domain.vo.policyVersion
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -21,7 +20,6 @@ class PointEarningTest :
                     PointEarning.earn(
                         amount = pointAmount(BigDecimal(500)),
                         earnType = EarnType.SYSTEM,
-                        policyVersion = policyVersion(1L),
                     )
 
                 Then("지급 관리자 없이 기본 만료 기간(365일)이 적용된다") {
@@ -34,12 +32,10 @@ class PointEarningTest :
         Given("SYSTEM 적립을 생성할 때") {
             When("지급 관리자 없이 생성하면") {
                 val id = UUID.randomUUID().toString()
-                val version = policyVersion(7L)
-                val earning = pointEarning(id = id, policyVersion = version)
+                val earning = pointEarning(id = id)
 
                 Then("ACTIVE 상태로 생성되고 잔여액이 적립액과 같다") {
                     earning.id shouldBe id
-                    earning.policyVersion shouldBe version
                     earning.earnType shouldBe EarnType.SYSTEM
                     earning.grantedBy shouldBe null
                     earning.status shouldBe EarningStatus.ACTIVE
