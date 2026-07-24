@@ -34,8 +34,8 @@
     # 테스트
     ./gradlew test
 
-    # 로컬 실행 (api 모듈)
-    ./gradlew :api:bootRun
+    # 로컬 실행 (presentation 모듈)
+    ./gradlew :presentation:bootRun
 
 ---
 

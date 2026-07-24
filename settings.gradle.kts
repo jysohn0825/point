@@ -2,4 +2,5 @@ rootProject.name = "point"
 
 include("domain")
 include("infrastructure")
-include("api")
+include("application")
+include("presentation")

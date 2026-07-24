@@ -1,4 +1,4 @@
-package com.jysohn0825.point.api
+package com.jysohn0825.point.presentation
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
