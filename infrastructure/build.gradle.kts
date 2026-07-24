@@ -1,6 +1,11 @@
 plugins {
     alias(libs.plugins.kotlin.plugin.spring)
     alias(libs.plugins.kotlin.plugin.jpa)
+    alias(libs.plugins.kotlin.plugin.allopen)
+}
+
+allOpen {
+    annotation("jakarta.persistence.Entity")
 }
 
 dependencies {
