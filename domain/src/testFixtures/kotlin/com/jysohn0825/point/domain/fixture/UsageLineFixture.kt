@@ -1,9 +1,9 @@
 package com.jysohn0825.point.domain.fixture
 
-import com.jysohn0825.point.domain.vo.EarningId
 import com.jysohn0825.point.domain.vo.UsageLine
+import java.math.BigDecimal
 
 fun usageLine(
-    earningId: EarningId = earningId(),
-    amount: Long = 1_000L,
+    earningId: String = "1",
+    amount: BigDecimal = BigDecimal(1_000),
 ): UsageLine = UsageLine(earningId, amount)

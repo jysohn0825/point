@@ -9,7 +9,7 @@ class ExpirationDateTest :
         context("from") {
             test("적립 시점에 기간을 더한 시점으로 계산된다") {
                 val earnedAt = LocalDateTime.of(2026, 1, 1, 0, 0)
-                val period = ExpirationPeriod(10L)
+                val period = expirationPeriod(10L)
 
                 val expirationDate = ExpirationDate.from(earnedAt, period)
 

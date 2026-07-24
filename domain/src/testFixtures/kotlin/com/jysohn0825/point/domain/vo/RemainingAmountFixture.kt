@@ -1,3 +1,5 @@
 package com.jysohn0825.point.domain.vo
 
-fun remainingAmount(value: Long = 1_000L): RemainingAmount = RemainingAmount(value)
+import java.math.BigDecimal
+
+fun remainingAmount(value: BigDecimal = BigDecimal(1_000)): RemainingAmount = RemainingAmount(value)

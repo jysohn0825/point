@@ -3,10 +3,9 @@ package com.jysohn0825.point.domain.entity
 import com.jysohn0825.point.domain.vo.DefaultExpirationPeriod
 import com.jysohn0825.point.domain.vo.MaxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.MaxHoldingAmount
-import java.util.UUID
 
 class PointPolicy(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String,
     maxEarnPerTransaction: MaxEarnPerTransaction,
     maxHoldingAmount: MaxHoldingAmount,
     defaultExpirationPeriod: DefaultExpirationPeriod,

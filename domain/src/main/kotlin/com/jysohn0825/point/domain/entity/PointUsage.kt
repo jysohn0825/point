@@ -4,6 +4,7 @@ import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.UsageStatus
+import java.math.BigDecimal
 import java.util.UUID
 
 class PointUsage private constructor(
@@ -16,19 +17,19 @@ class PointUsage private constructor(
     val cancellationLines: List<CancellationLine>
         get() = _cancellationLines.toList()
 
-    val totalAmount: Long = lines.sumOf { it.amount }
+    val totalAmount: BigDecimal = lines.sumOf { it.amount }
 
-    val cancelledAmount: Long
+    val cancelledAmount: BigDecimal
         get() = _cancellationLines.sumOf { it.restoredAmount }
 
-    val remainingAmount: Long
+    val remainingAmount: BigDecimal
         get() = totalAmount - cancelledAmount
 
     val status: UsageStatus
         get() =
             when {
                 _cancellationLines.isEmpty() -> UsageStatus.USED
-                remainingAmount == 0L -> UsageStatus.FULLY_CANCELED
+                remainingAmount.signum() == 0 -> UsageStatus.FULLY_CANCELED
                 else -> UsageStatus.PARTIALLY_CANCELED
             }
 
@@ -39,14 +40,14 @@ class PointUsage private constructor(
         val cancelledByLine =
             _cancellationLines
                 .groupingBy { it.originalLine }
-                .fold(0L) { acc, cancellationLine -> acc + cancellationLine.restoredAmount }
+                .fold(BigDecimal.ZERO) { acc, cancellationLine -> acc + cancellationLine.restoredAmount }
                 .toMutableMap()
 
         requestedLines.forEach { requested ->
             require(lines.contains(requested.originalLine)) {
                 "취소 대상 라인이 이 사용 건에 속하지 않습니다: ${requested.originalLine}"
             }
-            val alreadyCancelled = cancelledByLine.getOrDefault(requested.originalLine, 0L)
+            val alreadyCancelled = cancelledByLine.getOrDefault(requested.originalLine, BigDecimal.ZERO)
             val totalCancelled = alreadyCancelled + requested.restoredAmount
             require(totalCancelled <= requested.originalLine.amount) {
                 "취소 요청 금액이 해당 라인의 사용 금액을 초과할 수 없습니다: line=${requested.originalLine}, requested=$totalCancelled"
@@ -64,8 +65,6 @@ class PointUsage private constructor(
     }
 
     override fun hashCode(): Int = id.hashCode()
-
-    override fun toString(): String = "PointUsage(id=$id, orderNumber=$orderNumber, totalAmount=$totalAmount, status=$status)"
 
     companion object {
         fun use(

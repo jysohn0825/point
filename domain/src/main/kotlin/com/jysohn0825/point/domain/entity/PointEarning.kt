@@ -8,6 +8,7 @@ import com.jysohn0825.point.domain.vo.GrantedBy
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.PolicyVersion
 import com.jysohn0825.point.domain.vo.RemainingAmount
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -34,11 +35,11 @@ class PointEarning private constructor(
 
     fun cancelEarning() {
         check(canCancelEarning()) { "일부 사용되었거나 취소 가능한 상태가 아니므로 적립을 취소할 수 없습니다: $status" }
-        remainingAmount = RemainingAmount(0)
+        remainingAmount = RemainingAmount(BigDecimal.ZERO)
         status = EarningStatus.CANCELED
     }
 
-    fun use(amount: Long) {
+    fun use(amount: BigDecimal) {
         check(status.isActive()) { "사용 가능한 상태가 아닙니다: $status" }
         remainingAmount = remainingAmount.decrease(amount)
         if (remainingAmount.isExhausted()) {
@@ -46,7 +47,7 @@ class PointEarning private constructor(
         }
     }
 
-    fun restoreUsage(amount: Long) {
+    fun restoreUsage(amount: BigDecimal) {
         check(status == EarningStatus.ACTIVE || status == EarningStatus.EXHAUSTED) {
             "사용취소로 복원 가능한 상태가 아닙니다: $status"
         }

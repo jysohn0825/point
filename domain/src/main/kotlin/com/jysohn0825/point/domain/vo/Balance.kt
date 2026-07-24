@@ -1,11 +1,13 @@
 package com.jysohn0825.point.domain.vo
 
+import java.math.BigDecimal
+
 @JvmInline
 value class Balance(
-    val amount: Long,
+    val amount: BigDecimal,
 ) {
     init {
-        require(amount >= 0) { "잔액은 0보다 작을 수 없습니다." }
+        require(amount >= BigDecimal.ZERO) { "잔액은 0보다 작을 수 없습니다." }
     }
 
     operator fun plus(pointAmount: PointAmount): Balance = Balance(amount + pointAmount.value)
@@ -13,6 +15,6 @@ value class Balance(
     operator fun minus(pointAmount: PointAmount): Balance = Balance(amount - pointAmount.value)
 
     companion object {
-        val ZERO = Balance(0)
+        val ZERO = Balance(BigDecimal.ZERO)
     }
 }

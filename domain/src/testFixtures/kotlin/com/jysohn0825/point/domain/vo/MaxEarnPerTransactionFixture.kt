@@ -1,3 +1,5 @@
 package com.jysohn0825.point.domain.vo
 
-fun maxEarnPerTransaction(value: Long = 50_000L): MaxEarnPerTransaction = MaxEarnPerTransaction(value)
+import java.math.BigDecimal
+
+fun maxEarnPerTransaction(value: BigDecimal = BigDecimal(50_000)): MaxEarnPerTransaction = MaxEarnPerTransaction(value)
