@@ -9,6 +9,7 @@ dependencies {
 
     implementation("org.springframework:spring-context")
     implementation("org.springframework:spring-tx")
+    implementation("org.springframework.boot:spring-boot-starter-aop")
     implementation(libs.kotlin.reflect)
 
     testImplementation(testFixtures(project(":domain")))

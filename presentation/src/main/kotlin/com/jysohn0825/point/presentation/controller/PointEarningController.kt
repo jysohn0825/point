@@ -1,6 +1,6 @@
 package com.jysohn0825.point.presentation.controller
 
-import com.jysohn0825.point.application.earning.EarnPointCommand
+import com.jysohn0825.point.application.earning.EarnPointDto
 import com.jysohn0825.point.application.earning.EarnPointService
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.presentation.dto.request.EarnPointRequest
@@ -35,7 +35,7 @@ class PointEarningController(
     ): PointEarningResponse =
         earnPointService
             .earn(
-                EarnPointCommand(
+                EarnPointDto(
                     memberId = memberId,
                     amount = request.amount,
                     earnType = EarnType.SYSTEM,

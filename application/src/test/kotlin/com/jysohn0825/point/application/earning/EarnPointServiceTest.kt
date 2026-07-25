@@ -6,7 +6,6 @@ import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointPolicy
 import com.jysohn0825.point.domain.entity.pointWallet
-import com.jysohn0825.point.domain.lock.DistributedLockExecutor
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
@@ -15,29 +14,7 @@ import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import org.springframework.transaction.PlatformTransactionManager
-import org.springframework.transaction.TransactionDefinition
-import org.springframework.transaction.TransactionStatus
-import org.springframework.transaction.support.SimpleTransactionStatus
 import java.math.BigDecimal
-import java.time.Duration
-
-private class NoopTransactionManager : PlatformTransactionManager {
-    override fun getTransaction(definition: TransactionDefinition?): TransactionStatus = SimpleTransactionStatus()
-
-    override fun commit(status: TransactionStatus) {}
-
-    override fun rollback(status: TransactionStatus) {}
-}
-
-private class FakeDistributedLockExecutor : DistributedLockExecutor {
-    override fun <T> executeWithLock(
-        key: String,
-        waitTime: Duration,
-        leaseTime: Duration,
-        action: () -> T,
-    ): T = action()
-}
 
 private class FakePointWalletRepository(
     var wallet: PointWallet,
@@ -87,14 +64,11 @@ private fun service(
     walletRepository: FakePointWalletRepository,
     earningRepository: FakePointEarningRepository = FakePointEarningRepository(),
     policyRepository: FakePointPolicyRepository = FakePointPolicyRepository(pointPolicy()),
-    lockExecutor: DistributedLockExecutor = FakeDistributedLockExecutor(),
 ): EarnPointService =
     EarnPointService(
         walletRepository = walletRepository,
         earningRepository = earningRepository,
         policyRepository = policyRepository,
-        lockExecutor = lockExecutor,
-        transactionManager = NoopTransactionManager(),
     )
 
 class EarnPointServiceTest :
@@ -107,7 +81,7 @@ class EarnPointServiceTest :
             When("적립을 실행하면") {
                 val earning =
                     earnPointService.earn(
-                        EarnPointCommand(
+                        EarnPointDto(
                             memberId = "member-1",
                             amount = BigDecimal(1_000),
                             earnType = EarnType.SYSTEM,
@@ -128,18 +102,18 @@ class EarnPointServiceTest :
             val walletRepository = FakePointWalletRepository(pointWallet())
             val earningRepository = FakePointEarningRepository()
             val earnPointService = service(walletRepository, earningRepository)
-            val command =
-                EarnPointCommand(
+            val dto =
+                EarnPointDto(
                     memberId = "member-1",
                     amount = BigDecimal(1_000),
                     earnType = EarnType.SYSTEM,
                     sourceReferenceId = "ORDER-1",
                 )
 
-            val firstEarning = earnPointService.earn(command)
+            val firstEarning = earnPointService.earn(dto)
 
             When("같은 요청을 재시도하면") {
-                val secondEarning = earnPointService.earn(command)
+                val secondEarning = earnPointService.earn(dto)
 
                 Then("새 적립건을 만들지 않고 기존 적립건을 그대로 반환한다") {
                     secondEarning.id shouldBe firstEarning.id
@@ -158,7 +132,7 @@ class EarnPointServiceTest :
                 Then("예외가 발생하고 잔액은 변하지 않는다") {
                     shouldThrow<PointBusinessException> {
                         earnPointService.earn(
-                            EarnPointCommand(
+                            EarnPointDto(
                                 memberId = "member-1",
                                 amount = BigDecimal(10_001),
                                 earnType = EarnType.SYSTEM,

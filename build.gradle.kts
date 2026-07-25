@@ -30,7 +30,8 @@ subprojects {
 
     configure<KotlinJvmProjectExtension> {
         compilerOptions {
-            freeCompilerArgs.addAll("-Xjsr305=strict")
+            // SpEL(@DistributedLock 등)이 리플렉션으로 파라미터 이름을 안정적으로 읽을 수 있도록 한다.
+            freeCompilerArgs.addAll("-Xjsr305=strict", "-java-parameters")
         }
     }
 
