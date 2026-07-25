@@ -1,10 +1,19 @@
 spring:
   application:
     name: point-api
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:point}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    username: ${DB_USERNAME:point}
+    password: ${DB_PASSWORD:point}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
 
 server:
   port: 8080
 
 redis:
-  host: localhost
-  port: 6379
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6379}
