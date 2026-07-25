@@ -3,6 +3,7 @@ package com.jysohn0825.point.domain.entity
 import com.jysohn0825.point.domain.vo.ExpirationPeriod
 import com.jysohn0825.point.domain.vo.MaxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.MaxHoldingAmount
+import java.math.BigDecimal
 
 class PointPolicy(
     val id: String,
@@ -18,6 +19,12 @@ class PointPolicy(
 
     var defaultExpirationPeriod: ExpirationPeriod = defaultExpirationPeriod
         private set
+
+    fun validateEarnAmount(amount: BigDecimal) {
+        require(amount <= maxEarnPerTransaction.value) {
+            "1회 적립 한도(${maxEarnPerTransaction.value})를 초과했습니다: $amount"
+        }
+    }
 
     fun update(
         maxEarnPerTransaction: MaxEarnPerTransaction = this.maxEarnPerTransaction,

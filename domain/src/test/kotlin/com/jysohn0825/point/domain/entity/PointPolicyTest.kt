@@ -6,6 +6,8 @@ import com.jysohn0825.point.domain.vo.MaxHoldingAmount
 import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.maxHoldingAmount
+import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
@@ -56,6 +58,22 @@ class PointPolicyTest :
                     sut.maxEarnPerTransaction shouldBe newMaxEarnPerTransaction
                     sut.maxHoldingAmount shouldBe newMaxHoldingAmount
                     sut.defaultExpirationPeriod shouldBe newDefaultExpirationPeriod
+                }
+            }
+        }
+
+        given("1회 적립 한도가 10,000원인 정책이 있을 때") {
+            val sut: PointPolicy = pointPolicy(maxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(10_000)))
+
+            `when`("한도 이하 금액을 검증하면") {
+                then("예외가 발생하지 않는다") {
+                    shouldNotThrowAny { sut.validateEarnAmount(BigDecimal(10_000)) }
+                }
+            }
+
+            `when`("한도를 초과하는 금액을 검증하면") {
+                then("예외가 발생한다") {
+                    shouldThrow<IllegalArgumentException> { sut.validateEarnAmount(BigDecimal(10_001)) }
                 }
             }
         }
