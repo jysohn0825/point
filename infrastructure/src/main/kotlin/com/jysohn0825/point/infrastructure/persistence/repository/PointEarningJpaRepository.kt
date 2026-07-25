@@ -1,0 +1,31 @@
+package com.jysohn0825.point.infrastructure.persistence.repository
+
+import com.jysohn0825.point.infrastructure.persistence.entity.PointEarningEntity
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+import java.time.LocalDateTime
+
+interface PointEarningJpaRepository : JpaRepository<PointEarningEntity, String> {
+    /**
+     * ACTIVE·미만료·잔여금액>0 인 적립건만 조회한다.
+     * earnType asc 정렬은 조회 성능을 위한 편의일 뿐, 소진 우선순위(수기지급 우선·만료 임박 우선)의
+     * 실제 소유자는 도메인의 allocator이므로 최종 정렬은 그쪽에서 다시 보장해야 한다.
+     */
+    @Query(
+        """
+        select e from PointEarningEntity e
+        where e.walletId = :walletId
+          and e.status = 'ACTIVE'
+          and e.remainingAmount > 0
+          and e.expiresAt > :now
+        order by e.earnType asc, e.expiresAt asc, e.earnedAt asc
+        """,
+    )
+    fun findRedeemableByWalletId(
+        @Param("walletId") walletId: String,
+        @Param("now") now: LocalDateTime,
+    ): List<PointEarningEntity>
+
+    fun findAllByIdIn(earningIds: List<String>): List<PointEarningEntity>
+}

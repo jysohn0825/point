@@ -90,5 +90,30 @@ class PointEarning private constructor(
                 status = EarningStatus.ACTIVE,
             )
         }
+
+        /**
+         * 영속성 어댑터가 저장된 row를 그대로 복원할 때 사용한다.
+         * `earn()`과 달리 신규 적립 불변식(항상 ACTIVE·전액 잔여)을 강제하지 않고, 전달된 상태를 그대로 신뢰한다.
+         */
+        fun reconstitute(
+            id: String,
+            amount: PointAmount,
+            earnType: EarnType,
+            grantedBy: GrantedBy?,
+            earnedAt: LocalDateTime,
+            expirationDate: ExpirationDate,
+            remainingAmount: RemainingAmount,
+            status: EarningStatus,
+        ): PointEarning =
+            PointEarning(
+                id = id,
+                amount = amount,
+                earnType = earnType,
+                grantedBy = grantedBy,
+                earnedAt = earnedAt,
+                expirationDate = expirationDate,
+                remainingAmount = remainingAmount,
+                status = status,
+            )
     }
 }

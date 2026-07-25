@@ -5,12 +5,14 @@ import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.UsageStatus
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.util.UUID
 
 class PointUsage private constructor(
     val id: String,
     val orderNumber: OrderNumber,
     val lines: List<UsageLine>,
+    val usedAt: LocalDateTime,
 ) {
     private val _cancellationLines: MutableList<CancellationLine> = mutableListOf()
 
@@ -70,9 +72,26 @@ class PointUsage private constructor(
         fun use(
             orderNumber: OrderNumber,
             lines: List<UsageLine>,
+            usedAt: LocalDateTime = LocalDateTime.now(),
         ): PointUsage {
             require(lines.isNotEmpty()) { "사용 라인은 최소 1개 이상이어야 합니다." }
-            return PointUsage(UUID.randomUUID().toString(), orderNumber, lines.toList())
+            return PointUsage(UUID.randomUUID().toString(), orderNumber, lines.toList(), usedAt)
+        }
+
+        /**
+         * 영속성 어댑터가 저장된 row를 그대로 복원할 때 사용한다.
+         * `cancel()`의 취소 시점 검증을 다시 거치지 않고, 이미 저장된 취소 라인들을 그대로 신뢰해 채워 넣는다.
+         */
+        fun reconstitute(
+            id: String,
+            orderNumber: OrderNumber,
+            lines: List<UsageLine>,
+            usedAt: LocalDateTime,
+            cancellationLines: List<CancellationLine>,
+        ): PointUsage {
+            val usage = PointUsage(id, orderNumber, lines.toList(), usedAt)
+            usage._cancellationLines.addAll(cancellationLines)
+            return usage
         }
     }
 }

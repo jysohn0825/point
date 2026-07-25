@@ -1,10 +1,30 @@
 package com.jysohn0825.point.domain.repository
 
 import com.jysohn0825.point.domain.entity.PointUsage
+import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.EarningUsageTrace
+import java.time.LocalDateTime
 
 interface PointUsageRepository {
-    fun save(usage: PointUsage)
+    /** walletId는 PointUsage가 들고 있지 않은 값(순수 FK)이라 저장 시점에 별도로 전달한다. */
+    fun save(
+        usage: PointUsage,
+        walletId: String,
+    )
+
+    /**
+     * cancel() 호출 직후, 그 결과(usage)와 이번 호출에서 방금 추가된 취소 라인들(requestedLines)을 함께 저장한다.
+     * PointUsage.cancellationLines는 과거 모든 취소를 합친 flat list라 "이번 호출분"만 구분할 수 없으므로,
+     * point_usage_cancellation 헤더 1건으로 묶기 위해 requestedLines를 별도로 받는다.
+     * reearnedEarningIds[i]는 requestedLines[i]가 RE_EARNED일 때만 그 신규 적립건의 id여야 하고, 그 외엔 null이어야 한다.
+     */
+    fun saveCancellation(
+        usage: PointUsage,
+        walletId: String,
+        requestedLines: List<CancellationLine>,
+        reearnedEarningIds: List<String?> = List(requestedLines.size) { null },
+        canceledAt: LocalDateTime = LocalDateTime.now(),
+    )
 
     fun findById(usageId: String): PointUsage
 
