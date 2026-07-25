@@ -12,6 +12,8 @@ import com.jysohn0825.point.domain.repository.PointWalletRepository
 import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import com.jysohn0825.point.domain.vo.GrantedBy
 import com.jysohn0825.point.domain.vo.PointAmount
+import com.jysohn0825.point.support.key.DistributedKeyGenerator
+import com.jysohn0825.point.support.key.DistributedKeyGenerator.Companion.EARNING_KEY_NAME
 import com.jysohn0825.point.support.lock.DistributedLock
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -22,6 +24,7 @@ class EarnPointService(
     private val earningRepository: PointEarningRepository,
     private val policyRepository: PointPolicyRepository,
     private val usageRepository: PointUsageRepository,
+    private val keyGenerator: DistributedKeyGenerator,
 ) {
     /**
      * 동일 (memberId, earnType, sourceReferenceId) 조합의 요청이 재시도되어도,
@@ -59,6 +62,7 @@ class EarnPointService(
 
         val earning: PointEarning =
             PointEarning.earn(
+                id = keyGenerator.next(EARNING_KEY_NAME).toString(),
                 amount = pointAmount,
                 earnType = dto.earnType,
                 sourceReferenceId = dto.sourceReferenceId,

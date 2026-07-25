@@ -1,5 +1,7 @@
 package com.jysohn0825.point.domain.entity
 
+import com.jysohn0825.point.domain.exception.checkDomain
+import com.jysohn0825.point.domain.exception.requireDomain
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.domain.vo.ExpirationDate
@@ -33,13 +35,13 @@ class PointEarning private constructor(
     fun canCancelEarning(): Boolean = status.isActive() && remainingAmount.isFullAmountOf(amount)
 
     fun cancelEarning() {
-        check(canCancelEarning()) { "일부 사용되었거나 취소 가능한 상태가 아니므로 적립을 취소할 수 없습니다: $status" }
+        checkDomain(canCancelEarning()) { "일부 사용되었거나 취소 가능한 상태가 아니므로 적립을 취소할 수 없습니다: $status" }
         remainingAmount = RemainingAmount(BigDecimal.ZERO)
         status = EarningStatus.CANCELED
     }
 
     fun use(amount: BigDecimal) {
-        check(status.isActive()) { "사용 가능한 상태가 아닙니다: $status" }
+        checkDomain(status.isActive()) { "사용 가능한 상태가 아닙니다: $status" }
         remainingAmount = remainingAmount.decrease(amount)
         if (remainingAmount.isExhausted()) {
             status = EarningStatus.EXHAUSTED
@@ -47,7 +49,7 @@ class PointEarning private constructor(
     }
 
     fun restoreUsage(amount: BigDecimal) {
-        check(status == EarningStatus.ACTIVE || status == EarningStatus.EXHAUSTED) {
+        checkDomain(status == EarningStatus.ACTIVE || status == EarningStatus.EXHAUSTED) {
             "사용취소로 복원 가능한 상태가 아닙니다: $status"
         }
         remainingAmount = remainingAmount.increase(amount, upTo = this.amount)
@@ -55,7 +57,7 @@ class PointEarning private constructor(
     }
 
     fun expire() {
-        check(status.isActive()) { "만료 처리 가능한 상태가 아닙니다: $status" }
+        checkDomain(status.isActive()) { "만료 처리 가능한 상태가 아닙니다: $status" }
         status = EarningStatus.EXPIRED
     }
 
@@ -72,15 +74,14 @@ class PointEarning private constructor(
             amount: PointAmount,
             earnType: EarnType,
             sourceReferenceId: String,
-            // TODO 분산 환경 기반 key-gen으로 전달
             id: String = UUID.randomUUID().toString(),
             grantedBy: GrantedBy? = null,
             earnedAt: LocalDateTime = LocalDateTime.now(),
             period: ExpirationPeriod = ExpirationPeriod.DEFAULT,
         ): PointEarning {
-            require(id.isNotBlank()) { "적립 식별자는 비어있을 수 없습니다." }
-            require(sourceReferenceId.isNotBlank()) { "적립 출처 참조값은 비어있을 수 없습니다." }
-            require((earnType == EarnType.MANUAL) == (grantedBy != null)) {
+            requireDomain(id.isNotBlank()) { "적립 식별자는 비어있을 수 없습니다." }
+            requireDomain(sourceReferenceId.isNotBlank()) { "적립 출처 참조값은 비어있을 수 없습니다." }
+            requireDomain((earnType == EarnType.MANUAL) == (grantedBy != null)) {
                 "수기지급(MANUAL)인 경우에만 지급 관리자(GrantedBy)를 가질 수 있습니다."
             }
             return PointEarning(

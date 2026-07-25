@@ -10,6 +10,7 @@ import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointEarning
 import com.jysohn0825.point.domain.entity.pointPolicy
 import com.jysohn0825.point.domain.entity.pointWallet
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.fixture.pointUsage
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
@@ -25,12 +26,14 @@ import com.jysohn0825.point.domain.vo.UsageStatus
 import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.grantedBy
 import com.jysohn0825.point.domain.vo.pointAmount
+import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicLong
 
 private class FakeUseWalletRepository(
     var wallet: PointWallet,
@@ -117,7 +120,7 @@ private class FakeUseUsageRepository(
 
     data class SaveCancellationCall(
         val requestedLines: List<CancellationLine>,
-        val reearnedEarningIds: List<String?>,
+        val reearnedEarningIds: List<String>,
     )
 
     override fun save(
@@ -159,17 +162,25 @@ private class FakeUsePolicyRepository(
     }
 }
 
+private class FakeUseKeyGenerator : DistributedKeyGenerator {
+    private val counter: AtomicLong = AtomicLong()
+
+    override fun next(name: String): Long = counter.incrementAndGet()
+}
+
 private fun service(
     walletRepository: FakeUseWalletRepository,
     earningRepository: FakeUseEarningRepository = FakeUseEarningRepository(),
     usageRepository: FakeUseUsageRepository = FakeUseUsageRepository(),
     policyRepository: FakeUsePolicyRepository = FakeUsePolicyRepository(pointPolicy()),
+    keyGenerator: DistributedKeyGenerator = FakeUseKeyGenerator(),
 ): UsePointService =
     UsePointService(
         walletRepository = walletRepository,
         earningRepository = earningRepository,
         usageRepository = usageRepository,
         policyRepository = policyRepository,
+        keyGenerator = keyGenerator,
     )
 
 class UsePointServiceTest :
@@ -255,7 +266,7 @@ class UsePointServiceTest :
 
             When("사용을 시도하면") {
                 Then("예외가 발생하고 잔액은 변하지 않는다") {
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         usePointService.use(
                             UsePointDto(
                                 memberId = "member-1",

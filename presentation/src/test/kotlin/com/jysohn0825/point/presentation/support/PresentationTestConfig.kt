@@ -25,4 +25,7 @@ class PresentationTestConfig {
 
     @Bean
     fun distributedLockExecutor(): FakeDistributedLockExecutor = FakeDistributedLockExecutor()
+
+    @Bean
+    fun distributedKeyGenerator(): FakeDistributedKeyGenerator = FakeDistributedKeyGenerator()
 }

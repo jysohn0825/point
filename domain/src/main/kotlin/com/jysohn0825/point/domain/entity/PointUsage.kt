@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.entity
 
+import com.jysohn0825.point.domain.exception.requireDomain
 import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.UsageLine
@@ -36,8 +37,8 @@ class PointUsage private constructor(
             }
 
     fun cancel(requestedLines: List<CancellationLine>) {
-        require(requestedLines.isNotEmpty()) { "취소 라인은 최소 1개 이상이어야 합니다." }
-        require(status != UsageStatus.FULLY_CANCELED) { "이미 전액 취소된 사용 건은 취소할 수 없습니다." }
+        requireDomain(requestedLines.isNotEmpty()) { "취소 라인은 최소 1개 이상이어야 합니다." }
+        requireDomain(status != UsageStatus.FULLY_CANCELED) { "이미 전액 취소된 사용 건은 취소할 수 없습니다." }
 
         val cancelledByLine: MutableMap<UsageLine, BigDecimal> =
             _cancellationLines
@@ -46,12 +47,12 @@ class PointUsage private constructor(
                 .toMutableMap()
 
         requestedLines.forEach { requested ->
-            require(lines.contains(requested.originalLine)) {
+            requireDomain(lines.contains(requested.originalLine)) {
                 "취소 대상 라인이 이 사용 건에 속하지 않습니다: ${requested.originalLine}"
             }
             val alreadyCancelled: BigDecimal = cancelledByLine.getOrDefault(requested.originalLine, BigDecimal.ZERO)
             val totalCancelled: BigDecimal = alreadyCancelled + requested.restoredAmount
-            require(totalCancelled <= requested.originalLine.amount) {
+            requireDomain(totalCancelled <= requested.originalLine.amount) {
                 "취소 요청 금액이 해당 라인의 사용 금액을 초과할 수 없습니다: line=${requested.originalLine}, requested=$totalCancelled"
             }
             cancelledByLine[requested.originalLine] = totalCancelled
@@ -72,12 +73,12 @@ class PointUsage private constructor(
         fun use(
             orderNumber: OrderNumber,
             lines: List<UsageLine>,
+            id: String = UUID.randomUUID().toString(),
             usedAt: LocalDateTime = LocalDateTime.now(),
         ): PointUsage {
-            require(lines.isNotEmpty()) { "사용 라인은 최소 1개 이상이어야 합니다." }
+            requireDomain(lines.isNotEmpty()) { "사용 라인은 최소 1개 이상이어야 합니다." }
             return PointUsage(
-                // TODO 분산 환경 기반 key-gen으로 전달
-                id = UUID.randomUUID().toString(),
+                id = id,
                 orderNumber = orderNumber,
                 lines = lines.toList(),
                 usedAt = usedAt,

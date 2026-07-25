@@ -7,6 +7,7 @@ import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointPolicy
 import com.jysohn0825.point.domain.entity.pointWallet
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointUsageRepository
@@ -18,11 +19,13 @@ import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
+import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicLong
 
 private class FakeEarnWalletRepository(
     var wallet: PointWallet,
@@ -164,17 +167,25 @@ private class FakeEarnPolicyRepository(
     }
 }
 
+private class FakeEarnKeyGenerator : DistributedKeyGenerator {
+    private val counter: AtomicLong = AtomicLong()
+
+    override fun next(name: String): Long = counter.incrementAndGet()
+}
+
 private fun service(
     walletRepository: FakeEarnWalletRepository,
     earningRepository: FakeEarnEarningRepository = FakeEarnEarningRepository(),
     policyRepository: FakeEarnPolicyRepository = FakeEarnPolicyRepository(pointPolicy()),
     usageRepository: FakeEarnUsageRepository = FakeEarnUsageRepository(),
+    keyGenerator: DistributedKeyGenerator = FakeEarnKeyGenerator(),
 ): EarnPointService =
     EarnPointService(
         walletRepository = walletRepository,
         earningRepository = earningRepository,
         policyRepository = policyRepository,
         usageRepository = usageRepository,
+        keyGenerator = keyGenerator,
     )
 
 class EarnPointServiceTest :
@@ -237,7 +248,7 @@ class EarnPointServiceTest :
 
             When("적립을 시도하면") {
                 Then("예외가 발생하고 잔액은 변하지 않는다") {
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         earnPointService.earn(
                             EarnPointDto(
                                 memberId = "member-1",
@@ -294,7 +305,7 @@ class EarnPointServiceTest :
 
             When("적립 취소를 시도하면") {
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalStateException> {
+                    shouldThrow<PointDomainException> {
                         earnPointService.cancelEarning(memberId = "member-1", earningId = earning.id)
                     }
                 }

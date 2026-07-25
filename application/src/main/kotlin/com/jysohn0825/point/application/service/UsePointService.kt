@@ -18,6 +18,7 @@ import com.jysohn0825.point.domain.service.PointRedemptionAllocator
 import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.UsageLine
+import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import com.jysohn0825.point.support.lock.DistributedLock
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -30,11 +31,12 @@ class UsePointService(
     private val earningRepository: PointEarningRepository,
     private val usageRepository: PointUsageRepository,
     private val policyRepository: PointPolicyRepository,
+    private val keyGenerator: DistributedKeyGenerator,
 ) {
     private val redemptionAllocator: PointRedemptionAllocator = PointRedemptionAllocator()
     private val cancellationAllocator: PointCancellationAllocator = PointCancellationAllocator()
 
-    @DistributedLock(key = "'point-usage-lock:' + #dto.memberId")
+    @DistributedLock(key = "'point-usage-lock:' + #dto.memberId + #dto.orderNumber")
     @Transactional
     fun use(dto: UsePointDto): PointUsage {
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
@@ -45,7 +47,12 @@ class UsePointService(
         val touchedEarnings: List<PointEarning> = redeemable.filter { it.id in usedEarningIds }
 
         wallet.decrease(PointAmount(dto.amount))
-        val usage: PointUsage = PointUsage.Companion.use(orderNumber = OrderNumber(dto.orderNumber), lines = lines)
+        val usage: PointUsage =
+            PointUsage.Companion.use(
+                id = keyGenerator.next(USAGE_KEY_NAME).toString(),
+                orderNumber = OrderNumber(dto.orderNumber),
+                lines = lines,
+            )
 
         walletRepository.save(wallet = wallet, memberId = dto.memberId)
         earningRepository.updateStatusAll(earnings = touchedEarnings, walletId = wallet.id)
@@ -54,7 +61,7 @@ class UsePointService(
         return usage
     }
 
-    @DistributedLock(key = "'point-usage-lock:' + #dto.memberId")
+    @DistributedLock(key = "'point-usage-lock:' + #dto.memberId + #dto.usageId")
     @Transactional
     fun cancelUsage(dto: CancelUsagePointDto): CancelUsagePointResultDto {
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
@@ -62,10 +69,11 @@ class UsePointService(
         val policy: PointPolicy = policyRepository.getCurrent()
         val now: LocalDateTime = LocalDateTime.now()
         val cancelAmount: BigDecimal = dto.amount ?: usage.remainingAmount
+        val earningIds: List<String> = usage.lines.map { it.earningId }.distinct()
 
         val earningsById: Map<String, PointEarning> =
             earningRepository
-                .findAllByIds(usage.lines.map { it.earningId }.distinct())
+                .findAllByIds(earningIds)
                 .associateBy { it.id }
 
         val allocation: CancellationAllocation =
@@ -119,4 +127,8 @@ class UsePointService(
      */
     @Transactional(readOnly = true)
     fun getUsage(usageId: String): PointUsage = usageRepository.findById(usageId)
+
+    companion object {
+        private const val USAGE_KEY_NAME: String = "point-usage"
+    }
 }
