@@ -17,7 +17,8 @@
 |------|---------------------------------------|
 | 언어 | Kotlin 1.9.25 |
 | 프레임워크 | Spring Boot 3.5.7                     |
-| DB | H2                                    |
+| DB | MySQL 8.0 (Docker Compose)             |
+| 캐시 / 분산 락 | Redis 7 (Docker Compose)         |
 | 빌드 도구 | Gradle (Kotlin DSL)                   |
 
 ---
@@ -28,13 +29,49 @@
 
 ## 빌드 및 실행 방법
 
+MySQL, Redis 등 로컬 환경 차이로 인한 이슈를 피하기 위해, 로컬 빌드/실행은 **반드시 Docker Compose로 인프라(MySQL, Redis)를 띄운 뒤** 진행합니다.
+
+### 0. 사전 준비
+
+- Docker / Docker Compose 설치 ([Docker Desktop](https://www.docker.com/products/docker-desktop/) 등)
+- 테스트(`./gradlew test`)는 Testcontainers가 MySQL 컨테이너를 자동으로 띄우므로, 별도의 docker-compose 실행 없이 **Docker 데몬만 실행 중이면** 됩니다.
+- Docker Desktop 대신 [Colima](https://github.com/abiosoft/colima)를 쓰는 경우, Testcontainers가 소켓을 못 찾을 수 있어 아래 환경변수가 추가로 필요합니다.
+
+      export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock
+      export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+
+### 1. 인프라 실행 (MySQL + Redis)
+
+    docker compose up -d
+
+- MySQL: `localhost:3306` (DB `point` / 계정 `point` / 비밀번호 `point`)
+- Redis: `localhost:6379`
+- MySQL 컨테이너는 최초 실행 시 `infrastructure/src/test/resources/schema.sql`을 이용해 스키마를 자동 생성합니다.
+- 접속 정보를 바꾸고 싶다면 리포지토리 루트에 `.env` 파일을 만들어 `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`, `REDIS_PORT` 등을 오버라이드할 수 있습니다. (`docker-compose.yml` 참고)
+
+인프라 상태 확인 / 종료:
+
+    # 상태 확인
+    docker compose ps
+
+    # 로그 확인
+    docker compose logs -f mysql redis
+
+    # 종료 (데이터 유지)
+    docker compose down
+
+    # 종료 + 데이터 삭제
+    docker compose down -v
+
+### 2. 빌드 / 테스트 / 실행
+
     # 빌드
     ./gradlew build
 
-    # 테스트
+    # 테스트 (Testcontainers가 MySQL을 자동 기동 — Docker 데몬 필요)
     ./gradlew test
 
-    # 로컬 실행 (presentation 모듈)
+    # 로컬 실행 (presentation 모듈, 1번의 docker compose가 먼저 실행되어 있어야 함)
     ./gradlew :presentation:bootRun
 
 ---
