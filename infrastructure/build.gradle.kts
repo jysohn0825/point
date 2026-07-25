@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":domain"))
 
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation(libs.redisson.spring.boot.starter)
     implementation(libs.kotlin.reflect)
 
     runtimeOnly("com.h2database:h2")
