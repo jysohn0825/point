@@ -5,6 +5,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.Comment
 import java.time.LocalDateTime
 
@@ -15,6 +16,12 @@ import java.time.LocalDateTime
         Index(name = "idx_earning_fifo", columnList = "wallet_id, status, expires_at, earned_at"),
         Index(name = "idx_earning_expire", columnList = "status, expires_at"),
         Index(name = "idx_earning_policy", columnList = "policy_id"),
+    ],
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_earning_source",
+            columnNames = ["wallet_id", "earn_type", "source_reference_id"],
+        ),
     ],
 )
 @Comment("포인트 적립건")
@@ -38,6 +45,9 @@ class PointEarningEntity(
     @Column(name = "earn_type", nullable = false, length = 10)
     @Comment("SYSTEM / MANUAL")
     val earnType: String,
+    @Column(name = "source_reference_id", nullable = false, length = 64)
+    @Comment("적립 출처 참조값 (주문번호 등). 멱등성 판별 키")
+    val sourceReferenceId: String,
     @Column(name = "granted_by_admin_id", length = 36)
     @Comment("수기지급 관리자. MANUAL일 때만")
     val grantedByAdminId: String? = null,
