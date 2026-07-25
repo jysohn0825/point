@@ -3,6 +3,8 @@ package com.jysohn0825.point.application.earning
 import com.jysohn0825.point.application.exception.PointBusinessException
 import com.jysohn0825.point.application.lock.DistributedLock
 import com.jysohn0825.point.domain.entity.PointEarning
+import com.jysohn0825.point.domain.entity.PointPolicy
+import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
@@ -25,25 +27,30 @@ class EarnPointService(
         key = "'point-earning-lock:' + #dto.memberId + ':' + #dto.earnType + ':' + #dto.sourceReferenceId",
     )
     @Transactional
-    fun earn(dto: EarnPointDto): PointEarning = findExistingEarning(dto) ?: createEarning(dto)
+    fun earn(dto: EarnPointDto): PointEarning {
+        val wallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
 
-    private fun findExistingEarning(dto: EarnPointDto): PointEarning? =
-        earningRepository.findByMemberIdAndEarnTypeAndSourceReferenceId(
-            memberId = dto.memberId,
+        return findExistingEarning(wallet, dto) ?: createEarning(wallet, dto)
+    }
+
+    private fun findExistingEarning(
+        wallet: PointWallet,
+        dto: EarnPointDto,
+    ): PointEarning? =
+        earningRepository.findByWalletIdAndEarnTypeAndSourceReferenceId(
+            walletId = wallet.id,
             earnType = dto.earnType,
             sourceReferenceId = dto.sourceReferenceId,
         )
 
-    private fun createEarning(dto: EarnPointDto): PointEarning {
+    private fun createEarning(
+        wallet: PointWallet,
+        dto: EarnPointDto,
+    ): PointEarning {
         val policy = policyRepository.getCurrent()
-        if (dto.amount > policy.maxEarnPerTransaction.value) {
-            throw PointBusinessException(
-                "1회 적립 한도(${policy.maxEarnPerTransaction.value})를 초과했습니다: ${dto.amount}",
-            )
-        }
+        checkMaxEarnPerTransaction(dto, policy)
 
         val pointAmount = PointAmount(dto.amount)
-        val wallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
         wallet.earn(pointAmount)
 
         val earning =
@@ -55,9 +62,20 @@ class EarnPointService(
                 period = policy.defaultExpirationPeriod,
             )
 
-        walletRepository.save(wallet)
-        earningRepository.save(earning)
+        walletRepository.save(wallet, dto.memberId)
+        earningRepository.save(earning, wallet.id, policy.id)
 
         return earning
+    }
+
+    private fun checkMaxEarnPerTransaction(
+        dto: EarnPointDto,
+        policy: PointPolicy,
+    ) {
+        if (dto.amount > policy.maxEarnPerTransaction.value) {
+            throw PointBusinessException(
+                "1회 적립 한도(${policy.maxEarnPerTransaction.value})를 초과했습니다: ${dto.amount}",
+            )
+        }
     }
 }

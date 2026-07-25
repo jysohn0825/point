@@ -28,4 +28,10 @@ interface PointEarningJpaRepository : JpaRepository<PointEarningEntity, String> 
     ): List<PointEarningEntity>
 
     fun findAllByIdIn(earningIds: List<String>): List<PointEarningEntity>
+
+    fun findByWalletIdAndEarnTypeAndSourceReferenceId(
+        walletId: String,
+        earnType: String,
+        sourceReferenceId: String,
+    ): PointEarningEntity?
 }

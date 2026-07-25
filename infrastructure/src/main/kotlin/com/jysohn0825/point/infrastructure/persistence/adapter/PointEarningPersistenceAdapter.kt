@@ -47,6 +47,12 @@ class PointEarningPersistenceAdapter(
         jpaRepository.findRedeemableByWalletId(walletId, LocalDateTime.now()).map { it.toDomain() }
 
     override fun findAllByIds(earningIds: List<String>): List<PointEarning> = jpaRepository.findAllByIdIn(earningIds).map { it.toDomain() }
+
+    override fun findByWalletIdAndEarnTypeAndSourceReferenceId(
+        walletId: String,
+        earnType: EarnType,
+        sourceReferenceId: String,
+    ): PointEarning? = jpaRepository.findByWalletIdAndEarnTypeAndSourceReferenceId(walletId, earnType.name, sourceReferenceId)?.toDomain()
 }
 
 private fun PointEarningEntity.toDomain(): PointEarning =
@@ -54,6 +60,7 @@ private fun PointEarningEntity.toDomain(): PointEarning =
         id = id,
         amount = PointAmount(BigDecimal.valueOf(amount)),
         earnType = EarnType.valueOf(earnType),
+        sourceReferenceId = sourceReferenceId,
         grantedBy = grantedByAdminId?.let { GrantedBy(it) },
         earnedAt = earnedAt,
         expirationDate = ExpirationDate(expiresAt),
@@ -73,6 +80,7 @@ private fun PointEarning.toEntity(
         amount = amount.value.longValueExact(),
         remainingAmount = remainingAmount.value.longValueExact(),
         earnType = earnType.name,
+        sourceReferenceId = sourceReferenceId,
         grantedByAdminId = grantedBy?.adminId,
         earnedAt = earnedAt,
         expiresAt = expirationDate.value,

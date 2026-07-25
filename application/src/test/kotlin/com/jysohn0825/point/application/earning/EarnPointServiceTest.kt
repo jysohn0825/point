@@ -15,39 +15,57 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 private class FakePointWalletRepository(
     var wallet: PointWallet,
 ) : PointWalletRepository {
     override fun findByMemberIdForUpdate(memberId: String): PointWallet = wallet
 
-    override fun save(wallet: PointWallet) {
+    override fun save(
+        wallet: PointWallet,
+        memberId: String,
+    ) {
         this.wallet = wallet
     }
 }
 
 private class FakePointEarningRepository : PointEarningRepository {
     val earnings = mutableListOf<PointEarning>()
+    private val walletIdByEarningId = mutableMapOf<String, String>()
 
-    override fun save(earning: PointEarning) {
+    override fun save(
+        earning: PointEarning,
+        walletId: String,
+        policyId: String,
+    ) {
         earnings.add(earning)
+        walletIdByEarningId[earning.id] = walletId
     }
 
-    override fun saveAll(earnings: List<PointEarning>) {
+    override fun saveAll(
+        earnings: List<PointEarning>,
+        walletId: String,
+        policyId: String,
+    ) {
         this.earnings.addAll(earnings)
+        earnings.forEach { walletIdByEarningId[it.id] = walletId }
     }
 
     override fun findById(earningId: String): PointEarning = earnings.first { it.id == earningId }
 
-    override fun findRedeemableByMemberId(memberId: String): List<PointEarning> = earnings
+    override fun findRedeemableByWalletId(walletId: String): List<PointEarning> = earnings.filter { walletIdByEarningId[it.id] == walletId }
 
     override fun findAllByIds(earningIds: List<String>): List<PointEarning> = earnings.filter { it.id in earningIds }
 
-    override fun findByMemberIdAndEarnTypeAndSourceReferenceId(
-        memberId: String,
+    override fun findByWalletIdAndEarnTypeAndSourceReferenceId(
+        walletId: String,
         earnType: EarnType,
         sourceReferenceId: String,
-    ): PointEarning? = earnings.firstOrNull { it.earnType == earnType && it.sourceReferenceId == sourceReferenceId }
+    ): PointEarning? =
+        earnings.firstOrNull {
+            walletIdByEarningId[it.id] == walletId && it.earnType == earnType && it.sourceReferenceId == sourceReferenceId
+        }
 }
 
 private class FakePointPolicyRepository(
@@ -55,7 +73,11 @@ private class FakePointPolicyRepository(
 ) : PointPolicyRepository {
     override fun getCurrent(): PointPolicy = policy
 
-    override fun save(policy: PointPolicy) {
+    override fun save(
+        policy: PointPolicy,
+        appliedAt: LocalDateTime,
+        createdByAdminId: String,
+    ) {
         this.policy = policy
     }
 }
