@@ -2,7 +2,9 @@ package com.jysohn0825.point.presentation
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.scheduling.annotation.EnableScheduling
 
+@EnableScheduling
 @SpringBootApplication(scanBasePackages = ["com.jysohn0825.point"])
 class PointApiApplication
 
