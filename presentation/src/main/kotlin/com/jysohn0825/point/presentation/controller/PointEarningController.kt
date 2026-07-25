@@ -49,5 +49,5 @@ class PointEarningController(
     fun cancel(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Parameter(description = "취소할 적립 건 식별자") @PathVariable earningId: String,
-    ): PointEarningResponse = TODO("적립취소 유스케이스 연동 필요")
+    ): PointEarningResponse = earnPointService.cancelEarning(memberId, earningId).toResponse(memberId)
 }

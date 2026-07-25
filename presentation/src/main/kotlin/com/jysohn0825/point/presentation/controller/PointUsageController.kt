@@ -1,9 +1,13 @@
 package com.jysohn0825.point.presentation.controller
 
+import com.jysohn0825.point.application.usage.CancelUsagePointDto
+import com.jysohn0825.point.application.usage.UsePointDto
+import com.jysohn0825.point.application.usage.UsePointService
 import com.jysohn0825.point.presentation.dto.request.CancelUsagePointRequest
 import com.jysohn0825.point.presentation.dto.request.UsePointRequest
 import com.jysohn0825.point.presentation.dto.response.PointUsageCancellationResponse
 import com.jysohn0825.point.presentation.dto.response.PointUsageResponse
+import com.jysohn0825.point.presentation.mapper.toResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -18,14 +22,24 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Point Usage", description = "포인트 사용/사용취소 API")
 @RestController
 @RequestMapping("/api/v1/members/{memberId}/point-usages")
-class PointUsageController {
+class PointUsageController(
+    private val usePointService: UsePointService,
+) {
     @Operation(summary = "포인트 사용", description = "주문번호와 함께 포인트를 사용한다. 수기지급 포인트가 우선, 만료일이 짧은 순으로 차감된다.")
     @ApiResponse(responseCode = "200", description = "사용 성공")
     @PostMapping
     fun use(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Valid @RequestBody request: UsePointRequest,
-    ): PointUsageResponse = TODO("사용 유스케이스 연동 필요")
+    ): PointUsageResponse =
+        usePointService
+            .use(
+                UsePointDto(
+                    memberId = memberId,
+                    orderNumber = request.orderNumber,
+                    amount = request.amount,
+                ),
+            ).toResponse(memberId)
 
     @Operation(
         summary = "포인트 사용취소",
@@ -37,5 +51,13 @@ class PointUsageController {
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Parameter(description = "취소할 사용 건 식별자") @PathVariable usageId: String,
         @Valid @RequestBody request: CancelUsagePointRequest,
-    ): PointUsageCancellationResponse = TODO("사용취소 유스케이스 연동 필요")
+    ): PointUsageCancellationResponse =
+        usePointService
+            .cancelUsage(
+                CancelUsagePointDto(
+                    memberId = memberId,
+                    usageId = usageId,
+                    amount = request.amount,
+                ),
+            ).toResponse(memberId)
 }
