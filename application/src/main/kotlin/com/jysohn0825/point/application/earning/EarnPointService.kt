@@ -32,9 +32,9 @@ class EarnPointService(
     )
     @Transactional
     fun earn(dto: EarnPointDto): PointEarning {
-        val wallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
+        val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
 
-        return findExistingEarning(wallet, dto) ?: createEarning(wallet, dto)
+        return findExistingEarning(wallet = wallet, dto = dto) ?: createEarning(wallet = wallet, dto = dto)
     }
 
     private fun findExistingEarning(
@@ -51,13 +51,13 @@ class EarnPointService(
         wallet: PointWallet,
         dto: EarnPointDto,
     ): PointEarning {
-        val policy = policyRepository.getCurrent()
-        checkMaxEarnPerTransaction(dto, policy)
+        val policy: PointPolicy = policyRepository.getCurrent()
+        checkMaxEarnPerTransaction(dto = dto, policy = policy)
 
-        val pointAmount = PointAmount(dto.amount)
+        val pointAmount: PointAmount = PointAmount(dto.amount)
         wallet.earn(pointAmount)
 
-        val earning =
+        val earning: PointEarning =
             PointEarning.earn(
                 amount = pointAmount,
                 earnType = dto.earnType,
@@ -66,8 +66,8 @@ class EarnPointService(
                 period = dto.expirationPeriod ?: policy.defaultExpirationPeriod,
             )
 
-        walletRepository.save(wallet, dto.memberId)
-        earningRepository.save(earning, wallet.id, policy.id)
+        walletRepository.save(wallet = wallet, memberId = dto.memberId)
+        earningRepository.save(earning = earning, walletId = wallet.id, policyId = policy.id)
 
         return earning
     }
@@ -93,14 +93,14 @@ class EarnPointService(
         memberId: String,
         earningId: String,
     ): PointEarning {
-        val wallet = walletRepository.findByMemberIdForUpdate(memberId)
-        val earning = earningRepository.findById(earningId)
+        val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(memberId)
+        val earning: PointEarning = earningRepository.findById(earningId)
 
         earning.cancelEarning()
         wallet.decrease(earning.amount)
 
-        walletRepository.save(wallet, memberId)
-        earningRepository.updateStatus(earning, wallet.id)
+        walletRepository.save(wallet = wallet, memberId = memberId)
+        earningRepository.updateStatus(earning = earning, walletId = wallet.id)
 
         return earning
     }
@@ -110,7 +110,7 @@ class EarnPointService(
      */
     @Transactional(readOnly = true)
     fun getEarnings(memberId: String): List<PointEarning> {
-        val wallet =
+        val wallet: PointWallet =
             walletRepository.findByMemberId(memberId)
                 ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
         return earningRepository.findAllByWalletId(wallet.id)

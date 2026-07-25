@@ -46,8 +46,8 @@ private class FakePointWalletRepository(
 }
 
 private class FakePointEarningRepository : PointEarningRepository {
-    val earnings = mutableListOf<PointEarning>()
-    private val walletIdByEarningId = mutableMapOf<String, String>()
+    val earnings: MutableList<PointEarning> = mutableListOf()
+    private val walletIdByEarningId: MutableMap<String, String> = mutableMapOf()
 
     override fun save(
         earning: PointEarning,
@@ -117,8 +117,8 @@ private class FakePointEarningRepository : PointEarningRepository {
 }
 
 private class FakePointUsageRepository : PointUsageRepository {
-    val usages = mutableListOf<PointUsage>()
-    private val walletIdByUsageId = mutableMapOf<String, String>()
+    val usages: MutableList<PointUsage> = mutableListOf()
+    private val walletIdByUsageId: MutableMap<String, String> = mutableMapOf()
 
     override fun save(
         usage: PointUsage,
@@ -180,12 +180,12 @@ private fun service(
 class EarnPointServiceTest :
     BehaviorSpec({
         Given("처음 보는 sourceReferenceId로 적립을 요청하면") {
-            val walletRepository = FakePointWalletRepository(pointWallet())
-            val earningRepository = FakePointEarningRepository()
-            val earnPointService = service(walletRepository, earningRepository)
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet())
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
 
             When("적립을 실행하면") {
-                val earning =
+                val earning: PointEarning =
                     earnPointService.earn(
                         EarnPointDto(
                             memberId = "member-1",
@@ -205,10 +205,10 @@ class EarnPointServiceTest :
         }
 
         Given("이미 처리된 sourceReferenceId로 동일한 적립을 다시 요청하면") {
-            val walletRepository = FakePointWalletRepository(pointWallet())
-            val earningRepository = FakePointEarningRepository()
-            val earnPointService = service(walletRepository, earningRepository)
-            val dto =
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet())
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
+            val dto: EarnPointDto =
                 EarnPointDto(
                     memberId = "member-1",
                     amount = BigDecimal(1_000),
@@ -216,10 +216,10 @@ class EarnPointServiceTest :
                     sourceReferenceId = "ORDER-1",
                 )
 
-            val firstEarning = earnPointService.earn(dto)
+            val firstEarning: PointEarning = earnPointService.earn(dto)
 
             When("같은 요청을 재시도하면") {
-                val secondEarning = earnPointService.earn(dto)
+                val secondEarning: PointEarning = earnPointService.earn(dto)
 
                 Then("새 적립건을 만들지 않고 기존 적립건을 그대로 반환한다") {
                     secondEarning.id shouldBe firstEarning.id
@@ -230,9 +230,10 @@ class EarnPointServiceTest :
         }
 
         Given("1회 적립 한도를 초과하는 금액으로 요청하면") {
-            val walletRepository = FakePointWalletRepository(pointWallet())
-            val policyRepository = FakePointPolicyRepository(pointPolicy(maxEarnPerTransaction = maxEarnPerTransaction(BigDecimal(10_000))))
-            val earnPointService = service(walletRepository, policyRepository = policyRepository)
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet())
+            val policyRepository: FakePointPolicyRepository =
+                FakePointPolicyRepository(pointPolicy(maxEarnPerTransaction = maxEarnPerTransaction(BigDecimal(10_000))))
+            val earnPointService: EarnPointService = service(walletRepository = walletRepository, policyRepository = policyRepository)
 
             When("적립을 시도하면") {
                 Then("예외가 발생하고 잔액은 변하지 않는다") {
@@ -252,10 +253,10 @@ class EarnPointServiceTest :
         }
 
         Given("사용되지 않은 적립건을 취소하면") {
-            val walletRepository = FakePointWalletRepository(pointWallet())
-            val earningRepository = FakePointEarningRepository()
-            val earnPointService = service(walletRepository, earningRepository)
-            val earning =
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet())
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
+            val earning: PointEarning =
                 earnPointService.earn(
                     EarnPointDto(
                         memberId = "member-1",
@@ -266,7 +267,7 @@ class EarnPointServiceTest :
                 )
 
             When("적립 취소를 실행하면") {
-                val canceled = earnPointService.cancelEarning("member-1", earning.id)
+                val canceled: PointEarning = earnPointService.cancelEarning(memberId = "member-1", earningId = earning.id)
 
                 Then("적립건이 취소 상태가 되고 지갑 잔액이 원복된다") {
                     canceled.status shouldBe EarningStatus.CANCELED
@@ -277,10 +278,10 @@ class EarnPointServiceTest :
         }
 
         Given("일부 사용된 적립건을 취소하려고 하면") {
-            val walletRepository = FakePointWalletRepository(pointWallet())
-            val earningRepository = FakePointEarningRepository()
-            val earnPointService = service(walletRepository, earningRepository)
-            val earning =
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet())
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
+            val earning: PointEarning =
                 earnPointService.earn(
                     EarnPointDto(
                         memberId = "member-1",
@@ -294,26 +295,31 @@ class EarnPointServiceTest :
             When("적립 취소를 시도하면") {
                 Then("예외가 발생한다") {
                     shouldThrow<IllegalStateException> {
-                        earnPointService.cancelEarning("member-1", earning.id)
+                        earnPointService.cancelEarning(memberId = "member-1", earningId = earning.id)
                     }
                 }
             }
         }
 
         Given("적립건이 여러 개 있을 때") {
-            val walletRepository = FakePointWalletRepository(pointWallet())
-            val earningRepository = FakePointEarningRepository()
-            val earnPointService = service(walletRepository, earningRepository)
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet())
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
             earnPointService.earn(
                 EarnPointDto(memberId = "member-1", amount = BigDecimal(1_000), earnType = EarnType.SYSTEM, sourceReferenceId = "ORDER-5"),
             )
-            val second =
+            val second: PointEarning =
                 earnPointService.earn(
-                    EarnPointDto(memberId = "member-1", amount = BigDecimal(500), earnType = EarnType.SYSTEM, sourceReferenceId = "ORDER-6"),
+                    EarnPointDto(
+                        memberId = "member-1",
+                        amount = BigDecimal(500),
+                        earnType = EarnType.SYSTEM,
+                        sourceReferenceId = "ORDER-6",
+                    ),
                 )
 
             When("목록을 조회하면") {
-                val earnings = earnPointService.getEarnings("member-1")
+                val earnings: List<PointEarning> = earnPointService.getEarnings("member-1")
 
                 Then("회원의 전체 적립건이 반환된다") {
                     earnings.size shouldBe 2
@@ -321,7 +327,7 @@ class EarnPointServiceTest :
             }
 
             When("상세를 조회하면") {
-                val earning = earnPointService.getEarning(second.id)
+                val earning: PointEarning = earnPointService.getEarning(second.id)
 
                 Then("해당 적립건이 반환된다") {
                     earning.id shouldBe second.id
@@ -331,25 +337,32 @@ class EarnPointServiceTest :
         }
 
         Given("적립건이 특정 주문에서 사용된 이력이 있을 때") {
-            val walletRepository = FakePointWalletRepository(pointWallet())
-            val earningRepository = FakePointEarningRepository()
-            val usageRepository = FakePointUsageRepository()
-            val earnPointService = service(walletRepository, earningRepository, usageRepository = usageRepository)
-            val earning =
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet())
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            val usageRepository: FakePointUsageRepository = FakePointUsageRepository()
+            val earnPointService: EarnPointService =
+                service(walletRepository = walletRepository, earningRepository = earningRepository, usageRepository = usageRepository)
+            val earning: PointEarning =
                 earnPointService.earn(
-                    EarnPointDto(memberId = "member-1", amount = BigDecimal(1_000), earnType = EarnType.SYSTEM, sourceReferenceId = "ORDER-7"),
+                    EarnPointDto(
+                        memberId = "member-1",
+                        amount = BigDecimal(1_000),
+                        earnType = EarnType.SYSTEM,
+                        sourceReferenceId = "ORDER-7",
+                    ),
                 )
             earning.use(BigDecimal(300))
             usageRepository.save(
-                PointUsage.use(
-                    orderNumber = OrderNumber("A1234"),
-                    lines = listOf(UsageLine(earning.id, BigDecimal(300))),
-                ),
+                usage =
+                    PointUsage.use(
+                        orderNumber = OrderNumber("A1234"),
+                        lines = listOf(UsageLine(earningId = earning.id, amount = BigDecimal(300))),
+                    ),
                 walletId = walletRepository.wallet.id,
             )
 
             When("사용 추적을 조회하면") {
-                val traces = earnPointService.getUsageTraces(earning.id)
+                val traces: List<EarningUsageTrace> = earnPointService.getUsageTraces(earning.id)
 
                 Then("차감된 주문번호와 금액이 반환된다") {
                     traces.size shouldBe 1

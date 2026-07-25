@@ -14,7 +14,7 @@ class RedissonConfig(
 ) {
     @Bean(destroyMethod = "shutdown")
     fun redissonClient(): RedissonClient {
-        val config = Config()
+        val config: Config = Config()
         config.useSingleServer().address = "redis://$host:$port"
         return Redisson.create(config)
     }

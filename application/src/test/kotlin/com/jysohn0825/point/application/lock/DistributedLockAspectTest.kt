@@ -21,7 +21,7 @@ class SampleLockedService {
 }
 
 private class RecordingLockExecutor : DistributedLockExecutor {
-    val capturedKeys = mutableListOf<String>()
+    val capturedKeys: MutableList<String> = mutableListOf()
 
     override fun <T> executeWithLock(
         key: String,
@@ -50,12 +50,12 @@ class DistributedLockTestConfig {
 class DistributedLockAspectTest :
     FunSpec({
         test("메서드 인자를 참조한 SpEL key가 그대로 락 실행기에 전달되고, 원래 메서드 결과가 반환된다") {
-            val context = AnnotationConfigApplicationContext(DistributedLockTestConfig::class.java)
+            val context: AnnotationConfigApplicationContext = AnnotationConfigApplicationContext(DistributedLockTestConfig::class.java)
 
-            val service = context.getBean(SampleLockedService::class.java)
-            val executor = context.getBean(DistributedLockExecutor::class.java) as RecordingLockExecutor
+            val service: SampleLockedService = context.getBean(SampleLockedService::class.java)
+            val executor: RecordingLockExecutor = context.getBean(DistributedLockExecutor::class.java) as RecordingLockExecutor
 
-            val result = service.run(LockTarget("abc"))
+            val result: String = service.run(LockTarget("abc"))
 
             result shouldBe "executed-abc"
             executor.capturedKeys shouldBe listOf("lock:abc")

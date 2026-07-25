@@ -89,7 +89,7 @@ class PointEarning private constructor(
                 sourceReferenceId = sourceReferenceId,
                 grantedBy = grantedBy,
                 earnedAt = earnedAt,
-                expirationDate = ExpirationDate.from(earnedAt, period),
+                expirationDate = ExpirationDate.from(earnedAt = earnedAt, period = period),
                 remainingAmount = RemainingAmount(amount.value),
                 status = EarningStatus.ACTIVE,
             )

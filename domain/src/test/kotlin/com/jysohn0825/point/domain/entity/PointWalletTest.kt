@@ -1,6 +1,7 @@
 package com.jysohn0825.point.domain.entity
 
 import com.jysohn0825.point.domain.vo.Balance
+import com.jysohn0825.point.domain.vo.HoldingLimit
 import com.jysohn0825.point.domain.vo.balance
 import com.jysohn0825.point.domain.vo.holdingLimit
 import com.jysohn0825.point.domain.vo.pointAmount
@@ -12,10 +13,10 @@ import java.math.BigDecimal
 class PointWalletTest :
     BehaviorSpec({
         Given("잔액을 지정하지 않으면") {
-            val limit = holdingLimit(value = BigDecimal(500))
+            val limit: HoldingLimit = holdingLimit(value = BigDecimal(500))
 
             When("지갑을 개설하면") {
-                val wallet = PointWallet.open(id = "member-7", holdingLimit = limit)
+                val wallet: PointWallet = PointWallet.open(id = "member-7", holdingLimit = limit)
 
                 Then("0원 잔액으로 개설된다") {
                     wallet.id shouldBe "member-7"
@@ -36,7 +37,7 @@ class PointWalletTest :
 
         Given("보유한도 이내의 잔액이 주어지면") {
             When("지갑을 개설하면") {
-                val wallet =
+                val wallet: PointWallet =
                     pointWallet(balance = balance(amount = BigDecimal(100)), holdingLimit = holdingLimit(value = BigDecimal(100)))
 
                 Then("해당 잔액으로 개설된다") {
@@ -56,7 +57,7 @@ class PointWalletTest :
         }
 
         Given("한도 이내로 적립 가능한 지갑이 주어지면") {
-            val wallet = pointWallet(holdingLimit = holdingLimit(value = BigDecimal(1_000)))
+            val wallet: PointWallet = pointWallet(holdingLimit = holdingLimit(value = BigDecimal(1_000)))
 
             When("적립하면") {
                 wallet.earn(pointAmount(value = BigDecimal(500)))
@@ -68,7 +69,8 @@ class PointWalletTest :
         }
 
         Given("한도 초과 임계치에 근접한 잔액을 가진 지갑이 주어지면") {
-            val wallet = pointWallet(balance = balance(amount = BigDecimal(900)), holdingLimit = holdingLimit(value = BigDecimal(1_000)))
+            val wallet: PointWallet =
+                pointWallet(balance = balance(amount = BigDecimal(900)), holdingLimit = holdingLimit(value = BigDecimal(1_000)))
 
             When("한도를 초과하는 금액을 적립하면") {
                 Then("예외가 발생한다") {
@@ -78,7 +80,7 @@ class PointWalletTest :
         }
 
         Given("잔액이 있는 지갑이 주어지면") {
-            val wallet = pointWallet(balance = balance(amount = BigDecimal(500)))
+            val wallet: PointWallet = pointWallet(balance = balance(amount = BigDecimal(500)))
 
             When("차감하면") {
                 wallet.decrease(pointAmount(value = BigDecimal(200)))
@@ -90,7 +92,7 @@ class PointWalletTest :
         }
 
         Given("잔액이 부족한 지갑이 주어지면") {
-            val wallet = pointWallet(balance = balance(amount = BigDecimal(100)))
+            val wallet: PointWallet = pointWallet(balance = balance(amount = BigDecimal(100)))
 
             When("잔액보다 많은 금액을 차감하면") {
                 Then("예외가 발생한다") {
@@ -100,8 +102,8 @@ class PointWalletTest :
         }
 
         Given("동일한 id를 가진 두 지갑이 주어지면") {
-            val walletA = pointWallet(id = "member-1")
-            val walletB = pointWallet(id = "member-1")
+            val walletA: PointWallet = pointWallet(id = "member-1")
+            val walletB: PointWallet = pointWallet(id = "member-1")
 
             When("동등성을 비교하면") {
                 Then("서로 동등하다") {
@@ -112,8 +114,8 @@ class PointWalletTest :
         }
 
         Given("다른 id를 가진 두 지갑이 주어지면") {
-            val walletA = pointWallet(id = "member-1")
-            val walletB = pointWallet(id = "member-2")
+            val walletA: PointWallet = pointWallet(id = "member-1")
+            val walletB: PointWallet = pointWallet(id = "member-2")
 
             When("동등성을 비교하면") {
                 Then("서로 동등하지 않다") {
@@ -123,7 +125,7 @@ class PointWalletTest :
         }
 
         Given("지갑이 주어지면") {
-            val wallet = pointWallet()
+            val wallet: PointWallet = pointWallet()
 
             When("자기 자신과 비교하면") {
                 Then("항상 동등하다") {

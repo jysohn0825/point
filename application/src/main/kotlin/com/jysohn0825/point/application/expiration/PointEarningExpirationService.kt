@@ -8,6 +8,7 @@ import com.jysohn0825.point.domain.repository.PointWalletRepository
 import com.jysohn0825.point.domain.vo.PointAmount
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Service
@@ -24,14 +25,14 @@ class PointEarningExpirationService(
         walletId: String,
         now: LocalDateTime = LocalDateTime.now(),
     ): List<PointEarning> {
-        val wallet = walletRepository.findByIdForUpdate(walletId)
-        val dueEarnings = earningRepository.findExpiringByWalletId(walletId, now)
+        val wallet: PointWallet = walletRepository.findByIdForUpdate(walletId)
+        val dueEarnings: List<PointEarning> = earningRepository.findExpiringByWalletId(walletId = walletId, now = now)
         if (dueEarnings.isEmpty()) return emptyList()
 
-        applyExpiration(wallet, dueEarnings)
+        applyExpiration(wallet = wallet, dueEarnings = dueEarnings)
 
         walletRepository.updateBalance(wallet)
-        earningRepository.updateStatusAll(dueEarnings, walletId)
+        earningRepository.updateStatusAll(earnings = dueEarnings, walletId = walletId)
         return dueEarnings
     }
 
@@ -44,14 +45,14 @@ class PointEarningExpirationService(
         memberId: String,
         now: LocalDateTime = LocalDateTime.now(),
     ): List<PointEarning> {
-        val wallet = walletRepository.findByMemberIdForUpdate(memberId)
-        val dueEarnings = earningRepository.findExpiringByWalletId(wallet.id, now)
+        val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(memberId)
+        val dueEarnings: List<PointEarning> = earningRepository.findExpiringByWalletId(walletId = wallet.id, now = now)
         if (dueEarnings.isEmpty()) return emptyList()
 
-        applyExpiration(wallet, dueEarnings)
+        applyExpiration(wallet = wallet, dueEarnings = dueEarnings)
 
-        walletRepository.save(wallet, memberId)
-        earningRepository.updateStatusAll(dueEarnings, wallet.id)
+        walletRepository.save(wallet = wallet, memberId = memberId)
+        earningRepository.updateStatusAll(earnings = dueEarnings, walletId = wallet.id)
         return dueEarnings
     }
 
@@ -67,15 +68,15 @@ class PointEarningExpirationService(
         memberId: String,
         earningId: String,
     ): PointEarning {
-        val wallet = walletRepository.findByMemberIdForUpdate(memberId)
-        val earning = earningRepository.findById(earningId)
+        val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(memberId)
+        val earning: PointEarning = earningRepository.findById(earningId)
 
-        val expiredAmount = earning.remainingAmount.value
+        val expiredAmount: BigDecimal = earning.remainingAmount.value
         earning.expire()
         wallet.decrease(PointAmount(expiredAmount))
 
-        walletRepository.save(wallet, memberId)
-        earningRepository.updateStatus(earning, wallet.id)
+        walletRepository.save(wallet = wallet, memberId = memberId)
+        earningRepository.updateStatus(earning = earning, walletId = wallet.id)
         return earning
     }
 
@@ -87,7 +88,7 @@ class PointEarningExpirationService(
         wallet: PointWallet,
         dueEarnings: List<PointEarning>,
     ) {
-        val totalExpired = dueEarnings.sumOf { it.remainingAmount.value }
+        val totalExpired: BigDecimal = dueEarnings.sumOf { it.remainingAmount.value }
         dueEarnings.forEach { it.expire() }
         wallet.decrease(PointAmount(totalExpired))
     }

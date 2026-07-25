@@ -8,13 +8,13 @@ import java.math.BigDecimal
 class PointAmountTest :
     FunSpec({
         test("양수 금액이면 정상적으로 생성된다") {
-            val amount = PointAmount(BigDecimal(1_000))
+            val amount: PointAmount = PointAmount(BigDecimal(1_000))
 
             amount.value shouldBe BigDecimal(1_000)
         }
 
         test("최소값인 1원도 허용한다") {
-            val amount = PointAmount(BigDecimal.ONE)
+            val amount: PointAmount = PointAmount(BigDecimal.ONE)
 
             amount.value shouldBe BigDecimal.ONE
         }

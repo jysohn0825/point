@@ -7,4 +7,4 @@ import com.jysohn0825.point.domain.vo.UsageLine
 fun pointUsage(
     orderNumber: OrderNumber = orderNumber(),
     lines: List<UsageLine> = listOf(usageLine()),
-): PointUsage = PointUsage.use(orderNumber, lines)
+): PointUsage = PointUsage.use(orderNumber = orderNumber, lines = lines)

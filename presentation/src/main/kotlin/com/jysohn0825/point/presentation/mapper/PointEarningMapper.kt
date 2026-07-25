@@ -5,21 +5,24 @@ import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import com.jysohn0825.point.presentation.dto.response.EarningUsageTraceResponse
 import com.jysohn0825.point.presentation.dto.response.PointEarningResponse
 
-fun PointEarning.toResponse(memberId: String): PointEarningResponse =
+fun toResponse(
+    pointEarning: PointEarning,
+    memberId: String,
+): PointEarningResponse =
     PointEarningResponse(
-        earningId = id,
+        earningId = pointEarning.id,
         memberId = memberId,
-        amount = amount.value,
-        remainingAmount = remainingAmount.value,
-        earnType = earnType,
-        grantedBy = grantedBy?.adminId,
-        earnedAt = earnedAt,
-        expirationDate = expirationDate.value,
-        status = status,
+        amount = pointEarning.amount.value,
+        remainingAmount = pointEarning.remainingAmount.value,
+        earnType = pointEarning.earnType,
+        grantedBy = pointEarning.grantedBy?.adminId,
+        earnedAt = pointEarning.earnedAt,
+        expirationDate = pointEarning.expirationDate.value,
+        status = pointEarning.status,
     )
 
-fun EarningUsageTrace.toResponse(): EarningUsageTraceResponse =
+fun toResponse(earningUsageTrace: EarningUsageTrace): EarningUsageTraceResponse =
     EarningUsageTraceResponse(
-        orderNumber = orderNumber.value,
-        amount = amount,
+        orderNumber = earningUsageTrace.orderNumber.value,
+        amount = earningUsageTrace.amount,
     )

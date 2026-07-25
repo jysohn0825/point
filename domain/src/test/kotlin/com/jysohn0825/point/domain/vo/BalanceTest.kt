@@ -8,7 +8,7 @@ import java.math.BigDecimal
 class BalanceTest :
     FunSpec({
         test("amount가 0 이상이면 Balance를 생성한다") {
-            val result = balance(amount = BigDecimal(100))
+            val result: Balance = balance(amount = BigDecimal(100))
 
             result.amount shouldBe BigDecimal(100)
         }
@@ -22,24 +22,24 @@ class BalanceTest :
         }
 
         test("plus 연산은 PointAmount만큼 증가한 새 Balance를 반환한다") {
-            val origin = balance(amount = BigDecimal(100))
+            val origin: Balance = balance(amount = BigDecimal(100))
 
-            val result = origin + pointAmount(value = BigDecimal(50))
+            val result: Balance = origin + pointAmount(value = BigDecimal(50))
 
             result.amount shouldBe BigDecimal(150)
             origin.amount shouldBe BigDecimal(100)
         }
 
         test("minus 연산은 PointAmount만큼 감소한 새 Balance를 반환한다") {
-            val origin = balance(amount = BigDecimal(100))
+            val origin: Balance = balance(amount = BigDecimal(100))
 
-            val result = origin - pointAmount(value = BigDecimal(30))
+            val result: Balance = origin - pointAmount(value = BigDecimal(30))
 
             result.amount shouldBe BigDecimal(70)
         }
 
         test("minus 연산 결과가 음수이면 예외가 발생한다") {
-            val origin = balance(amount = BigDecimal(10))
+            val origin: Balance = balance(amount = BigDecimal(10))
 
             shouldThrow<IllegalArgumentException> { origin - pointAmount(value = BigDecimal(20)) }
         }

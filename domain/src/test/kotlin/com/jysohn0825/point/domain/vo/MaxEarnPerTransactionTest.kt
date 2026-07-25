@@ -9,13 +9,13 @@ class MaxEarnPerTransactionTest :
     FunSpec({
 
         test("하한값(1포인트)으로 생성할 수 있다") {
-            val sut = MaxEarnPerTransaction(BigDecimal.ONE)
+            val sut: MaxEarnPerTransaction = MaxEarnPerTransaction(BigDecimal.ONE)
 
             sut.value shouldBe BigDecimal.ONE
         }
 
         test("상한값(10만포인트)으로 생성할 수 있다") {
-            val sut = MaxEarnPerTransaction(BigDecimal(100_000))
+            val sut: MaxEarnPerTransaction = MaxEarnPerTransaction(BigDecimal(100_000))
 
             sut.value shouldBe BigDecimal(100_000)
         }
@@ -33,7 +33,7 @@ class MaxEarnPerTransactionTest :
         }
 
         test("픽스처는 유효한 기본값으로 생성된다") {
-            val sut = maxEarnPerTransaction()
+            val sut: MaxEarnPerTransaction = maxEarnPerTransaction()
 
             sut.value shouldBe BigDecimal(50_000)
         }

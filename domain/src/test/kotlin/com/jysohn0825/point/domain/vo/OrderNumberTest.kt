@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 class OrderNumberTest :
     FunSpec({
         test("공백이 아닌 값으로 생성할 수 있다") {
-            val orderNumber = OrderNumber("ORDER-20260722-0001")
+            val orderNumber: OrderNumber = OrderNumber("ORDER-20260722-0001")
 
             orderNumber.value shouldBe "ORDER-20260722-0001"
         }

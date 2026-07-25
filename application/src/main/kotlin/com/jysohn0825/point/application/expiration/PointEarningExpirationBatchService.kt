@@ -15,8 +15,8 @@ class PointEarningExpirationBatchService(
     private val expirationService: PointEarningExpirationService,
 ) {
     fun expireAllDue(now: LocalDateTime = LocalDateTime.now()): Int {
-        val walletIds = earningRepository.findExpiredCandidateWalletIds(now)
-        walletIds.forEach { walletId -> expirationService.expireWalletEarnings(walletId, now) }
+        val walletIds: List<String> = earningRepository.findExpiredCandidateWalletIds(now)
+        walletIds.forEach { walletId -> expirationService.expireWalletEarnings(walletId = walletId, now = now) }
         return walletIds.size
     }
 }

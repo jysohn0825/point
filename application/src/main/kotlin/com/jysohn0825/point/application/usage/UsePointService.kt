@@ -3,7 +3,9 @@ package com.jysohn0825.point.application.usage
 import com.jysohn0825.point.application.exception.PointBusinessException
 import com.jysohn0825.point.application.lock.DistributedLock
 import com.jysohn0825.point.domain.entity.PointEarning
+import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointUsage
+import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
@@ -33,35 +35,36 @@ class UsePointService(
     @DistributedLock(key = "'point-usage-lock:' + #dto.memberId")
     @Transactional
     fun use(dto: UsePointDto): PointUsage {
-        val wallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
-        val redeemable = earningRepository.findRedeemableByWalletId(wallet.id).sortedByConsumptionPriority()
+        val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
+        val redeemable: List<PointEarning> =
+            sortedByConsumptionPriority(earnings = earningRepository.findRedeemableByWalletId(wallet.id))
 
-        val lines = allocateUsage(redeemable, dto.amount)
-        val usedEarningIds = lines.map { it.earningId }.toSet()
-        val touchedEarnings = redeemable.filter { it.id in usedEarningIds }
+        val lines: List<UsageLine> = allocateUsage(redeemable = redeemable, amount = dto.amount)
+        val usedEarningIds: Set<String> = lines.map { it.earningId }.toSet()
+        val touchedEarnings: List<PointEarning> = redeemable.filter { it.id in usedEarningIds }
 
         wallet.decrease(PointAmount(dto.amount))
-        val usage = PointUsage.use(orderNumber = OrderNumber(dto.orderNumber), lines = lines)
+        val usage: PointUsage = PointUsage.use(orderNumber = OrderNumber(dto.orderNumber), lines = lines)
 
-        walletRepository.save(wallet, dto.memberId)
-        earningRepository.updateStatusAll(touchedEarnings, wallet.id)
-        usageRepository.save(usage, wallet.id)
+        walletRepository.save(wallet = wallet, memberId = dto.memberId)
+        earningRepository.updateStatusAll(earnings = touchedEarnings, walletId = wallet.id)
+        usageRepository.save(usage = usage, walletId = wallet.id)
 
         return usage
     }
 
-    private fun List<PointEarning>.sortedByConsumptionPriority(): List<PointEarning> =
-        sortedWith(compareBy({ it.earnType != EarnType.MANUAL }, { it.expirationDate.value }))
+    private fun sortedByConsumptionPriority(earnings: List<PointEarning>): List<PointEarning> =
+        earnings.sortedWith(compareBy({ it.earnType != EarnType.MANUAL }, { it.expirationDate.value }))
 
     private fun allocateUsage(
         redeemable: List<PointEarning>,
         amount: BigDecimal,
     ): List<UsageLine> {
-        var remaining = amount
-        val lines = mutableListOf<UsageLine>()
+        var remaining: BigDecimal = amount
+        val lines: MutableList<UsageLine> = mutableListOf()
         for (earning in redeemable) {
             if (remaining.signum() == 0) break
-            val deduction = minOf(earning.remainingAmount.value, remaining)
+            val deduction: BigDecimal = minOf(earning.remainingAmount.value, remaining)
             earning.use(deduction)
             lines.add(UsageLine(earningId = earning.id, amount = deduction))
             remaining -= deduction
@@ -79,10 +82,10 @@ class UsePointService(
     @DistributedLock(key = "'point-usage-lock:' + #dto.memberId")
     @Transactional
     fun cancelUsage(dto: CancelUsagePointDto): CancelUsagePointResult {
-        val wallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
-        val usage = usageRepository.findById(dto.usageId)
+        val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
+        val usage: PointUsage = usageRepository.findById(dto.usageId)
 
-        val cancelAmount = dto.amount ?: usage.remainingAmount
+        val cancelAmount: BigDecimal = dto.amount ?: usage.remainingAmount
         if (cancelAmount.signum() <= 0) {
             throw PointBusinessException("취소할 사용 금액이 없습니다: usageId=${usage.id}")
         }
@@ -92,24 +95,24 @@ class UsePointService(
             )
         }
 
-        val allocations = allocateCancellation(usage, cancelAmount)
-        val earningsById =
+        val allocations: List<Pair<UsageLine, BigDecimal>> = allocateCancellation(usage = usage, cancelAmount = cancelAmount)
+        val earningsById: Map<String, PointEarning> =
             earningRepository
                 .findAllByIds(allocations.map { it.first.earningId }.distinct())
                 .associateBy { it.id }
 
-        val now = LocalDateTime.now()
-        val policy = policyRepository.getCurrent()
+        val now: LocalDateTime = LocalDateTime.now()
+        val policy: PointPolicy = policyRepository.getCurrent()
 
-        val requestedLines = mutableListOf<CancellationLine>()
-        val reearnedEarningIds = mutableListOf<String?>()
-        val restoredEarnings = mutableListOf<PointEarning>()
-        val reEarnings = mutableListOf<PointEarning>()
+        val requestedLines: MutableList<CancellationLine> = mutableListOf()
+        val reearnedEarningIds: MutableList<String?> = mutableListOf()
+        val restoredEarnings: MutableList<PointEarning> = mutableListOf()
+        val reEarnings: MutableList<PointEarning> = mutableListOf()
 
         allocations.forEach { (line, restoreAmount) ->
-            val earning = earningsById.getValue(line.earningId)
+            val earning: PointEarning = earningsById.getValue(line.earningId)
             if (earning.isExpiredAt(now)) {
-                val reEarned =
+                val reEarned: PointEarning =
                     PointEarning.earn(
                         amount = PointAmount(restoreAmount),
                         earnType = earning.earnType,
@@ -119,12 +122,16 @@ class UsePointService(
                         period = policy.defaultExpirationPeriod,
                     )
                 reEarnings.add(reEarned)
-                requestedLines.add(CancellationLine(line, restoreAmount, RestorationType.RE_EARNED))
+                requestedLines.add(
+                    CancellationLine(originalLine = line, restoredAmount = restoreAmount, restorationType = RestorationType.RE_EARNED),
+                )
                 reearnedEarningIds.add(reEarned.id)
             } else {
                 earning.restoreUsage(restoreAmount)
                 restoredEarnings.add(earning)
-                requestedLines.add(CancellationLine(line, restoreAmount, RestorationType.RESTORED))
+                requestedLines.add(
+                    CancellationLine(originalLine = line, restoredAmount = restoreAmount, restorationType = RestorationType.RESTORED),
+                )
                 reearnedEarningIds.add(null)
             }
         }
@@ -133,34 +140,40 @@ class UsePointService(
         wallet.earn(PointAmount(cancelAmount))
         usage.cancel(requestedLines)
 
-        walletRepository.save(wallet, dto.memberId)
+        walletRepository.save(wallet = wallet, memberId = dto.memberId)
         if (restoredEarnings.isNotEmpty()) {
-            earningRepository.updateStatusAll(restoredEarnings, wallet.id)
+            earningRepository.updateStatusAll(earnings = restoredEarnings, walletId = wallet.id)
         }
         if (reEarnings.isNotEmpty()) {
-            earningRepository.saveAll(reEarnings, wallet.id, policy.id)
+            earningRepository.saveAll(earnings = reEarnings, walletId = wallet.id, policyId = policy.id)
         }
-        usageRepository.saveCancellation(usage, wallet.id, requestedLines, reearnedEarningIds, now)
+        usageRepository.saveCancellation(
+            usage = usage,
+            walletId = wallet.id,
+            requestedLines = requestedLines,
+            reearnedEarningIds = reearnedEarningIds,
+            canceledAt = now,
+        )
 
-        return CancelUsagePointResult(usage, requestedLines, reEarnings)
+        return CancelUsagePointResult(usage = usage, requestedLines = requestedLines, reEarnings = reEarnings)
     }
 
     private fun allocateCancellation(
         usage: PointUsage,
         cancelAmount: BigDecimal,
     ): List<Pair<UsageLine, BigDecimal>> {
-        val alreadyCancelledByLine =
+        val alreadyCancelledByLine: Map<UsageLine, BigDecimal> =
             usage.cancellationLines
                 .groupingBy { it.originalLine }
                 .fold(BigDecimal.ZERO) { acc, cancellationLine -> acc + cancellationLine.restoredAmount }
 
-        var remaining = cancelAmount
-        val allocations = mutableListOf<Pair<UsageLine, BigDecimal>>()
+        var remaining: BigDecimal = cancelAmount
+        val allocations: MutableList<Pair<UsageLine, BigDecimal>> = mutableListOf()
         for (line in usage.lines) {
             if (remaining.signum() == 0) break
-            val cancellable = line.amount - alreadyCancelledByLine.getOrDefault(line, BigDecimal.ZERO)
+            val cancellable: BigDecimal = line.amount - alreadyCancelledByLine.getOrDefault(line, BigDecimal.ZERO)
             if (cancellable.signum() <= 0) continue
-            val take = minOf(cancellable, remaining)
+            val take: BigDecimal = minOf(cancellable, remaining)
             allocations.add(line to take)
             remaining -= take
         }
@@ -173,7 +186,7 @@ class UsePointService(
      */
     @Transactional(readOnly = true)
     fun getUsages(memberId: String): List<PointUsage> {
-        val wallet =
+        val wallet: PointWallet =
             walletRepository.findByMemberId(memberId)
                 ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
         return usageRepository.findAllByWalletId(wallet.id)

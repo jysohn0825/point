@@ -16,7 +16,7 @@ class PointEarningTest :
     BehaviorSpec({
         Given("필수 값만 전달하고 나머지는 기본값에 맡기는 경우") {
             When("PointEarning.earn을 호출하면") {
-                val earning =
+                val earning: PointEarning =
                     PointEarning.earn(
                         amount = pointAmount(BigDecimal(500)),
                         earnType = EarnType.SYSTEM,
@@ -32,8 +32,8 @@ class PointEarningTest :
 
         Given("SYSTEM 적립을 생성할 때") {
             When("지급 관리자 없이 생성하면") {
-                val id = UUID.randomUUID().toString()
-                val earning = pointEarning(id = id)
+                val id: String = UUID.randomUUID().toString()
+                val earning: PointEarning = pointEarning(id = id)
 
                 Then("ACTIVE 상태로 생성되고 잔여액이 적립액과 같다") {
                     earning.id shouldBe id
@@ -55,7 +55,7 @@ class PointEarningTest :
 
         Given("MANUAL 적립을 생성할 때") {
             When("지급 관리자와 함께 생성하면") {
-                val earning = pointEarning(earnType = EarnType.MANUAL, grantedBy = grantedBy("admin-9999"))
+                val earning: PointEarning = pointEarning(earnType = EarnType.MANUAL, grantedBy = grantedBy("admin-9999"))
 
                 Then("지급 관리자 정보가 함께 저장된다") {
                     earning.earnType shouldBe EarnType.MANUAL
@@ -74,7 +74,7 @@ class PointEarningTest :
 
         Given("만료 여부를 판단할 때") {
             When("만료일 이전 시점으로 확인하면") {
-                val earning = pointEarning()
+                val earning: PointEarning = pointEarning()
 
                 Then("만료되지 않은 것으로 판단한다") {
                     earning.isExpiredAt(POINT_EARNING_DEFAULT_EARNED_AT) shouldBe false
@@ -82,7 +82,7 @@ class PointEarningTest :
             }
 
             When("만료일 이후 시점으로 확인하면") {
-                val earning = pointEarning()
+                val earning: PointEarning = pointEarning()
 
                 Then("만료된 것으로 판단한다") {
                     earning.isExpiredAt(POINT_EARNING_DEFAULT_EARNED_AT.plusDays(400)) shouldBe true
@@ -92,7 +92,7 @@ class PointEarningTest :
 
         Given("전혀 사용되지 않은 ACTIVE 적립건이 있을 때") {
             When("적립취소를 하면") {
-                val earning = pointEarning()
+                val earning: PointEarning = pointEarning()
 
                 Then("취소 가능하며 CANCELED 상태로 전환된다") {
                     earning.canCancelEarning() shouldBe true
@@ -107,7 +107,7 @@ class PointEarningTest :
 
         Given("일부가 사용된 적립건이 있을 때") {
             When("적립취소를 시도하면") {
-                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
                 earning.use(BigDecimal.ONE)
 
                 Then("취소할 수 없다") {
@@ -121,7 +121,7 @@ class PointEarningTest :
 
         Given("이미 취소된 적립건이 있을 때") {
             When("다시 적립취소를 시도하면") {
-                val earning = pointEarning()
+                val earning: PointEarning = pointEarning()
                 earning.cancelEarning()
 
                 Then("예외가 발생한다") {
@@ -132,7 +132,7 @@ class PointEarningTest :
             }
 
             When("사용취소를 시도하면") {
-                val earning = pointEarning()
+                val earning: PointEarning = pointEarning()
                 earning.cancelEarning()
 
                 Then("예외가 발생한다") {
@@ -143,7 +143,7 @@ class PointEarningTest :
             }
 
             When("만료 처리를 시도하면") {
-                val earning = pointEarning()
+                val earning: PointEarning = pointEarning()
                 earning.cancelEarning()
 
                 Then("예외가 발생한다") {
@@ -156,7 +156,7 @@ class PointEarningTest :
 
         Given("잔여액이 1,000원인 ACTIVE 적립건이 있을 때") {
             When("잔여액 이내로 사용하면") {
-                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
 
                 earning.use(BigDecimal(300))
 
@@ -167,7 +167,7 @@ class PointEarningTest :
             }
 
             When("잔여액을 모두 사용하면") {
-                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
 
                 earning.use(BigDecimal(1_000))
 
@@ -180,7 +180,7 @@ class PointEarningTest :
 
         Given("ACTIVE 상태가 아닌 적립건이 있을 때") {
             When("사용을 시도하면") {
-                val earning = pointEarning()
+                val earning: PointEarning = pointEarning()
                 earning.cancelEarning()
 
                 Then("예외가 발생한다") {
@@ -193,7 +193,7 @@ class PointEarningTest :
 
         Given("잔여액을 모두 사용한 EXHAUSTED 적립건이 있을 때") {
             When("사용취소로 일부를 복원하면") {
-                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
                 earning.use(BigDecimal(1_000))
 
                 earning.restoreUsage(BigDecimal(400))
@@ -207,7 +207,7 @@ class PointEarningTest :
 
         Given("일부만 사용된 ACTIVE 적립건이 있을 때") {
             When("사용취소로 일부를 복원하면") {
-                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
                 earning.use(BigDecimal(300))
 
                 earning.restoreUsage(BigDecimal(100))
@@ -219,7 +219,7 @@ class PointEarningTest :
             }
 
             When("최초 적립액을 초과하여 복원을 시도하면") {
-                val earning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
                 earning.use(BigDecimal(300))
 
                 Then("예외가 발생한다") {
@@ -232,7 +232,7 @@ class PointEarningTest :
 
         Given("ACTIVE 상태의 적립건이 있을 때") {
             When("만료 처리를 하면") {
-                val earning = pointEarning()
+                val earning: PointEarning = pointEarning()
 
                 earning.expire()
 
@@ -243,11 +243,11 @@ class PointEarningTest :
         }
 
         Given("동일한 식별자를 가진 두 적립건이 있을 때") {
-            val id = UUID.randomUUID().toString()
+            val id: String = UUID.randomUUID().toString()
 
             When("서로 다른 상태를 갖더라도") {
-                val earning1 = pointEarning(id = id)
-                val earning2 = pointEarning(id = id, amount = pointAmount(BigDecimal(2_000)))
+                val earning1: PointEarning = pointEarning(id = id)
+                val earning2: PointEarning = pointEarning(id = id, amount = pointAmount(BigDecimal(2_000)))
                 earning2.use(BigDecimal(500))
 
                 Then("동일한 적립건으로 취급한다") {
@@ -259,8 +259,8 @@ class PointEarningTest :
 
         Given("식별자가 다른 두 적립건이 있을 때") {
             When("나머지 값이 모두 같더라도") {
-                val earning1 = pointEarning(id = UUID.randomUUID().toString())
-                val earning2 = pointEarning(id = UUID.randomUUID().toString())
+                val earning1: PointEarning = pointEarning(id = UUID.randomUUID().toString())
+                val earning2: PointEarning = pointEarning(id = UUID.randomUUID().toString())
 
                 Then("서로 다른 적립건으로 취급한다") {
                     earning1 shouldNotBe earning2
@@ -270,7 +270,7 @@ class PointEarningTest :
 
         Given("적립건이 있을 때") {
             When("PointEarning이 아닌 다른 타입과 비교하면") {
-                val earning = pointEarning()
+                val earning: PointEarning = pointEarning()
 
                 Then("동일하지 않은 것으로 판단한다") {
                     (earning.equals("not-a-point-earning")) shouldBe false
@@ -278,7 +278,7 @@ class PointEarningTest :
             }
 
             When("자기 자신과 비교하면") {
-                val earning = pointEarning()
+                val earning: PointEarning = pointEarning()
 
                 Then("동일한 것으로 판단한다") {
                     (earning == earning) shouldBe true

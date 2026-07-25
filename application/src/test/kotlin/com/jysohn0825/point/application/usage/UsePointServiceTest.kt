@@ -54,7 +54,7 @@ private class FakePointWalletRepository(
 private class FakePointEarningRepository(
     initial: List<PointEarning> = emptyList(),
 ) : PointEarningRepository {
-    val earnings = initial.toMutableList()
+    val earnings: MutableList<PointEarning> = initial.toMutableList()
 
     override fun save(
         earning: PointEarning,
@@ -90,8 +90,7 @@ private class FakePointEarningRepository(
         sourceReferenceId: String,
     ): PointEarning? = earnings.firstOrNull { it.earnType == earnType && it.sourceReferenceId == sourceReferenceId }
 
-    override fun findRedeemableByWalletId(walletId: String): List<PointEarning> =
-        earnings.filter { it.canBeRedeemed() }
+    override fun findRedeemableByWalletId(walletId: String): List<PointEarning> = earnings.filter { canBeRedeemed(earning = it) }
 
     override fun findAllByIds(earningIds: List<String>): List<PointEarning> = earnings.filter { it.id in earningIds }
 
@@ -104,8 +103,8 @@ private class FakePointEarningRepository(
         now: LocalDateTime,
     ): List<PointEarning> = emptyList()
 
-    private fun PointEarning.canBeRedeemed(): Boolean =
-        status.isActive() && remainingAmount.value.signum() > 0 && !isExpiredAt(LocalDateTime.now())
+    private fun canBeRedeemed(earning: PointEarning): Boolean =
+        earning.status.isActive() && earning.remainingAmount.value.signum() > 0 && !earning.isExpiredAt(LocalDateTime.now())
 }
 
 private class FakePointUsageRepository(
@@ -134,7 +133,7 @@ private class FakePointUsageRepository(
         canceledAt: LocalDateTime,
     ) {
         this.usage = usage
-        lastSaveCancellationCall = SaveCancellationCall(requestedLines, reearnedEarningIds)
+        lastSaveCancellationCall = SaveCancellationCall(requestedLines = requestedLines, reearnedEarningIds = reearnedEarningIds)
     }
 
     override fun findById(usageId: String): PointUsage = requireNotNull(usage) { "usage not found: $usageId" }
@@ -174,7 +173,7 @@ private fun service(
 class UsePointServiceTest :
     BehaviorSpec({
         Given("수기지급 적립건과 일반 적립건이 함께 있을 때") {
-            val manualEarning =
+            val manualEarning: PointEarning =
                 pointEarning(
                     id = "manual-1",
                     amount = pointAmount(BigDecimal(1_000)),
@@ -182,19 +181,19 @@ class UsePointServiceTest :
                     grantedBy = grantedBy(),
                     earnedAt = LocalDateTime.now().minusDays(1),
                 )
-            val systemEarning =
+            val systemEarning: PointEarning =
                 pointEarning(
                     id = "system-1",
                     amount = pointAmount(BigDecimal(1_000)),
                     earnType = EarnType.SYSTEM,
                     earnedAt = LocalDateTime.now().minusDays(2),
                 )
-            val walletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(2_000))))
-            val earningRepository = FakePointEarningRepository(listOf(systemEarning, manualEarning))
-            val usePointService = service(walletRepository, earningRepository)
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(2_000))))
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository(listOf(systemEarning, manualEarning))
+            val usePointService: UsePointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
 
             When("일반 적립건보다 먼저 만료되지 않더라도 수기지급건을 사용하면") {
-                val usage =
+                val usage: PointUsage =
                     usePointService.use(
                         UsePointDto(memberId = "member-1", orderNumber = "ORDER-1", amount = BigDecimal(500)),
                     )
@@ -210,7 +209,7 @@ class UsePointServiceTest :
         }
 
         Given("일반 적립건 중 만료일이 다른 두 건이 있을 때") {
-            val soonExpiring =
+            val soonExpiring: PointEarning =
                 pointEarning(
                     id = "soon",
                     amount = pointAmount(BigDecimal(500)),
@@ -218,7 +217,7 @@ class UsePointServiceTest :
                     earnedAt = LocalDateTime.now(),
                     period = expirationPeriod(1),
                 )
-            val laterExpiring =
+            val laterExpiring: PointEarning =
                 pointEarning(
                     id = "later",
                     amount = pointAmount(BigDecimal(500)),
@@ -226,9 +225,9 @@ class UsePointServiceTest :
                     earnedAt = LocalDateTime.now(),
                     period = expirationPeriod(30),
                 )
-            val walletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(1_000))))
-            val earningRepository = FakePointEarningRepository(listOf(laterExpiring, soonExpiring))
-            val usePointService = service(walletRepository, earningRepository)
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(1_000))))
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository(listOf(laterExpiring, soonExpiring))
+            val usePointService: UsePointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
 
             When("포인트를 사용하면") {
                 usePointService.use(UsePointDto(memberId = "member-1", orderNumber = "ORDER-2", amount = BigDecimal(500)))
@@ -241,10 +240,10 @@ class UsePointServiceTest :
         }
 
         Given("가용 포인트보다 많은 금액을 사용하려고 하면") {
-            val earning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(500)))
-            val walletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(500))))
-            val earningRepository = FakePointEarningRepository(listOf(earning))
-            val usePointService = service(walletRepository, earningRepository)
+            val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(500)))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(500))))
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository(listOf(earning))
+            val usePointService: UsePointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
 
             When("사용을 시도하면") {
                 Then("예외가 발생하고 잔액은 변하지 않는다") {
@@ -257,16 +256,18 @@ class UsePointServiceTest :
         }
 
         Given("만료되지 않은 적립건에서 차감된 사용 건을 전액 취소하면") {
-            val earning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))
+            val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))
             earning.use(BigDecimal(300))
-            val usage = pointUsage(lines = listOf(UsageLine("e1", BigDecimal(300))))
-            val walletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(700))))
-            val earningRepository = FakePointEarningRepository(listOf(earning))
-            val usageRepository = FakePointUsageRepository(usage)
-            val usePointService = service(walletRepository, earningRepository, usageRepository)
+            val usage: PointUsage = pointUsage(lines = listOf(UsageLine(earningId = "e1", amount = BigDecimal(300))))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(700))))
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository(listOf(earning))
+            val usageRepository: FakePointUsageRepository = FakePointUsageRepository(usage)
+            val usePointService: UsePointService =
+                service(walletRepository = walletRepository, earningRepository = earningRepository, usageRepository = usageRepository)
 
             When("사용취소를 실행하면") {
-                val result = usePointService.cancelUsage(CancelUsagePointDto(memberId = "member-1", usageId = usage.id))
+                val result: CancelUsagePointResult =
+                    usePointService.cancelUsage(CancelUsagePointDto(memberId = "member-1", usageId = usage.id))
 
                 Then("원 적립건이 그대로 복원되고 신규 적립은 생기지 않는다") {
                     result.reEarnings.shouldBeEmpty()
@@ -280,7 +281,7 @@ class UsePointServiceTest :
         }
 
         Given("이미 만료된 적립건에서 차감된 사용 건을 취소하면") {
-            val expiredEarning =
+            val expiredEarning: PointEarning =
                 pointEarning(
                     id = "expired-1",
                     amount = pointAmount(BigDecimal(1_000)),
@@ -288,14 +289,16 @@ class UsePointServiceTest :
                     period = expirationPeriod(1),
                 )
             expiredEarning.use(BigDecimal(400))
-            val usage = pointUsage(lines = listOf(UsageLine("expired-1", BigDecimal(400))))
-            val walletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(600))))
-            val earningRepository = FakePointEarningRepository(listOf(expiredEarning))
-            val usageRepository = FakePointUsageRepository(usage)
-            val usePointService = service(walletRepository, earningRepository, usageRepository)
+            val usage: PointUsage = pointUsage(lines = listOf(UsageLine(earningId = "expired-1", amount = BigDecimal(400))))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(600))))
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository(listOf(expiredEarning))
+            val usageRepository: FakePointUsageRepository = FakePointUsageRepository(usage)
+            val usePointService: UsePointService =
+                service(walletRepository = walletRepository, earningRepository = earningRepository, usageRepository = usageRepository)
 
             When("사용취소를 실행하면") {
-                val result = usePointService.cancelUsage(CancelUsagePointDto(memberId = "member-1", usageId = usage.id))
+                val result: CancelUsagePointResult =
+                    usePointService.cancelUsage(CancelUsagePointDto(memberId = "member-1", usageId = usage.id))
 
                 Then("만료된 적립건은 복원되지 않고 신규 적립으로 대체된다") {
                     result.reEarnings.size shouldBe 1
@@ -308,16 +311,17 @@ class UsePointServiceTest :
         }
 
         Given("사용 건의 일부만 취소하면") {
-            val earning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))
+            val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))
             earning.use(BigDecimal(500))
-            val usage = pointUsage(lines = listOf(UsageLine("e1", BigDecimal(500))))
-            val walletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(500))))
-            val earningRepository = FakePointEarningRepository(listOf(earning))
-            val usageRepository = FakePointUsageRepository(usage)
-            val usePointService = service(walletRepository, earningRepository, usageRepository)
+            val usage: PointUsage = pointUsage(lines = listOf(UsageLine(earningId = "e1", amount = BigDecimal(500))))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(500))))
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository(listOf(earning))
+            val usageRepository: FakePointUsageRepository = FakePointUsageRepository(usage)
+            val usePointService: UsePointService =
+                service(walletRepository = walletRepository, earningRepository = earningRepository, usageRepository = usageRepository)
 
             When("일부 금액만 취소하면") {
-                val result =
+                val result: CancelUsagePointResult =
                     usePointService.cancelUsage(
                         CancelUsagePointDto(memberId = "member-1", usageId = usage.id, amount = BigDecimal(200)),
                     )
@@ -331,14 +335,17 @@ class UsePointServiceTest :
         }
 
         Given("회원이 주문에서 포인트를 사용한 이력이 있을 때") {
-            val earning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))
-            val walletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(1_000))))
-            val earningRepository = FakePointEarningRepository(listOf(earning))
-            val usePointService = service(walletRepository, earningRepository)
-            val usage = usePointService.use(UsePointDto(memberId = "member-1", orderNumber = "ORDER-9", amount = BigDecimal(300)))
+            val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(1_000))))
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository(listOf(earning))
+            val usePointService: UsePointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
+            val usage: PointUsage =
+                usePointService.use(
+                    UsePointDto(memberId = "member-1", orderNumber = "ORDER-9", amount = BigDecimal(300)),
+                )
 
             When("사용건 목록을 조회하면") {
-                val usages = usePointService.getUsages("member-1")
+                val usages: List<PointUsage> = usePointService.getUsages("member-1")
 
                 Then("사용건이 반환된다") {
                     usages.size shouldBe 1
@@ -347,7 +354,7 @@ class UsePointServiceTest :
             }
 
             When("사용건 상세를 조회하면") {
-                val found = usePointService.getUsage(usage.id)
+                val found: PointUsage = usePointService.getUsage(usage.id)
 
                 Then("동일한 사용건이 반환된다") {
                     found.id shouldBe usage.id

@@ -7,10 +7,12 @@ import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
 import org.springframework.core.DefaultParameterNameDiscoverer
 import org.springframework.core.Ordered
+import org.springframework.core.ParameterNameDiscoverer
 import org.springframework.core.annotation.Order
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
 import org.springframework.stereotype.Component
+import java.lang.reflect.Method
 import java.time.Duration
 
 /**
@@ -23,15 +25,15 @@ import java.time.Duration
 class DistributedLockAspect(
     private val lockExecutor: DistributedLockExecutor,
 ) {
-    private val parser = SpelExpressionParser()
-    private val parameterNameDiscoverer = DefaultParameterNameDiscoverer()
+    private val parser: SpelExpressionParser = SpelExpressionParser()
+    private val parameterNameDiscoverer: ParameterNameDiscoverer = DefaultParameterNameDiscoverer()
 
     @Around("@annotation(distributedLock)")
     fun around(
         joinPoint: ProceedingJoinPoint,
         distributedLock: DistributedLock,
     ): Any? {
-        val key = resolveKey(joinPoint, distributedLock.key)
+        val key: String = resolveKey(joinPoint = joinPoint, keyExpression = distributedLock.key)
 
         return lockExecutor.executeWithLock(
             key = key,
@@ -46,10 +48,10 @@ class DistributedLockAspect(
         joinPoint: ProceedingJoinPoint,
         keyExpression: String,
     ): String {
-        val method = (joinPoint.signature as MethodSignature).method
-        val parameterNames = parameterNameDiscoverer.getParameterNames(method) ?: emptyArray()
+        val method: Method = (joinPoint.signature as MethodSignature).method
+        val parameterNames: Array<String> = parameterNameDiscoverer.getParameterNames(method) ?: emptyArray()
 
-        val context = StandardEvaluationContext()
+        val context: StandardEvaluationContext = StandardEvaluationContext()
         parameterNames.forEachIndexed { index, name ->
             context.setVariable(name, joinPoint.args[index])
         }

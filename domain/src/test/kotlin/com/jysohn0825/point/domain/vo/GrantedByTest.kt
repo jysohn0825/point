@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 class GrantedByTest :
     FunSpec({
         test("비어있지 않은 관리자 식별자면 정상적으로 생성된다") {
-            val grantedBy = GrantedBy("admin-0001")
+            val grantedBy: GrantedBy = GrantedBy("admin-0001")
 
             grantedBy.adminId shouldBe "admin-0001"
         }

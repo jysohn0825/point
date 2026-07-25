@@ -23,5 +23,9 @@ class PointWalletController(
     @GetMapping
     fun getWallet(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
-    ): PointWalletResponse = walletQueryService.getWallet(memberId).toResponse(memberId)
+    ): PointWalletResponse =
+        toResponse(
+            pointWallet = walletQueryService.getWallet(memberId),
+            memberId = memberId,
+        )
 }

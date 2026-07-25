@@ -11,13 +11,13 @@ class ExpirationPeriodTest :
         }
 
         test("최소값인 1일을 허용한다") {
-            val period = ExpirationPeriod(ExpirationPeriod.MIN_DAYS)
+            val period: ExpirationPeriod = ExpirationPeriod(ExpirationPeriod.MIN_DAYS)
 
             period.days shouldBe 1L
         }
 
         test("5년 미만의 최대값을 허용한다") {
-            val period = ExpirationPeriod(ExpirationPeriod.MAX_DAYS)
+            val period: ExpirationPeriod = ExpirationPeriod(ExpirationPeriod.MAX_DAYS)
 
             period.days shouldBe ExpirationPeriod.MAX_DAYS
         }

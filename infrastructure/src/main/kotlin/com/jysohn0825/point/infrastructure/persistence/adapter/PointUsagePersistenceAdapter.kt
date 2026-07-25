@@ -32,8 +32,8 @@ class PointUsagePersistenceAdapter(
         usage: PointUsage,
         walletId: String,
     ) {
-        usageJpaRepository.save(usage.toEntity(walletId))
-        lineJpaRepository.saveAll(usage.lines.map { it.toNewEntity(usageId = usage.id) })
+        usageJpaRepository.save(toEntity(usage = usage, walletId = walletId))
+        lineJpaRepository.saveAll(usage.lines.map { toNewEntity(usageLine = it, usageId = usage.id) })
     }
 
     override fun saveCancellation(
@@ -47,16 +47,17 @@ class PointUsagePersistenceAdapter(
             "requestedLines와 reearnedEarningIds는 같은 길이여야 합니다."
         }
         requestedLines.forEachIndexed { index, line ->
-            val requiresReearnedId = line.restorationType == RestorationType.RE_EARNED
+            val requiresReearnedId: Boolean = line.restorationType == RestorationType.RE_EARNED
             require((reearnedEarningIds[index] != null) == requiresReearnedId) {
                 "reearnedEarningIds[$index]는 RE_EARNED일 때만 값이 있어야 합니다: type=${line.restorationType}"
             }
         }
 
-        val existingLinesByEarningId = lineJpaRepository.findAllByUsageId(usage.id).associateBy { it.earningId }
+        val existingLinesByEarningId: Map<String, PointUsageLineEntity> =
+            lineJpaRepository.findAllByUsageId(usage.id).associateBy { it.earningId }
 
         // 이번 cancel() 호출 하나 = point_usage_cancellation 헤더 1건
-        val cancellationId = UUID.randomUUID().toString()
+        val cancellationId: String = UUID.randomUUID().toString()
         cancellationJpaRepository.save(
             PointUsageCancellationEntity(
                 id = cancellationId,
@@ -66,9 +67,9 @@ class PointUsagePersistenceAdapter(
             ),
         )
 
-        val newCancellationLineEntities =
+        val newCancellationLineEntities: List<PointUsageCancellationLineEntity> =
             requestedLines.mapIndexed { index, line ->
-                val usageLineEntity =
+                val usageLineEntity: PointUsageLineEntity =
                     existingLinesByEarningId[line.originalLine.earningId]
                         ?: throw PointDomainException(
                             "취소 대상 사용 라인을 찾을 수 없습니다: usageId=${usage.id}, earningId=${line.originalLine.earningId}",
@@ -85,11 +86,11 @@ class PointUsagePersistenceAdapter(
         cancellationLineJpaRepository.saveAll(newCancellationLineEntities)
 
         // usage_line.canceled_amount는 해당 라인에 대한 전체 취소 누계이므로, 도메인의 최종 상태로 다시 계산해 반영한다.
-        val cancelledAmountByEarningId =
+        val cancelledAmountByEarningId: Map<String, BigDecimal> =
             usage.cancellationLines
                 .groupBy { it.originalLine.earningId }
                 .mapValues { (_, lines) -> lines.sumOf { it.restoredAmount } }
-        val updatedLineEntities =
+        val updatedLineEntities: List<PointUsageLineEntity> =
             existingLinesByEarningId.values.map { existing ->
                 PointUsageLineEntity(
                     id = existing.id,
@@ -101,20 +102,21 @@ class PointUsagePersistenceAdapter(
             }
         lineJpaRepository.saveAll(updatedLineEntities)
 
-        usageJpaRepository.save(usage.toEntity(walletId))
+        usageJpaRepository.save(toEntity(usage = usage, walletId = walletId))
     }
 
     override fun findById(usageId: String): PointUsage {
-        val entity =
+        val entity: PointUsageEntity =
             usageJpaRepository
                 .findById(usageId)
                 .orElseThrow { PointDomainException("사용건을 찾을 수 없습니다: usageId=$usageId") }
-        return entity.toDomain()
+        return toDomain(entity = entity)
     }
 
     override fun findLinesByEarningId(earningId: String): List<EarningUsageTrace> {
-        val lineEntities = lineJpaRepository.findAllByEarningId(earningId)
-        val usagesById = usageJpaRepository.findAllById(lineEntities.map { it.usageId }).associateBy { it.id }
+        val lineEntities: List<PointUsageLineEntity> = lineJpaRepository.findAllByEarningId(earningId)
+        val usagesById: Map<String, PointUsageEntity> =
+            usageJpaRepository.findAllById(lineEntities.map { it.usageId }).associateBy { it.id }
         return lineEntities.map { line ->
             EarningUsageTrace(
                 orderNumber = OrderNumber(usagesById.getValue(line.usageId).orderNumber),
@@ -124,14 +126,14 @@ class PointUsagePersistenceAdapter(
     }
 
     override fun findAllByWalletId(walletId: String): List<PointUsage> =
-        usageJpaRepository.findAllByWalletIdOrderByUsedAtDesc(walletId).map { it.toDomain() }
+        usageJpaRepository.findAllByWalletIdOrderByUsedAtDesc(walletId).map { toDomain(entity = it) }
 
     /** usage 하나를 라인·취소이력까지 포함해 완전히 조립한다 (findById/findAllByWalletId 공용). */
-    private fun PointUsageEntity.toDomain(): PointUsage {
-        val lineEntities = lineJpaRepository.findAllByUsageId(id)
-        val lineEntityById = lineEntities.associateBy { it.id }
-        val cancellationIds = cancellationJpaRepository.findAllByUsageId(id).map { it.id }
-        val cancellationLineEntities =
+    private fun toDomain(entity: PointUsageEntity): PointUsage {
+        val lineEntities: List<PointUsageLineEntity> = lineJpaRepository.findAllByUsageId(entity.id)
+        val lineEntityById: Map<String, PointUsageLineEntity> = lineEntities.associateBy { it.id }
+        val cancellationIds: List<String> = cancellationJpaRepository.findAllByUsageId(entity.id).map { it.id }
+        val cancellationLineEntities: List<PointUsageCancellationLineEntity> =
             if (cancellationIds.isEmpty()) {
                 emptyList()
             } else {
@@ -139,15 +141,15 @@ class PointUsagePersistenceAdapter(
             }
 
         return PointUsage.reconstitute(
-            id = id,
-            orderNumber = OrderNumber(orderNumber),
-            lines = lineEntities.map { it.toUsageLine() },
-            usedAt = usedAt,
+            id = entity.id,
+            orderNumber = OrderNumber(entity.orderNumber),
+            lines = lineEntities.map { toUsageLine(entity = it) },
+            usedAt = entity.usedAt,
             cancellationLines =
                 cancellationLineEntities.map { cl ->
-                    val lineEntity = lineEntityById.getValue(cl.usageLineId)
+                    val lineEntity: PointUsageLineEntity = lineEntityById.getValue(cl.usageLineId)
                     CancellationLine(
-                        originalLine = lineEntity.toUsageLine(),
+                        originalLine = toUsageLine(entity = lineEntity),
                         restoredAmount = BigDecimal.valueOf(cl.restoredAmount),
                         restorationType = RestorationType.valueOf(cl.restoreType),
                     )
@@ -156,23 +158,30 @@ class PointUsagePersistenceAdapter(
     }
 }
 
-private fun PointUsage.toEntity(walletId: String): PointUsageEntity =
+private fun toEntity(
+    usage: PointUsage,
+    walletId: String,
+): PointUsageEntity =
     PointUsageEntity(
-        id = id,
+        id = usage.id,
         walletId = walletId,
-        orderNumber = orderNumber.value,
-        totalAmount = totalAmount.longValueExact(),
-        canceledAmount = cancelledAmount.longValueExact(),
-        status = status.name,
-        usedAt = usedAt,
+        orderNumber = usage.orderNumber.value,
+        totalAmount = usage.totalAmount.longValueExact(),
+        canceledAmount = usage.cancelledAmount.longValueExact(),
+        status = usage.status.name,
+        usedAt = usage.usedAt,
     )
 
-private fun UsageLine.toNewEntity(usageId: String): PointUsageLineEntity =
+private fun toNewEntity(
+    usageLine: UsageLine,
+    usageId: String,
+): PointUsageLineEntity =
     PointUsageLineEntity(
         id = UUID.randomUUID().toString(),
         usageId = usageId,
-        earningId = earningId,
-        amount = amount.longValueExact(),
+        earningId = usageLine.earningId,
+        amount = usageLine.amount.longValueExact(),
     )
 
-private fun PointUsageLineEntity.toUsageLine(): UsageLine = UsageLine(earningId = earningId, amount = BigDecimal.valueOf(amount))
+private fun toUsageLine(entity: PointUsageLineEntity): UsageLine =
+    UsageLine(earningId = entity.earningId, amount = BigDecimal.valueOf(entity.amount))

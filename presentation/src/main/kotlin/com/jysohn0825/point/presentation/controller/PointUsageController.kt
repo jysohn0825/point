@@ -35,14 +35,17 @@ class PointUsageController(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Valid @RequestBody request: UsePointRequest,
     ): PointUsageResponse =
-        usePointService
-            .use(
-                UsePointDto(
-                    memberId = memberId,
-                    orderNumber = request.orderNumber,
-                    amount = request.amount,
+        toResponse(
+            pointUsage =
+                usePointService.use(
+                    UsePointDto(
+                        memberId = memberId,
+                        orderNumber = request.orderNumber,
+                        amount = request.amount,
+                    ),
                 ),
-            ).toResponse(memberId)
+            memberId = memberId,
+        )
 
     @Operation(
         summary = "포인트 사용취소",
@@ -55,21 +58,24 @@ class PointUsageController(
         @Parameter(description = "취소할 사용 건 식별자") @PathVariable usageId: String,
         @Valid @RequestBody request: CancelUsagePointRequest,
     ): PointUsageCancellationResponse =
-        usePointService
-            .cancelUsage(
-                CancelUsagePointDto(
-                    memberId = memberId,
-                    usageId = usageId,
-                    amount = request.amount,
+        toResponse(
+            cancelUsagePointResult =
+                usePointService.cancelUsage(
+                    CancelUsagePointDto(
+                        memberId = memberId,
+                        usageId = usageId,
+                        amount = request.amount,
+                    ),
                 ),
-            ).toResponse(memberId)
+            memberId = memberId,
+        )
 
     @Operation(summary = "포인트 사용건 목록 조회", description = "회원의 전체 사용건을 최신순으로 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping
     fun getUsages(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
-    ): List<PointUsageResponse> = usePointService.getUsages(memberId).map { it.toResponse(memberId) }
+    ): List<PointUsageResponse> = usePointService.getUsages(memberId).map { toResponse(pointUsage = it, memberId = memberId) }
 
     @Operation(summary = "포인트 사용건 상세 조회", description = "사용 건 하나의 상세 정보를 취소 이력과 함께 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
@@ -77,5 +83,9 @@ class PointUsageController(
     fun getUsage(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Parameter(description = "조회할 사용 건 식별자") @PathVariable usageId: String,
-    ): PointUsageDetailResponse = usePointService.getUsage(usageId).toDetailResponse(memberId)
+    ): PointUsageDetailResponse =
+        toDetailResponse(
+            pointUsage = usePointService.getUsage(usageId),
+            memberId = memberId,
+        )
 }

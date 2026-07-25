@@ -24,7 +24,7 @@ value class RemainingAmount(
         upTo: PointAmount,
     ): RemainingAmount {
         require(amount > BigDecimal.ZERO) { "복원액은 0보다 커야 합니다: $amount" }
-        val increased = value + amount
+        val increased: BigDecimal = value + amount
         require(increased <= upTo.value) { "복원 후 잔여 포인트($increased)는 최초 적립액(${upTo.value})을 초과할 수 없습니다." }
         return RemainingAmount(increased)
     }

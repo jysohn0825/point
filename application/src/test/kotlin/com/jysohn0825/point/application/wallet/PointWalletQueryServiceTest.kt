@@ -30,11 +30,11 @@ private class FakePointWalletRepository(
 class PointWalletQueryServiceTest :
     BehaviorSpec({
         Given("회원의 지갑이 존재할 때") {
-            val walletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(1_400))))
-            val walletQueryService = PointWalletQueryService(walletRepository)
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(pointWallet(balance = Balance(BigDecimal(1_400))))
+            val walletQueryService: PointWalletQueryService = PointWalletQueryService(walletRepository)
 
             When("지갑을 조회하면") {
-                val wallet = walletQueryService.getWallet("member-1")
+                val wallet: PointWallet = walletQueryService.getWallet("member-1")
 
                 Then("잔액이 그대로 반환된다") {
                     wallet.balance.amount shouldBe BigDecimal(1_400)
@@ -43,8 +43,8 @@ class PointWalletQueryServiceTest :
         }
 
         Given("회원의 지갑이 존재하지 않을 때") {
-            val walletRepository = FakePointWalletRepository(null)
-            val walletQueryService = PointWalletQueryService(walletRepository)
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository(null)
+            val walletQueryService: PointWalletQueryService = PointWalletQueryService(walletRepository)
 
             When("지갑을 조회하면") {
                 Then("예외가 발생한다") {

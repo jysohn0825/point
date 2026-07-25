@@ -17,6 +17,6 @@ value class ExpirationPeriod(
         const val MAX_DAYS = 365L * 5 - 1
         const val DEFAULT_DAYS = 365L
 
-        val DEFAULT = ExpirationPeriod(DEFAULT_DAYS)
+        val DEFAULT: ExpirationPeriod = ExpirationPeriod(DEFAULT_DAYS)
     }
 }

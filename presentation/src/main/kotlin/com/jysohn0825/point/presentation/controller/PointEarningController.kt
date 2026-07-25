@@ -35,15 +35,18 @@ class PointEarningController(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Valid @RequestBody request: EarnPointRequest,
     ): PointEarningResponse =
-        earnPointService
-            .earn(
-                EarnPointDto(
-                    memberId = memberId,
-                    amount = request.amount,
-                    earnType = EarnType.SYSTEM,
-                    sourceReferenceId = request.sourceReferenceId,
+        toResponse(
+            pointEarning =
+                earnPointService.earn(
+                    EarnPointDto(
+                        memberId = memberId,
+                        amount = request.amount,
+                        earnType = EarnType.SYSTEM,
+                        sourceReferenceId = request.sourceReferenceId,
+                    ),
                 ),
-            ).toResponse(memberId)
+            memberId = memberId,
+        )
 
     @Operation(summary = "포인트 적립 취소", description = "적립한 금액 중 사용되지 않은 적립 건을 전액 취소한다.")
     @ApiResponse(responseCode = "200", description = "적립 취소 성공")
@@ -51,14 +54,18 @@ class PointEarningController(
     fun cancel(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Parameter(description = "취소할 적립 건 식별자") @PathVariable earningId: String,
-    ): PointEarningResponse = earnPointService.cancelEarning(memberId, earningId).toResponse(memberId)
+    ): PointEarningResponse =
+        toResponse(
+            pointEarning = earnPointService.cancelEarning(memberId = memberId, earningId = earningId),
+            memberId = memberId,
+        )
 
     @Operation(summary = "포인트 적립건 목록 조회", description = "회원의 전체 적립건을 상태 무관 최신순으로 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping
     fun getEarnings(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
-    ): List<PointEarningResponse> = earnPointService.getEarnings(memberId).map { it.toResponse(memberId) }
+    ): List<PointEarningResponse> = earnPointService.getEarnings(memberId).map { toResponse(pointEarning = it, memberId = memberId) }
 
     @Operation(summary = "포인트 적립건 상세 조회", description = "적립 건 하나의 상세 정보를 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
@@ -66,7 +73,11 @@ class PointEarningController(
     fun getEarning(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Parameter(description = "조회할 적립 건 식별자") @PathVariable earningId: String,
-    ): PointEarningResponse = earnPointService.getEarning(earningId).toResponse(memberId)
+    ): PointEarningResponse =
+        toResponse(
+            pointEarning = earnPointService.getEarning(earningId),
+            memberId = memberId,
+        )
 
     @Operation(
         summary = "포인트 적립건 사용 추적 조회",
@@ -77,5 +88,5 @@ class PointEarningController(
     fun getUsageTraces(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Parameter(description = "조회할 적립 건 식별자") @PathVariable earningId: String,
-    ): List<EarningUsageTraceResponse> = earnPointService.getUsageTraces(earningId).map { it.toResponse() }
+    ): List<EarningUsageTraceResponse> = earnPointService.getUsageTraces(earningId).map { toResponse(earningUsageTrace = it) }
 }

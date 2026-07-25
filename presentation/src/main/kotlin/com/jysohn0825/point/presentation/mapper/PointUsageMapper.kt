@@ -8,48 +8,57 @@ import com.jysohn0825.point.presentation.dto.response.PointUsageDetailResponse
 import com.jysohn0825.point.presentation.dto.response.PointUsageResponse
 import com.jysohn0825.point.presentation.dto.response.UsageLineResponse
 
-fun PointUsage.toResponse(memberId: String): PointUsageResponse =
+fun toResponse(
+    pointUsage: PointUsage,
+    memberId: String,
+): PointUsageResponse =
     PointUsageResponse(
-        usageId = id,
+        usageId = pointUsage.id,
         memberId = memberId,
-        orderNumber = orderNumber.value,
-        totalAmount = totalAmount,
-        lines = lines.map { UsageLineResponse(earningId = it.earningId, amount = it.amount) },
-        status = status,
+        orderNumber = pointUsage.orderNumber.value,
+        totalAmount = pointUsage.totalAmount,
+        lines = pointUsage.lines.map { UsageLineResponse(earningId = it.earningId, amount = it.amount) },
+        status = pointUsage.status,
     )
 
-fun PointUsage.toDetailResponse(memberId: String): PointUsageDetailResponse =
+fun toDetailResponse(
+    pointUsage: PointUsage,
+    memberId: String,
+): PointUsageDetailResponse =
     PointUsageDetailResponse(
-        usageId = id,
+        usageId = pointUsage.id,
         memberId = memberId,
-        orderNumber = orderNumber.value,
-        totalAmount = totalAmount,
-        cancelledAmount = cancelledAmount,
-        remainingAmount = remainingAmount,
-        lines = lines.map { UsageLineResponse(earningId = it.earningId, amount = it.amount) },
+        orderNumber = pointUsage.orderNumber.value,
+        totalAmount = pointUsage.totalAmount,
+        cancelledAmount = pointUsage.cancelledAmount,
+        remainingAmount = pointUsage.remainingAmount,
+        lines = pointUsage.lines.map { UsageLineResponse(earningId = it.earningId, amount = it.amount) },
         cancellationLines =
-            cancellationLines.map {
+            pointUsage.cancellationLines.map {
                 CancellationLineResponse(
                     earningId = it.originalLine.earningId,
                     restoredAmount = it.restoredAmount,
                     restorationType = it.restorationType,
                 )
             },
-        status = status,
+        status = pointUsage.status,
     )
 
-fun CancelUsagePointResult.toResponse(memberId: String): PointUsageCancellationResponse =
+fun toResponse(
+    cancelUsagePointResult: CancelUsagePointResult,
+    memberId: String,
+): PointUsageCancellationResponse =
     PointUsageCancellationResponse(
-        usageId = usage.id,
-        cancelledAmount = requestedLines.sumOf { it.restoredAmount },
-        remainingUsageAmount = usage.remainingAmount,
+        usageId = cancelUsagePointResult.usage.id,
+        cancelledAmount = cancelUsagePointResult.requestedLines.sumOf { it.restoredAmount },
+        remainingUsageAmount = cancelUsagePointResult.usage.remainingAmount,
         cancellationLines =
-            requestedLines.map {
+            cancelUsagePointResult.requestedLines.map {
                 CancellationLineResponse(
                     earningId = it.originalLine.earningId,
                     restoredAmount = it.restoredAmount,
                     restorationType = it.restorationType,
                 )
             },
-        reEarnings = reEarnings.map { it.toResponse(memberId) },
+        reEarnings = cancelUsagePointResult.reEarnings.map { toResponse(pointEarning = it, memberId = memberId) },
     )

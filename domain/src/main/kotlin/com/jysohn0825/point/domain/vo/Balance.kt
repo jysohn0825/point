@@ -15,6 +15,6 @@ value class Balance(
     operator fun minus(pointAmount: PointAmount): Balance = Balance(amount - pointAmount.value)
 
     companion object {
-        val ZERO = Balance(BigDecimal.ZERO)
+        val ZERO: Balance = Balance(BigDecimal.ZERO)
     }
 }

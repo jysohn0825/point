@@ -2,6 +2,7 @@ package com.jysohn0825.point.infrastructure.lock
 
 import com.jysohn0825.point.domain.lock.DistributedLockExecutor
 import com.jysohn0825.point.domain.lock.LockAcquisitionException
+import org.redisson.api.RLock
 import org.redisson.api.RedissonClient
 import org.springframework.stereotype.Component
 import java.time.Duration
@@ -17,8 +18,8 @@ class RedissonDistributedLockExecutor(
         leaseTime: Duration,
         action: () -> T,
     ): T {
-        val lock = redissonClient.getLock(key)
-        val acquired =
+        val lock: RLock = redissonClient.getLock(key)
+        val acquired: Boolean =
             try {
                 lock.tryLock(waitTime.toMillis(), leaseTime.toMillis(), TimeUnit.MILLISECONDS)
             } catch (e: InterruptedException) {

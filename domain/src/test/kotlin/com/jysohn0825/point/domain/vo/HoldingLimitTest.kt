@@ -8,7 +8,7 @@ import java.math.BigDecimal
 class HoldingLimitTest :
     FunSpec({
         test("value가 0보다 크면 HoldingLimit을 생성한다") {
-            val limit = holdingLimit(value = BigDecimal(1_000))
+            val limit: HoldingLimit = holdingLimit(value = BigDecimal(1_000))
 
             limit.value shouldBe BigDecimal(1_000)
         }
@@ -18,14 +18,20 @@ class HoldingLimitTest :
         }
 
         test("잔액과 적립금액의 합이 한도 이하이면 수용 가능하다") {
-            val limit = holdingLimit(value = BigDecimal(100))
+            val limit: HoldingLimit = holdingLimit(value = BigDecimal(100))
 
-            limit.canAccept(balance(amount = BigDecimal(60)), pointAmount(value = BigDecimal(40))) shouldBe true
+            limit.canAccept(
+                balance = balance(amount = BigDecimal(60)),
+                pointAmount = pointAmount(value = BigDecimal(40)),
+            ) shouldBe true
         }
 
         test("잔액과 적립금액의 합이 한도를 초과하면 수용할 수 없다") {
-            val limit = holdingLimit(value = BigDecimal(100))
+            val limit: HoldingLimit = holdingLimit(value = BigDecimal(100))
 
-            limit.canAccept(balance(amount = BigDecimal(60)), pointAmount(value = BigDecimal(41))) shouldBe false
+            limit.canAccept(
+                balance = balance(amount = BigDecimal(60)),
+                pointAmount = pointAmount(value = BigDecimal(41)),
+            ) shouldBe false
         }
     })

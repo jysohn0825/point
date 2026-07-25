@@ -39,7 +39,7 @@ class PointUsage private constructor(
         require(requestedLines.isNotEmpty()) { "취소 라인은 최소 1개 이상이어야 합니다." }
         require(status != UsageStatus.FULLY_CANCELED) { "이미 전액 취소된 사용 건은 취소할 수 없습니다." }
 
-        val cancelledByLine =
+        val cancelledByLine: MutableMap<UsageLine, BigDecimal> =
             _cancellationLines
                 .groupingBy { it.originalLine }
                 .fold(BigDecimal.ZERO) { acc, cancellationLine -> acc + cancellationLine.restoredAmount }
@@ -49,8 +49,8 @@ class PointUsage private constructor(
             require(lines.contains(requested.originalLine)) {
                 "취소 대상 라인이 이 사용 건에 속하지 않습니다: ${requested.originalLine}"
             }
-            val alreadyCancelled = cancelledByLine.getOrDefault(requested.originalLine, BigDecimal.ZERO)
-            val totalCancelled = alreadyCancelled + requested.restoredAmount
+            val alreadyCancelled: BigDecimal = cancelledByLine.getOrDefault(requested.originalLine, BigDecimal.ZERO)
+            val totalCancelled: BigDecimal = alreadyCancelled + requested.restoredAmount
             require(totalCancelled <= requested.originalLine.amount) {
                 "취소 요청 금액이 해당 라인의 사용 금액을 초과할 수 없습니다: line=${requested.originalLine}, requested=$totalCancelled"
             }
@@ -75,7 +75,12 @@ class PointUsage private constructor(
             usedAt: LocalDateTime = LocalDateTime.now(),
         ): PointUsage {
             require(lines.isNotEmpty()) { "사용 라인은 최소 1개 이상이어야 합니다." }
-            return PointUsage(UUID.randomUUID().toString(), orderNumber, lines.toList(), usedAt)
+            return PointUsage(
+                id = UUID.randomUUID().toString(),
+                orderNumber = orderNumber,
+                lines = lines.toList(),
+                usedAt = usedAt,
+            )
         }
 
         /**
@@ -89,7 +94,13 @@ class PointUsage private constructor(
             usedAt: LocalDateTime,
             cancellationLines: List<CancellationLine>,
         ): PointUsage {
-            val usage = PointUsage(id, orderNumber, lines.toList(), usedAt)
+            val usage: PointUsage =
+                PointUsage(
+                    id = id,
+                    orderNumber = orderNumber,
+                    lines = lines.toList(),
+                    usedAt = usedAt,
+                )
             usage._cancellationLines.addAll(cancellationLines)
             return usage
         }

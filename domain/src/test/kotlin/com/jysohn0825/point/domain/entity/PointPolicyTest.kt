@@ -1,5 +1,8 @@
 package com.jysohn0825.point.domain.entity
 
+import com.jysohn0825.point.domain.vo.ExpirationPeriod
+import com.jysohn0825.point.domain.vo.MaxEarnPerTransaction
+import com.jysohn0825.point.domain.vo.MaxHoldingAmount
 import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.maxHoldingAmount
@@ -12,7 +15,7 @@ class PointPolicyTest :
 
         given("포인트 정책 픽스처가 주어졌을 때") {
             `when`("픽스처 기본값으로 생성하면") {
-                val sut = pointPolicy()
+                val sut: PointPolicy = pointPolicy()
 
                 then("모든 필드가 기본값으로 설정된다") {
                     sut.id shouldBe "point-policy-1"
@@ -25,8 +28,8 @@ class PointPolicyTest :
 
         given("정책이 이미 생성되어 있을 때") {
             `when`("일부 필드만 수정하면") {
-                val sut = pointPolicy()
-                val newMaxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(80_000))
+                val sut: PointPolicy = pointPolicy()
+                val newMaxEarnPerTransaction: MaxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(80_000))
 
                 sut.update(maxEarnPerTransaction = newMaxEarnPerTransaction)
 
@@ -38,10 +41,10 @@ class PointPolicyTest :
             }
 
             `when`("모든 필드를 수정하면") {
-                val sut = pointPolicy()
-                val newMaxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(70_000))
-                val newMaxHoldingAmount = maxHoldingAmount(value = BigDecimal(2_000_000))
-                val newDefaultExpirationPeriod = expirationPeriod(days = 730L)
+                val sut: PointPolicy = pointPolicy()
+                val newMaxEarnPerTransaction: MaxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(70_000))
+                val newMaxHoldingAmount: MaxHoldingAmount = maxHoldingAmount(value = BigDecimal(2_000_000))
+                val newDefaultExpirationPeriod: ExpirationPeriod = expirationPeriod(days = 730L)
 
                 sut.update(
                     maxEarnPerTransaction = newMaxEarnPerTransaction,
@@ -59,7 +62,7 @@ class PointPolicyTest :
 
         given("두 정책의 동등성을 비교할 때") {
             `when`("자기 자신과 비교하면") {
-                val sut = pointPolicy(id = "policy-1")
+                val sut: PointPolicy = pointPolicy(id = "policy-1")
 
                 then("같다고 판단한다") {
                     (sut == sut) shouldBe true
@@ -68,8 +71,10 @@ class PointPolicyTest :
             }
 
             `when`("id는 같고 다른 필드 값이 다르면") {
-                val sut = pointPolicy(id = "policy-1", maxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(10_000)))
-                val other = pointPolicy(id = "policy-1", maxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(90_000)))
+                val sut: PointPolicy =
+                    pointPolicy(id = "policy-1", maxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(10_000)))
+                val other: PointPolicy =
+                    pointPolicy(id = "policy-1", maxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(90_000)))
 
                 then("같은 엔티티로 판단하고 해시코드도 같다") {
                     sut shouldBe other
@@ -78,8 +83,8 @@ class PointPolicyTest :
             }
 
             `when`("id가 다르면") {
-                val sut = pointPolicy(id = "policy-1")
-                val other = pointPolicy(id = "policy-2")
+                val sut: PointPolicy = pointPolicy(id = "policy-1")
+                val other: PointPolicy = pointPolicy(id = "policy-2")
 
                 then("모든 필드 값이 같아도 다른 엔티티로 판단한다") {
                     (sut == other) shouldBe false
@@ -87,7 +92,7 @@ class PointPolicyTest :
             }
 
             `when`("PointPolicy가 아닌 다른 타입과 비교하면") {
-                val sut = pointPolicy(id = "policy-1")
+                val sut: PointPolicy = pointPolicy(id = "policy-1")
 
                 then("같지 않다고 판단한다") {
                     sut.equals("policy-1") shouldBe false

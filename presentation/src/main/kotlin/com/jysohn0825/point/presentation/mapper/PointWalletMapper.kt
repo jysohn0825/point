@@ -3,10 +3,13 @@ package com.jysohn0825.point.presentation.mapper
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.presentation.dto.response.PointWalletResponse
 
-fun PointWallet.toResponse(memberId: String): PointWalletResponse =
+fun toResponse(
+    pointWallet: PointWallet,
+    memberId: String,
+): PointWalletResponse =
     PointWalletResponse(
-        walletId = id,
+        walletId = pointWallet.id,
         memberId = memberId,
-        balance = balance.amount,
-        holdingLimit = holdingLimit.value,
+        balance = pointWallet.balance.amount,
+        holdingLimit = pointWallet.holdingLimit.value,
     )
