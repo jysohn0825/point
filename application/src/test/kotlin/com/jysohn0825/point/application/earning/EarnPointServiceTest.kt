@@ -1,6 +1,5 @@
 package com.jysohn0825.point.application.earning
 
-import com.jysohn0825.point.application.exception.PointBusinessException
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointUsage
@@ -237,7 +236,7 @@ class EarnPointServiceTest :
 
             When("적립을 시도하면") {
                 Then("예외가 발생하고 잔액은 변하지 않는다") {
-                    shouldThrow<PointBusinessException> {
+                    shouldThrow<IllegalArgumentException> {
                         earnPointService.earn(
                             EarnPointDto(
                                 memberId = "member-1",

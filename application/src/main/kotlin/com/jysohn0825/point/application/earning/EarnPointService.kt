@@ -1,6 +1,5 @@
 package com.jysohn0825.point.application.earning
 
-import com.jysohn0825.point.application.exception.PointBusinessException
 import com.jysohn0825.point.application.lock.DistributedLock
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
@@ -52,7 +51,7 @@ class EarnPointService(
         dto: EarnPointDto,
     ): PointEarning {
         val policy: PointPolicy = policyRepository.getCurrent()
-        checkMaxEarnPerTransaction(dto = dto, policy = policy)
+        policy.validateEarnAmount(dto.amount)
 
         val pointAmount: PointAmount = PointAmount(dto.amount)
         wallet.earn(pointAmount)
@@ -70,17 +69,6 @@ class EarnPointService(
         earningRepository.save(earning = earning, walletId = wallet.id, policyId = policy.id)
 
         return earning
-    }
-
-    private fun checkMaxEarnPerTransaction(
-        dto: EarnPointDto,
-        policy: PointPolicy,
-    ) {
-        if (dto.amount > policy.maxEarnPerTransaction.value) {
-            throw PointBusinessException(
-                "1회 적립 한도(${policy.maxEarnPerTransaction.value})를 초과했습니다: ${dto.amount}",
-            )
-        }
     }
 
     /**
