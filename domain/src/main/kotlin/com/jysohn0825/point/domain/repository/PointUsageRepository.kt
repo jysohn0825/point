@@ -30,4 +30,7 @@ interface PointUsageRepository {
 
     /** 적립건이 어느 주문에서 얼마나 사용됐는지 역추적한다. */
     fun findLinesByEarningId(earningId: String): List<EarningUsageTrace>
+
+    /** 조회 API용 — 지갑의 모든 사용건을 최신순으로 반환한다. */
+    fun findAllByWalletId(walletId: String): List<PointUsage>
 }
