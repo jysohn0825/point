@@ -33,12 +33,10 @@ MySQL, Redis 등 로컬 환경 차이로 인한 이슈를 피하기 위해, 로�
 
 ### 0. 사전 준비
 
-- Docker / Docker Compose 설치 ([Docker Desktop](https://www.docker.com/products/docker-desktop/) 등)
+- **(필수) Docker / Docker Compose 설치** ([Docker Desktop](https://www.docker.com/products/docker-desktop/) 등). 로컬 실행(`bootRun`)과 테스트(`test`) 모두 Docker 없이는 동작하지 않습니다.
+- 실행(`./gradlew :presentation:bootRun`)은 아래 1번의 `docker compose up -d`로 MySQL/Redis를 먼저 띄워야 합니다.
 - 테스트(`./gradlew test`)는 Testcontainers가 MySQL 컨테이너를 자동으로 띄우므로, 별도의 docker-compose 실행 없이 **Docker 데몬만 실행 중이면** 됩니다.
-- Docker Desktop 대신 [Colima](https://github.com/abiosoft/colima)를 쓰는 경우, Testcontainers가 소켓을 못 찾을 수 있어 아래 환경변수가 추가로 필요합니다.
-
-      export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock
-      export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+- Docker Desktop 대신 [Colima](https://github.com/abiosoft/colima)/OrbStack 등을 쓰는 경우에도 별도 설정이 필요 없습니다. `:infrastructure:test`가 실행 시점에 현재 활성화된 `docker context`를 조회해 `DOCKER_HOST`/`TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`를 자동으로 맞춰줍니다.
 
 ### 1. 인프라 실행 (MySQL + Redis)
 
