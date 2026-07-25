@@ -1,15 +1,11 @@
 package com.jysohn0825.point.presentation.controller
 
-import com.jysohn0825.point.application.usage.CancelUsagePointDto
-import com.jysohn0825.point.application.usage.UsePointDto
-import com.jysohn0825.point.application.usage.UsePointService
-import com.jysohn0825.point.presentation.dto.request.CancelUsagePointRequest
-import com.jysohn0825.point.presentation.dto.request.UsePointRequest
-import com.jysohn0825.point.presentation.dto.response.PointUsageCancellationResponse
-import com.jysohn0825.point.presentation.dto.response.PointUsageDetailResponse
-import com.jysohn0825.point.presentation.dto.response.PointUsageResponse
-import com.jysohn0825.point.presentation.mapper.toDetailResponse
-import com.jysohn0825.point.presentation.mapper.toResponse
+import com.jysohn0825.point.application.service.UsePointService
+import com.jysohn0825.point.presentation.controller.dto.request.CancelUsagePointRequest
+import com.jysohn0825.point.presentation.controller.dto.request.UsePointRequest
+import com.jysohn0825.point.presentation.controller.dto.response.PointUsageCancellationResponse
+import com.jysohn0825.point.presentation.controller.dto.response.PointUsageDetailResponse
+import com.jysohn0825.point.presentation.controller.dto.response.PointUsageResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -32,20 +28,9 @@ class PointUsageController(
     @ApiResponse(responseCode = "200", description = "사용 성공")
     @PostMapping
     fun use(
-        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
+        @Parameter(description = "회원 식별자") @PathVariable memberId: String,
         @Valid @RequestBody request: UsePointRequest,
-    ): PointUsageResponse =
-        toResponse(
-            pointUsage =
-                usePointService.use(
-                    UsePointDto(
-                        memberId = memberId,
-                        orderNumber = request.orderNumber,
-                        amount = request.amount,
-                    ),
-                ),
-            memberId = memberId,
-        )
+    ): PointUsageResponse = PointUsageResponse.of(pointUsage = usePointService.use(request.to(memberId)), memberId)
 
     @Operation(
         summary = "포인트 사용취소",
@@ -54,19 +39,13 @@ class PointUsageController(
     @ApiResponse(responseCode = "200", description = "사용취소 성공")
     @PostMapping("/{usageId}/cancellations")
     fun cancel(
-        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
+        @Parameter(description = "회원 식별자") @PathVariable memberId: String,
         @Parameter(description = "취소할 사용 건 식별자") @PathVariable usageId: String,
         @Valid @RequestBody request: CancelUsagePointRequest,
     ): PointUsageCancellationResponse =
-        toResponse(
+        PointUsageCancellationResponse.of(
             cancelUsagePointResult =
-                usePointService.cancelUsage(
-                    CancelUsagePointDto(
-                        memberId = memberId,
-                        usageId = usageId,
-                        amount = request.amount,
-                    ),
-                ),
+                usePointService.cancelUsage(request.to(memberId, usageId)),
             memberId = memberId,
         )
 
@@ -74,18 +53,14 @@ class PointUsageController(
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping
     fun getUsages(
-        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
-    ): List<PointUsageResponse> = usePointService.getUsages(memberId).map { toResponse(pointUsage = it, memberId = memberId) }
+        @Parameter(description = "회원 식별자") @PathVariable memberId: String,
+    ): List<PointUsageResponse> = PointUsageResponse.of(usePointService.getUsages(memberId), memberId = memberId)
 
     @Operation(summary = "포인트 사용건 상세 조회", description = "사용 건 하나의 상세 정보를 취소 이력과 함께 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
-    @GetMapping("/{usageId}")
+    @GetMapping("/point-usages/{usageId}")
     fun getUsage(
-        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
+        @Parameter(description = "회원 식별자") @PathVariable memberId: String,
         @Parameter(description = "조회할 사용 건 식별자") @PathVariable usageId: String,
-    ): PointUsageDetailResponse =
-        toDetailResponse(
-            pointUsage = usePointService.getUsage(usageId),
-            memberId = memberId,
-        )
+    ): PointUsageDetailResponse = PointUsageDetailResponse.of(pointUsage = usePointService.getUsage(usageId), memberId = memberId)
 }

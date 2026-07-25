@@ -76,6 +76,7 @@ class PointUsage private constructor(
         ): PointUsage {
             require(lines.isNotEmpty()) { "사용 라인은 최소 1개 이상이어야 합니다." }
             return PointUsage(
+                // TODO 분산 환경 기반 key-gen으로 전달
                 id = UUID.randomUUID().toString(),
                 orderNumber = orderNumber,
                 lines = lines.toList(),

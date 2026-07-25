@@ -1,0 +1,90 @@
+package com.jysohn0825.point.presentation.support
+
+import com.jysohn0825.point.domain.entity.PointEarning
+import com.jysohn0825.point.domain.exception.PointDomainException
+import com.jysohn0825.point.domain.repository.PointEarningRepository
+import com.jysohn0825.point.domain.vo.EarnType
+import java.time.LocalDateTime
+
+class FakePointEarningRepository : PointEarningRepository {
+    private val earningsById: MutableMap<String, PointEarning> = mutableMapOf()
+    private val walletIdByEarningId: MutableMap<String, String> = mutableMapOf()
+
+    fun clear() {
+        earningsById.clear()
+        walletIdByEarningId.clear()
+    }
+
+    override fun save(
+        earning: PointEarning,
+        walletId: String,
+        policyId: String,
+    ) {
+        earningsById[earning.id] = earning
+        walletIdByEarningId[earning.id] = walletId
+    }
+
+    override fun saveAll(
+        earnings: List<PointEarning>,
+        walletId: String,
+        policyId: String,
+    ) {
+        earnings.forEach { save(earning = it, walletId = walletId, policyId = policyId) }
+    }
+
+    override fun updateStatus(
+        earning: PointEarning,
+        walletId: String,
+    ) {
+        earningsById[earning.id] = earning
+    }
+
+    override fun updateStatusAll(
+        earnings: List<PointEarning>,
+        walletId: String,
+    ) {
+        earnings.forEach { earningsById[it.id] = it }
+    }
+
+    override fun findById(earningId: String): PointEarning =
+        earningsById[earningId] ?: throw PointDomainException("적립건을 찾을 수 없습니다: earningId=$earningId")
+
+    override fun findByWalletIdAndEarnTypeAndSourceReferenceId(
+        walletId: String,
+        earnType: EarnType,
+        sourceReferenceId: String,
+    ): PointEarning? =
+        earningsById.values.firstOrNull {
+            walletIdByEarningId[it.id] == walletId && it.earnType == earnType && it.sourceReferenceId == sourceReferenceId
+        }
+
+    override fun findRedeemableByWalletId(walletId: String): List<PointEarning> =
+        earningsById.values.filter {
+            walletIdByEarningId[it.id] == walletId &&
+                it.status.isActive() &&
+                it.remainingAmount.value.signum() > 0 &&
+                !it.isExpiredAt(LocalDateTime.now())
+        }
+
+    override fun findAllByIds(earningIds: List<String>): List<PointEarning> = earningsById.values.filter { it.id in earningIds }
+
+    override fun findAllByWalletId(walletId: String): List<PointEarning> =
+        earningsById.values.filter { walletIdByEarningId[it.id] == walletId }.sortedByDescending { it.earnedAt }
+
+    override fun findExpiredCandidateWalletIds(now: LocalDateTime): List<String> =
+        earningsById.values
+            .filter { it.status.isActive() && it.remainingAmount.value.signum() > 0 && it.isExpiredAt(now) }
+            .mapNotNull { walletIdByEarningId[it.id] }
+            .distinct()
+
+    override fun findExpiringByWalletId(
+        walletId: String,
+        now: LocalDateTime,
+    ): List<PointEarning> =
+        earningsById.values.filter {
+            walletIdByEarningId[it.id] == walletId &&
+                it.status.isActive() &&
+                it.remainingAmount.value.signum() > 0 &&
+                it.isExpiredAt(now)
+        }
+}

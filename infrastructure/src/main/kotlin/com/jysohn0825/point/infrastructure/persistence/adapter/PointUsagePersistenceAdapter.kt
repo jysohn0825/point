@@ -7,7 +7,7 @@ import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.RestorationType
-import com.jysohn0825.point.domain.vo.UsageLine
+import com.jysohn0825.point.infrastructure.persistence.adapter.mapper.PointUsageMapper
 import com.jysohn0825.point.infrastructure.persistence.entity.PointUsageCancellationEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointUsageCancellationLineEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointUsageEntity
@@ -32,8 +32,8 @@ class PointUsagePersistenceAdapter(
         usage: PointUsage,
         walletId: String,
     ) {
-        usageJpaRepository.save(toEntity(usage = usage, walletId = walletId))
-        lineJpaRepository.saveAll(usage.lines.map { toNewEntity(usageLine = it, usageId = usage.id) })
+        usageJpaRepository.save(PointUsageMapper.of(usage = usage, walletId = walletId))
+        lineJpaRepository.saveAll(usage.lines.map { PointUsageMapper.of(usageLine = it, usageId = usage.id) })
     }
 
     override fun saveCancellation(
@@ -102,7 +102,7 @@ class PointUsagePersistenceAdapter(
             }
         lineJpaRepository.saveAll(updatedLineEntities)
 
-        usageJpaRepository.save(toEntity(usage = usage, walletId = walletId))
+        usageJpaRepository.save(PointUsageMapper.of(usage = usage, walletId = walletId))
     }
 
     override fun findById(usageId: String): PointUsage {
@@ -143,13 +143,13 @@ class PointUsagePersistenceAdapter(
         return PointUsage.reconstitute(
             id = entity.id,
             orderNumber = OrderNumber(entity.orderNumber),
-            lines = lineEntities.map { toUsageLine(entity = it) },
+            lines = lineEntities.map { PointUsageMapper.of(entity = it) },
             usedAt = entity.usedAt,
             cancellationLines =
                 cancellationLineEntities.map { cl ->
                     val lineEntity: PointUsageLineEntity = lineEntityById.getValue(cl.usageLineId)
                     CancellationLine(
-                        originalLine = toUsageLine(entity = lineEntity),
+                        originalLine = PointUsageMapper.of(entity = lineEntity),
                         restoredAmount = BigDecimal.valueOf(cl.restoredAmount),
                         restorationType = RestorationType.valueOf(cl.restoreType),
                     )
@@ -157,31 +157,3 @@ class PointUsagePersistenceAdapter(
         )
     }
 }
-
-private fun toEntity(
-    usage: PointUsage,
-    walletId: String,
-): PointUsageEntity =
-    PointUsageEntity(
-        id = usage.id,
-        walletId = walletId,
-        orderNumber = usage.orderNumber.value,
-        totalAmount = usage.totalAmount.longValueExact(),
-        canceledAmount = usage.cancelledAmount.longValueExact(),
-        status = usage.status.name,
-        usedAt = usage.usedAt,
-    )
-
-private fun toNewEntity(
-    usageLine: UsageLine,
-    usageId: String,
-): PointUsageLineEntity =
-    PointUsageLineEntity(
-        id = UUID.randomUUID().toString(),
-        usageId = usageId,
-        earningId = usageLine.earningId,
-        amount = usageLine.amount.longValueExact(),
-    )
-
-private fun toUsageLine(entity: PointUsageLineEntity): UsageLine =
-    UsageLine(earningId = entity.earningId, amount = BigDecimal.valueOf(entity.amount))

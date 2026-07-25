@@ -1,12 +1,9 @@
 package com.jysohn0825.point.presentation.controller
 
-import com.jysohn0825.point.application.earning.EarnPointDto
-import com.jysohn0825.point.application.earning.EarnPointService
-import com.jysohn0825.point.domain.vo.EarnType
-import com.jysohn0825.point.presentation.dto.request.EarnPointRequest
-import com.jysohn0825.point.presentation.dto.response.EarningUsageTraceResponse
-import com.jysohn0825.point.presentation.dto.response.PointEarningResponse
-import com.jysohn0825.point.presentation.mapper.toResponse
+import com.jysohn0825.point.application.service.EarnPointService
+import com.jysohn0825.point.presentation.controller.dto.request.EarnPointRequest
+import com.jysohn0825.point.presentation.controller.dto.response.EarningUsageTraceResponse
+import com.jysohn0825.point.presentation.controller.dto.response.PointEarningResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -32,19 +29,11 @@ class PointEarningController(
     @ApiResponse(responseCode = "200", description = "적립 성공")
     @PostMapping
     fun earn(
-        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
+        @Parameter(description = "회원 식별자") @PathVariable memberId: String,
         @Valid @RequestBody request: EarnPointRequest,
     ): PointEarningResponse =
-        toResponse(
-            pointEarning =
-                earnPointService.earn(
-                    EarnPointDto(
-                        memberId = memberId,
-                        amount = request.amount,
-                        earnType = EarnType.SYSTEM,
-                        sourceReferenceId = request.sourceReferenceId,
-                    ),
-                ),
+        PointEarningResponse.of(
+            pointEarning = earnPointService.earn(request.to(memberId)),
             memberId = memberId,
         )
 
@@ -52,10 +41,10 @@ class PointEarningController(
     @ApiResponse(responseCode = "200", description = "적립 취소 성공")
     @PostMapping("/{earningId}/cancellations")
     fun cancel(
-        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
+        @Parameter(description = "회원 식별자") @PathVariable memberId: String,
         @Parameter(description = "취소할 적립 건 식별자") @PathVariable earningId: String,
     ): PointEarningResponse =
-        toResponse(
+        PointEarningResponse.of(
             pointEarning = earnPointService.cancelEarning(memberId = memberId, earningId = earningId),
             memberId = memberId,
         )
@@ -64,17 +53,21 @@ class PointEarningController(
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping
     fun getEarnings(
-        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
-    ): List<PointEarningResponse> = earnPointService.getEarnings(memberId).map { toResponse(pointEarning = it, memberId = memberId) }
+        @Parameter(description = "회원 식별자") @PathVariable memberId: String,
+    ): List<PointEarningResponse> =
+        PointEarningResponse.of(
+            pointEarnings = earnPointService.getEarnings(memberId),
+            memberId = memberId,
+        )
 
     @Operation(summary = "포인트 적립건 상세 조회", description = "적립 건 하나의 상세 정보를 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/{earningId}")
     fun getEarning(
-        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
+        @Parameter(description = "회원 식별자") @PathVariable memberId: String,
         @Parameter(description = "조회할 적립 건 식별자") @PathVariable earningId: String,
     ): PointEarningResponse =
-        toResponse(
+        PointEarningResponse.of(
             pointEarning = earnPointService.getEarning(earningId),
             memberId = memberId,
         )
@@ -86,7 +79,7 @@ class PointEarningController(
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/{earningId}/usage-traces")
     fun getUsageTraces(
-        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
+        @Parameter(description = "회원 식별자") @PathVariable memberId: String,
         @Parameter(description = "조회할 적립 건 식별자") @PathVariable earningId: String,
-    ): List<EarningUsageTraceResponse> = earnPointService.getUsageTraces(earningId).map { toResponse(earningUsageTrace = it) }
+    ): List<EarningUsageTraceResponse> = EarningUsageTraceResponse.of(earningUsageTraces = earnPointService.getUsageTraces(earningId))
 }

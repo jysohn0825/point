@@ -1,8 +1,7 @@
 package com.jysohn0825.point.presentation.controller
 
-import com.jysohn0825.point.application.wallet.PointWalletQueryService
-import com.jysohn0825.point.presentation.dto.response.PointWalletResponse
-import com.jysohn0825.point.presentation.mapper.toResponse
+import com.jysohn0825.point.application.service.PointWalletService
+import com.jysohn0825.point.presentation.controller.dto.response.PointWalletResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -16,15 +15,15 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/v1/members/{memberId}/point-wallet")
 class PointWalletController(
-    private val walletQueryService: PointWalletQueryService,
+    private val walletQueryService: PointWalletService,
 ) {
     @Operation(summary = "포인트 지갑 조회", description = "회원의 총 잔액과 보유 한도를 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping
     fun getWallet(
-        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
+        @Parameter(description = "회원 식별자") @PathVariable memberId: String,
     ): PointWalletResponse =
-        toResponse(
+        PointWalletResponse.of(
             pointWallet = walletQueryService.getWallet(memberId),
             memberId = memberId,
         )

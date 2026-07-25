@@ -72,6 +72,7 @@ class PointEarning private constructor(
             amount: PointAmount,
             earnType: EarnType,
             sourceReferenceId: String,
+            // TODO 분산 환경 기반 key-gen으로 전달
             id: String = UUID.randomUUID().toString(),
             grantedBy: GrantedBy? = null,
             earnedAt: LocalDateTime = LocalDateTime.now(),
