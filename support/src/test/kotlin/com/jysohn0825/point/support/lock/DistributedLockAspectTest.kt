@@ -1,6 +1,5 @@
-package com.jysohn0825.point.application.lock
+package com.jysohn0825.point.support.lock
 
-import com.jysohn0825.point.domain.lock.DistributedLockExecutor
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import org.springframework.context.annotation.AnnotationConfigApplicationContext

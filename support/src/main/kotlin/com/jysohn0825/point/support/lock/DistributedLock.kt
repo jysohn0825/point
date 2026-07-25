@@ -1,4 +1,4 @@
-package com.jysohn0825.point.application.lock
+package com.jysohn0825.point.support.lock
 
 /**
  * 메서드 호출 전체를 분산락으로 감싼다. key는 메서드 인자를 참조하는 SpEL 표현식이다 (예: "#dto.memberId").

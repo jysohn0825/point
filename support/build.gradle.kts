@@ -5,11 +5,7 @@ plugins {
 dependencies {
     implementation(platform(libs.spring.boot.dependencies.bom))
 
-    implementation(project(":domain"))
-    implementation(project(":support"))
-
     implementation("org.springframework:spring-context")
-    implementation("org.springframework:spring-tx")
-
-    testImplementation(testFixtures(project(":domain")))
+    implementation("org.springframework.boot:spring-boot-starter-aop")
+    implementation(libs.kotlin.reflect)
 }

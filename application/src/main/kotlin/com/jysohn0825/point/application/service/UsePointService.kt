@@ -1,6 +1,5 @@
 package com.jysohn0825.point.application.service
 
-import com.jysohn0825.point.application.lock.DistributedLock
 import com.jysohn0825.point.application.service.dto.CancelUsagePointDto
 import com.jysohn0825.point.application.service.dto.CancelUsagePointResultDto
 import com.jysohn0825.point.application.service.dto.UsePointDto
@@ -19,6 +18,7 @@ import com.jysohn0825.point.domain.service.PointRedemptionAllocator
 import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.UsageLine
+import com.jysohn0825.point.support.lock.DistributedLock
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal

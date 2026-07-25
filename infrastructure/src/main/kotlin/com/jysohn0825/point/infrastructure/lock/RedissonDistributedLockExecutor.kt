@@ -1,7 +1,7 @@
 package com.jysohn0825.point.infrastructure.lock
 
-import com.jysohn0825.point.domain.lock.DistributedLockExecutor
-import com.jysohn0825.point.domain.lock.LockAcquisitionException
+import com.jysohn0825.point.support.lock.DistributedLockExecutor
+import com.jysohn0825.point.support.lock.LockAcquisitionException
 import org.redisson.api.RLock
 import org.redisson.api.RedissonClient
 import org.springframework.stereotype.Component

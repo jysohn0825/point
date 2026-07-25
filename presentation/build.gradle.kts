@@ -16,5 +16,6 @@ dependencies {
     implementation(libs.kotlin.reflect)
 
     testImplementation(testFixtures(project(":domain")))
+    testImplementation(project(":support"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

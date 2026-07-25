@@ -8,8 +8,8 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 /**
  * presentation e2e 테스트 전용 부트 클래스.
  * 실제 [com.jysohn0825.point.presentation.PointApiApplication]과 달리 `infrastructure`(JPA/Redis)를
- * 스캔 범위에서 제외하고, `presentation`+`application`만 스캔한다. repository 포트는
- * [PresentationTestConfig]가 제공하는 fake 구현체로 대체된다(다른 모듈과 동일하게 mock이 아닌 fake 사용).
+ * 스캔 범위에서 제외하고, `presentation`+`application`+`support`만 스캔한다. repository 포트와
+ * 분산락 포트는 [PresentationTestConfig]가 제공하는 fake 구현체로 대체된다(다른 모듈과 동일하게 mock이 아닌 fake 사용).
  *
  * `infrastructure`가 `runtimeOnly`라 컴파일 의존은 없지만, 실행 시 클래스패스에는 여전히 존재한다.
  * Spring Boot의 자동설정(JPA/Redisson)은 스캔 범위와 무관하게 "클래스패스에 있으면" 동작하므로,
@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
         "com.jysohn0825.point.presentation.exception",
         "com.jysohn0825.point.presentation.scheduler",
         "com.jysohn0825.point.application",
+        "com.jysohn0825.point.support",
     ],
     exclude = [
         DataSourceAutoConfiguration::class,

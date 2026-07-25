@@ -1,6 +1,5 @@
 package com.jysohn0825.point.application.service
 
-import com.jysohn0825.point.application.lock.DistributedLock
 import com.jysohn0825.point.application.service.dto.EarnPointDto
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
@@ -13,6 +12,7 @@ import com.jysohn0825.point.domain.repository.PointWalletRepository
 import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import com.jysohn0825.point.domain.vo.GrantedBy
 import com.jysohn0825.point.domain.vo.PointAmount
+import com.jysohn0825.point.support.lock.DistributedLock
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

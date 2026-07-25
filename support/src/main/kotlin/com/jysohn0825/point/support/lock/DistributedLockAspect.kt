@@ -1,6 +1,5 @@
-package com.jysohn0825.point.application.lock
+package com.jysohn0825.point.support.lock
 
-import com.jysohn0825.point.domain.lock.DistributedLockExecutor
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
