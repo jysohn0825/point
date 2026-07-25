@@ -1,5 +1,6 @@
 package com.jysohn0825.point.infrastructure.key
 
+import com.jysohn0825.point.infrastructure.config.RedisTestContainer
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.AfterAll
@@ -8,8 +9,6 @@ import org.junit.jupiter.api.TestInstance
 import org.redisson.Redisson
 import org.redisson.api.RedissonClient
 import org.redisson.config.Config
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.utility.DockerImageName
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -18,15 +17,11 @@ import java.util.concurrent.atomic.AtomicReference
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RedissonDistributedKeyGeneratorContainerTest {
-    private val redisContainer: GenericContainer<*> =
-        GenericContainer(DockerImageName.parse("redis:7-alpine"))
-            .withExposedPorts(6379)
-            .also { it.start() }
-
     private val redissonClient: RedissonClient =
         Redisson.create(
             Config().apply {
-                useSingleServer().address = "redis://${redisContainer.host}:${redisContainer.getMappedPort(6379)}"
+                useSingleServer().address =
+                    "redis://${RedisTestContainer.instance.host}:${RedisTestContainer.instance.getMappedPort(6379)}"
             },
         )
 
@@ -35,7 +30,6 @@ class RedissonDistributedKeyGeneratorContainerTest {
     @AfterAll
     fun tearDown() {
         redissonClient.shutdown()
-        redisContainer.stop()
     }
 
     @Test

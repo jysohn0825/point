@@ -6,9 +6,15 @@ import org.springframework.context.annotation.Bean
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.utility.DockerImageName
 
+object MySqlTestContainer {
+    val instance: MySQLContainer<*> by lazy {
+        MySQLContainer(DockerImageName.parse("mysql:8.0")).apply { start() }
+    }
+}
+
 @TestConfiguration(proxyBeanMethods = false)
 class MySqlContainerConfig {
     @Bean
     @ServiceConnection
-    fun mySQLContainer(): MySQLContainer<*> = MySQLContainer(DockerImageName.parse("mysql:8.0"))
+    fun mySQLContainer(): MySQLContainer<*> = MySqlTestContainer.instance
 }

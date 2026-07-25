@@ -1,5 +1,6 @@
 package com.jysohn0825.point.infrastructure.cache
 
+import com.jysohn0825.point.infrastructure.config.RedisTestContainer
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.AfterAll
@@ -8,22 +9,16 @@ import org.junit.jupiter.api.TestInstance
 import org.redisson.Redisson
 import org.redisson.api.RedissonClient
 import org.redisson.config.Config
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RedissonCacheExecutorContainerTest {
-    private val redisContainer: GenericContainer<*> =
-        GenericContainer(DockerImageName.parse("redis:7-alpine"))
-            .withExposedPorts(6379)
-            .also { it.start() }
-
     private val redissonClient: RedissonClient =
         Redisson.create(
             Config().apply {
-                useSingleServer().address = "redis://${redisContainer.host}:${redisContainer.getMappedPort(6379)}"
+                useSingleServer().address =
+                    "redis://${RedisTestContainer.instance.host}:${RedisTestContainer.instance.getMappedPort(6379)}"
             },
         )
 
@@ -32,7 +27,6 @@ class RedissonCacheExecutorContainerTest {
     @AfterAll
     fun tearDown() {
         redissonClient.shutdown()
-        redisContainer.stop()
     }
 
     @Test

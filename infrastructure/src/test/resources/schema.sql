@@ -1,4 +1,4 @@
-CREATE TABLE point_policy (
+CREATE TABLE IF NOT EXISTS point_policy (
     id                        CHAR(36)    NOT NULL                COMMENT '정책 ID',
     policy_version            INT         NOT NULL                COMMENT '정책 버전 (증가)',
     max_earn_per_transaction  INT         NOT NULL                COMMENT '1회 적립 상한 (1~100,000)',
@@ -13,7 +13,7 @@ CREATE TABLE point_policy (
     UNIQUE KEY uk_policy_applied_at (applied_at)
 ) COMMENT='포인트 정책 (버전별 이력)';
 
-CREATE TABLE point_wallet (
+CREATE TABLE IF NOT EXISTS point_wallet (
     id                      CHAR(36) NOT NULL                COMMENT '지갑 ID',
     member_id               CHAR(36) NOT NULL                COMMENT '회원 ID',
     balance                 BIGINT   NOT NULL DEFAULT 0      COMMENT '총 잔액',
@@ -24,7 +24,7 @@ CREATE TABLE point_wallet (
     UNIQUE KEY uk_wallet_member (member_id)
 ) COMMENT='포인트 지갑 (회원당 1행)';
 
-CREATE TABLE point_earning (
+CREATE TABLE IF NOT EXISTS point_earning (
     id                   CHAR(36)    NOT NULL                COMMENT '적립 ID',
     wallet_id            CHAR(36)    NOT NULL                COMMENT '지갑 ID',
     policy_id            CHAR(36)    NOT NULL                COMMENT '적립 당시 적용 정책',
@@ -49,7 +49,7 @@ CREATE TABLE point_earning (
     CONSTRAINT fk_earning_policy FOREIGN KEY (policy_id) REFERENCES point_policy (id)
 ) COMMENT='포인트 적립건';
 
-CREATE TABLE point_usage (
+CREATE TABLE IF NOT EXISTS point_usage (
     id               CHAR(36)    NOT NULL                COMMENT '사용 ID',
     wallet_id        CHAR(36)    NOT NULL                COMMENT '지갑 ID',
     order_number     VARCHAR(30) NOT NULL                COMMENT '주문번호',
@@ -66,7 +66,7 @@ CREATE TABLE point_usage (
     CONSTRAINT fk_usage_wallet FOREIGN KEY (wallet_id) REFERENCES point_wallet (id)
 ) COMMENT='포인트 사용건';
 
-CREATE TABLE point_usage_line (
+CREATE TABLE IF NOT EXISTS point_usage_line (
     id               CHAR(36) NOT NULL                COMMENT '사용 라인 ID',
     usage_id         CHAR(36) NOT NULL                COMMENT '사용 ID',
     earning_id       CHAR(36) NOT NULL                COMMENT '차감 대상 적립건',
@@ -84,7 +84,7 @@ CREATE TABLE point_usage_line (
         FOREIGN KEY (earning_id) REFERENCES point_earning (id)
 ) COMMENT='포인트 사용 라인';
 
-CREATE TABLE point_usage_cancellation (
+CREATE TABLE IF NOT EXISTS point_usage_cancellation (
     id               CHAR(36) NOT NULL                COMMENT '사용취소 ID',
     usage_id         CHAR(36) NOT NULL                COMMENT '원 사용건',
     restored_amount  BIGINT   NOT NULL                COMMENT '복원 총액 (라인 합계)',
@@ -98,7 +98,7 @@ CREATE TABLE point_usage_cancellation (
         FOREIGN KEY (usage_id) REFERENCES point_usage (id)
 ) COMMENT='포인트 사용취소 헤더';
 
-CREATE TABLE point_usage_cancellation_line (
+CREATE TABLE IF NOT EXISTS point_usage_cancellation_line (
     id                   CHAR(36)    NOT NULL                COMMENT '취소 라인 ID',
     cancellation_id      CHAR(36)    NOT NULL                COMMENT '사용취소 ID',
     usage_line_id        CHAR(36)    NOT NULL                COMMENT '복원 대상 원 사용 라인',
@@ -120,7 +120,7 @@ CREATE TABLE point_usage_cancellation_line (
         FOREIGN KEY (reearned_earning_id) REFERENCES point_earning (id)
 ) COMMENT='포인트 사용취소 라인';
 
-CREATE TABLE point_wallet_transaction (
+CREATE TABLE IF NOT EXISTS point_wallet_transaction (
     id                CHAR(36)    NOT NULL                COMMENT '거래 ID',
     wallet_id         CHAR(36)    NOT NULL                COMMENT '지갑 ID',
     transaction_type  VARCHAR(20) NOT NULL                COMMENT 'EARN / USE / EARN_CANCEL / USE_CANCEL / EXPIRE',
