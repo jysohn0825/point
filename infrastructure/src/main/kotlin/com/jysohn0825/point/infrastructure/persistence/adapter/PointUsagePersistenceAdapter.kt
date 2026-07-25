@@ -128,10 +128,9 @@ class PointUsagePersistenceAdapter(
     override fun findAllByWalletId(walletId: String): List<PointUsage> =
         usageJpaRepository.findAllByWalletIdOrderByUsedAtDesc(walletId).map { toDomain(entity = it) }
 
-    /** usage 하나를 라인·취소이력까지 포함해 완전히 조립한다 (findById/findAllByWalletId 공용). */
+    /** usage 하나를 라인·취소이력까지 포함해 완전히 조회한다 (findById/findAllByWalletId 공용). 조립은 매퍼에 위임한다. */
     private fun toDomain(entity: PointUsageEntity): PointUsage {
         val lineEntities: List<PointUsageLineEntity> = lineJpaRepository.findAllByUsageId(entity.id)
-        val lineEntityById: Map<String, PointUsageLineEntity> = lineEntities.associateBy { it.id }
         val cancellationIds: List<String> = cancellationJpaRepository.findAllByUsageId(entity.id).map { it.id }
         val cancellationLineEntities: List<PointUsageCancellationLineEntity> =
             if (cancellationIds.isEmpty()) {
@@ -140,20 +139,10 @@ class PointUsagePersistenceAdapter(
                 cancellationLineJpaRepository.findAllByCancellationIdIn(cancellationIds)
             }
 
-        return PointUsage.reconstitute(
-            id = entity.id,
-            orderNumber = OrderNumber(entity.orderNumber),
-            lines = lineEntities.map { PointUsageMapper.of(entity = it) },
-            usedAt = entity.usedAt,
-            cancellationLines =
-                cancellationLineEntities.map { cl ->
-                    val lineEntity: PointUsageLineEntity = lineEntityById.getValue(cl.usageLineId)
-                    CancellationLine(
-                        originalLine = PointUsageMapper.of(entity = lineEntity),
-                        restoredAmount = BigDecimal.valueOf(cl.restoredAmount),
-                        restorationType = RestorationType.valueOf(cl.restoreType),
-                    )
-                },
+        return PointUsageMapper.of(
+            entity = entity,
+            lineEntities = lineEntities,
+            cancellationLineEntities = cancellationLineEntities,
         )
     }
 }
