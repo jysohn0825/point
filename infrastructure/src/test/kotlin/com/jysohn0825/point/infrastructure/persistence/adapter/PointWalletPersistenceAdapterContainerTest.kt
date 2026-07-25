@@ -23,7 +23,7 @@ import java.util.UUID
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(MySqlContainerConfig::class, PointWalletPersistenceAdapter::class, PointPolicyPersistenceAdapter::class)
+@Import(MySqlContainerConfig::class, PointWalletPersistenceAdapter::class, PointPolicyPersistenceAdapter::class, FakeCacheExecutor::class)
 class PointWalletPersistenceAdapterContainerTest {
     @Autowired
     private lateinit var entityManager: EntityManager

@@ -6,20 +6,24 @@ import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.infrastructure.persistence.adapter.mapper.PointPolicyMapper
 import com.jysohn0825.point.infrastructure.persistence.entity.PointPolicyEntity
 import com.jysohn0825.point.infrastructure.persistence.repository.PointPolicyJpaRepository
+import com.jysohn0825.point.support.cache.CacheExecutor
 import org.springframework.stereotype.Repository
+import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Repository
 class PointPolicyPersistenceAdapter(
     private val jpaRepository: PointPolicyJpaRepository,
+    private val cacheExecutor: CacheExecutor,
 ) : PointPolicyRepository {
-    // TODO 캐쉬 달기 (일자 키값 포함)
-    override fun getCurrent(): PointPolicy {
-        val entity: PointPolicyEntity =
-            jpaRepository.findFirstByAppliedAtLessThanEqualOrderByAppliedAtDesc(LocalDateTime.now())
-                ?: throw PointDomainException("적용 가능한 포인트 정책이 없습니다.")
-        return PointPolicyMapper.of(entity = entity)
-    }
+    override fun getCurrent(): PointPolicy =
+        cacheExecutor.getOrPut(key = currentCacheKey(), ttl = CACHE_TTL) {
+            val entity: PointPolicyEntity =
+                jpaRepository.findFirstByAppliedAtLessThanEqualOrderByAppliedAtDesc(LocalDateTime.now())
+                    ?: throw PointDomainException("적용 가능한 포인트 정책이 없습니다.")
+            PointPolicyMapper.of(entity = entity)
+        }
 
     override fun save(
         policy: PointPolicy,
@@ -32,5 +36,14 @@ class PointPolicyPersistenceAdapter(
         jpaRepository.save(
             PointPolicyMapper.of(policy = policy, policyVersion = nextVersion, appliedAt = appliedAt, createdByAdminId = createdByAdminId),
         )
+        // 새로 저장된 정책이 오늘부터 즉시 적용될 수 있으므로, 오늘자 캐시를 무효화해 다음 조회에서 다시 채운다.
+        cacheExecutor.evict(currentCacheKey())
+    }
+
+    private fun currentCacheKey(): String = "$CACHE_KEY_PREFIX${LocalDate.now()}"
+
+    companion object {
+        private const val CACHE_KEY_PREFIX: String = "point-policy:current:"
+        private val CACHE_TTL: Duration = Duration.ofDays(1)
     }
 }

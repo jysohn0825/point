@@ -10,6 +10,7 @@ import com.jysohn0825.point.infrastructure.config.MySqlContainerConfig
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import jakarta.persistence.EntityManager
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
@@ -20,13 +21,21 @@ import java.time.LocalDateTime
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(MySqlContainerConfig::class, PointPolicyPersistenceAdapter::class)
+@Import(MySqlContainerConfig::class, PointPolicyPersistenceAdapter::class, FakeCacheExecutor::class)
 class PointPolicyPersistenceAdapterContainerTest {
     @Autowired
     private lateinit var entityManager: EntityManager
 
     @Autowired
     private lateinit var adapter: PointPolicyPersistenceAdapter
+
+    @Autowired
+    private lateinit var cacheExecutor: FakeCacheExecutor
+
+    @BeforeEach
+    fun clearCache() {
+        cacheExecutor.clear()
+    }
 
     @Test
     fun `적용 가능한 정책이 없으면 예외가 발생한다`() {
