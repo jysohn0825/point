@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.vo
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -20,7 +21,7 @@ class RemainingAmountTest :
         }
 
         test("음수이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<PointDomainException> {
                 RemainingAmount(BigDecimal(-1))
             }
         }
@@ -67,13 +68,13 @@ class RemainingAmountTest :
             }
 
             test("차감액이 0 이하이면 예외가 발생한다") {
-                shouldThrow<IllegalArgumentException> {
+                shouldThrow<PointDomainException> {
                     RemainingAmount(BigDecimal(1_000)).decrease(BigDecimal.ZERO)
                 }
             }
 
             test("차감액이 잔여액을 초과하면 예외가 발생한다") {
-                shouldThrow<IllegalArgumentException> {
+                shouldThrow<PointDomainException> {
                     RemainingAmount(BigDecimal(1_000)).decrease(BigDecimal(1_001))
                 }
             }
@@ -92,7 +93,7 @@ class RemainingAmountTest :
             test("복원액이 0 이하이면 예외가 발생한다") {
                 val upTo: PointAmount = pointAmount(BigDecimal(1_000))
 
-                shouldThrow<IllegalArgumentException> {
+                shouldThrow<PointDomainException> {
                     RemainingAmount(BigDecimal(700)).increase(amount = BigDecimal.ZERO, upTo = upTo)
                 }
             }
@@ -100,7 +101,7 @@ class RemainingAmountTest :
             test("복원 후 금액이 최초 적립액을 초과하면 예외가 발생한다") {
                 val upTo: PointAmount = pointAmount(BigDecimal(1_000))
 
-                shouldThrow<IllegalArgumentException> {
+                shouldThrow<PointDomainException> {
                     RemainingAmount(BigDecimal(700)).increase(amount = BigDecimal(301), upTo = upTo)
                 }
             }

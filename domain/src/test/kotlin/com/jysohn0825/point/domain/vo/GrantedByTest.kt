@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.vo
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -13,13 +14,13 @@ class GrantedByTest :
         }
 
         test("빈 문자열이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<PointDomainException> {
                 GrantedBy("")
             }
         }
 
         test("공백만 있는 문자열이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<PointDomainException> {
                 GrantedBy("   ")
             }
         }

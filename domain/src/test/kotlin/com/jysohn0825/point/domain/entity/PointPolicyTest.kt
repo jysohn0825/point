@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.entity
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.vo.ExpirationPeriod
 import com.jysohn0825.point.domain.vo.MaxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.MaxHoldingAmount
@@ -73,7 +74,7 @@ class PointPolicyTest :
 
             `when`("한도를 초과하는 금액을 검증하면") {
                 then("예외가 발생한다") {
-                    shouldThrow<IllegalArgumentException> { sut.validateEarnAmount(BigDecimal(10_001)) }
+                    shouldThrow<PointDomainException> { sut.validateEarnAmount(BigDecimal(10_001)) }
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.vo
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -13,11 +14,11 @@ class OrderNumberTest :
         }
 
         test("공백 문자열이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> { OrderNumber("   ") }
+            shouldThrow<PointDomainException> { OrderNumber("   ") }
         }
 
         test("빈 문자열이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> { OrderNumber("") }
+            shouldThrow<PointDomainException> { OrderNumber("") }
         }
 
         test("동일한 값을 가진 OrderNumber는 서로 동등하다") {

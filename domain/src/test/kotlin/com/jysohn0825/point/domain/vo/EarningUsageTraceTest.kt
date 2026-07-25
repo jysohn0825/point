@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.vo
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.fixture.earningUsageTrace
 import com.jysohn0825.point.domain.fixture.orderNumber
 import io.kotest.assertions.throwables.shouldThrow
@@ -19,13 +20,13 @@ class EarningUsageTraceTest :
         }
 
         test("차감액이 0이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<PointDomainException> {
                 EarningUsageTrace(orderNumber = orderNumber(), amount = BigDecimal.ZERO)
             }
         }
 
         test("차감액이 음수이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<PointDomainException> {
                 EarningUsageTrace(orderNumber = orderNumber(), amount = BigDecimal(-1))
             }
         }

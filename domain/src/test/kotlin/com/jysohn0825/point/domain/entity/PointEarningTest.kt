@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.entity
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.domain.vo.ExpirationPeriod
@@ -46,7 +47,7 @@ class PointEarningTest :
 
             When("지급 관리자와 함께 생성을 시도하면") {
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         pointEarning(earnType = EarnType.SYSTEM, grantedBy = grantedBy())
                     }
                 }
@@ -65,7 +66,7 @@ class PointEarningTest :
 
             When("지급 관리자 없이 생성을 시도하면") {
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         pointEarning(earnType = EarnType.MANUAL, grantedBy = null)
                     }
                 }
@@ -112,7 +113,7 @@ class PointEarningTest :
 
                 Then("취소할 수 없다") {
                     earning.canCancelEarning() shouldBe false
-                    shouldThrow<IllegalStateException> {
+                    shouldThrow<PointDomainException> {
                         earning.cancelEarning()
                     }
                 }
@@ -125,7 +126,7 @@ class PointEarningTest :
                 earning.cancelEarning()
 
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalStateException> {
+                    shouldThrow<PointDomainException> {
                         earning.cancelEarning()
                     }
                 }
@@ -136,7 +137,7 @@ class PointEarningTest :
                 earning.cancelEarning()
 
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalStateException> {
+                    shouldThrow<PointDomainException> {
                         earning.restoreUsage(BigDecimal.ONE)
                     }
                 }
@@ -147,7 +148,7 @@ class PointEarningTest :
                 earning.cancelEarning()
 
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalStateException> {
+                    shouldThrow<PointDomainException> {
                         earning.expire()
                     }
                 }
@@ -184,7 +185,7 @@ class PointEarningTest :
                 earning.cancelEarning()
 
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalStateException> {
+                    shouldThrow<PointDomainException> {
                         earning.use(BigDecimal.ONE)
                     }
                 }
@@ -223,7 +224,7 @@ class PointEarningTest :
                 earning.use(BigDecimal(300))
 
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         earning.restoreUsage(BigDecimal(301))
                     }
                 }

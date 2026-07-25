@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.entity
 
+import com.jysohn0825.point.domain.exception.requireDomain
 import com.jysohn0825.point.domain.vo.ExpirationPeriod
 import com.jysohn0825.point.domain.vo.MaxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.MaxHoldingAmount
@@ -21,7 +22,7 @@ class PointPolicy(
         private set
 
     fun validateEarnAmount(amount: BigDecimal) {
-        require(amount <= maxEarnPerTransaction.value) {
+        requireDomain(amount <= maxEarnPerTransaction.value) {
             "1회 적립 한도(${maxEarnPerTransaction.value})를 초과했습니다: $amount"
         }
     }

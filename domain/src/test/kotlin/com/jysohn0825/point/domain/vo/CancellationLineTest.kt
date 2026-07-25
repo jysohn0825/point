@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.vo
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.fixture.usageLine
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -37,7 +38,7 @@ class CancellationLineTest :
         }
 
         test("복원액이 0이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<PointDomainException> {
                 CancellationLine(
                     originalLine = usageLine(amount = BigDecimal(1_000)),
                     restoredAmount = BigDecimal.ZERO,
@@ -47,7 +48,7 @@ class CancellationLineTest :
         }
 
         test("복원액이 음수이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<PointDomainException> {
                 CancellationLine(
                     originalLine = usageLine(amount = BigDecimal(1_000)),
                     restoredAmount = BigDecimal(-1),
@@ -57,7 +58,7 @@ class CancellationLineTest :
         }
 
         test("복원액이 원 라인 차감액을 초과하면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<PointDomainException> {
                 CancellationLine(
                     originalLine = usageLine(amount = BigDecimal(1_000)),
                     restoredAmount = BigDecimal(1_001),

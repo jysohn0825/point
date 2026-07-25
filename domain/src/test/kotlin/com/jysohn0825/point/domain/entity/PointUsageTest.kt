@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.entity
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.fixture.cancellationLine
 import com.jysohn0825.point.domain.fixture.orderNumber
 import com.jysohn0825.point.domain.fixture.pointUsage
@@ -32,7 +33,7 @@ class PointUsageTest :
 
             `when`("사용 라인이 비어있으면") {
                 then("예외가 발생한다") {
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         PointUsage.use(orderNumber = orderNumber(), lines = emptyList())
                     }
                 }
@@ -115,7 +116,7 @@ class PointUsageTest :
                 then("예외가 발생한다") {
                     val usage: PointUsage = pointUsage()
 
-                    shouldThrow<IllegalArgumentException> { usage.cancel(emptyList()) }
+                    shouldThrow<PointDomainException> { usage.cancel(emptyList()) }
                 }
             }
 
@@ -125,7 +126,7 @@ class PointUsageTest :
                     val usage: PointUsage = PointUsage.use(orderNumber = orderNumber(), lines = listOf(line))
                     usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(1_000))))
 
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal.ONE)))
                     }
                 }
@@ -136,7 +137,7 @@ class PointUsageTest :
                     val usage: PointUsage = pointUsage(lines = listOf(usageLine(amount = BigDecimal(1_000))))
                     val foreignLine: UsageLine = usageLine(amount = BigDecimal(500))
 
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         usage.cancel(listOf(cancellationLine(originalLine = foreignLine, restoredAmount = BigDecimal(100))))
                     }
                 }
@@ -148,7 +149,7 @@ class PointUsageTest :
                     val usage: PointUsage = PointUsage.use(orderNumber = orderNumber(), lines = listOf(line))
                     usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(700))))
 
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(400))))
                     }
 

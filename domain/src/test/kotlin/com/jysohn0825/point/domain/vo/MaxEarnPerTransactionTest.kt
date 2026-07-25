@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.vo
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -21,13 +22,13 @@ class MaxEarnPerTransactionTest :
         }
 
         test("1포인트 미만이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<PointDomainException> {
                 MaxEarnPerTransaction(BigDecimal.ZERO)
             }
         }
 
         test("10만포인트를 초과하면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<PointDomainException> {
                 MaxEarnPerTransaction(BigDecimal(100_001))
             }
         }

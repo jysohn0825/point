@@ -1,5 +1,7 @@
 package com.jysohn0825.point.domain.entity
 
+import com.jysohn0825.point.domain.exception.checkDomain
+import com.jysohn0825.point.domain.exception.requireDomain
 import com.jysohn0825.point.domain.vo.Balance
 import com.jysohn0825.point.domain.vo.HoldingLimit
 import com.jysohn0825.point.domain.vo.PointAmount
@@ -10,15 +12,15 @@ class PointWallet private constructor(
     val holdingLimit: HoldingLimit,
 ) {
     init {
-        require(id.isNotBlank()) { "id는 비어있을 수 없습니다." }
-        require(balance.amount <= holdingLimit.value) { "잔액은 보유한도를 초과할 수 없습니다." }
+        requireDomain(id.isNotBlank()) { "id는 비어있을 수 없습니다." }
+        requireDomain(balance.amount <= holdingLimit.value) { "잔액은 보유한도를 초과할 수 없습니다." }
     }
 
     var balance: Balance = balance
         private set
 
     fun earn(pointAmount: PointAmount) {
-        check(holdingLimit.canAccept(balance, pointAmount)) { "보유한도를 초과하여 적립할 수 없습니다." }
+        checkDomain(holdingLimit.canAccept(balance, pointAmount)) { "보유한도를 초과하여 적립할 수 없습니다." }
         balance += pointAmount
     }
 

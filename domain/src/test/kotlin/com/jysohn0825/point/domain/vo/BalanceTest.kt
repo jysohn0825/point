@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.vo
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -14,7 +15,7 @@ class BalanceTest :
         }
 
         test("amount가 음수이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> { Balance(BigDecimal(-1)) }
+            shouldThrow<PointDomainException> { Balance(BigDecimal(-1)) }
         }
 
         test("ZERO는 0원 잔액이다") {
@@ -41,6 +42,6 @@ class BalanceTest :
         test("minus 연산 결과가 음수이면 예외가 발생한다") {
             val origin: Balance = balance(amount = BigDecimal(10))
 
-            shouldThrow<IllegalArgumentException> { origin - pointAmount(value = BigDecimal(20)) }
+            shouldThrow<PointDomainException> { origin - pointAmount(value = BigDecimal(20)) }
         }
     })

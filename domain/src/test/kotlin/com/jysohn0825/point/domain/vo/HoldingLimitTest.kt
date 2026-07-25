@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.vo
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -14,7 +15,7 @@ class HoldingLimitTest :
         }
 
         test("value가 0 이하이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> { HoldingLimit(BigDecimal.ZERO) }
+            shouldThrow<PointDomainException> { HoldingLimit(BigDecimal.ZERO) }
         }
 
         test("잔액과 적립금액의 합이 한도 이하이면 수용 가능하다") {

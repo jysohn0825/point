@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.entity
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.vo.Balance
 import com.jysohn0825.point.domain.vo.HoldingLimit
 import com.jysohn0825.point.domain.vo.balance
@@ -29,8 +30,8 @@ class PointWalletTest :
         Given("id가 비어있으면") {
             When("지갑을 개설하면") {
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalArgumentException> { pointWallet(id = "") }
-                    shouldThrow<IllegalArgumentException> { pointWallet(id = "   ") }
+                    shouldThrow<PointDomainException> { pointWallet(id = "") }
+                    shouldThrow<PointDomainException> { pointWallet(id = "   ") }
                 }
             }
         }
@@ -49,7 +50,7 @@ class PointWalletTest :
         Given("잔액이 보유한도를 초과하면") {
             When("지갑을 개설하면") {
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         pointWallet(balance = balance(amount = BigDecimal(101)), holdingLimit = holdingLimit(value = BigDecimal(100)))
                     }
                 }
@@ -74,7 +75,7 @@ class PointWalletTest :
 
             When("한도를 초과하는 금액을 적립하면") {
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalStateException> { wallet.earn(pointAmount(value = BigDecimal(200))) }
+                    shouldThrow<PointDomainException> { wallet.earn(pointAmount(value = BigDecimal(200))) }
                 }
             }
         }
@@ -96,7 +97,7 @@ class PointWalletTest :
 
             When("잔액보다 많은 금액을 차감하면") {
                 Then("예외가 발생한다") {
-                    shouldThrow<IllegalArgumentException> { wallet.decrease(pointAmount(value = BigDecimal(200))) }
+                    shouldThrow<PointDomainException> { wallet.decrease(pointAmount(value = BigDecimal(200))) }
                 }
             }
         }

@@ -1,6 +1,7 @@
 package com.jysohn0825.point.domain.service
 
 import com.jysohn0825.point.domain.entity.PointEarning
+import com.jysohn0825.point.domain.exception.requireDomain
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.UsageLine
 import java.math.BigDecimal
@@ -22,7 +23,7 @@ class PointRedemptionAllocator {
             lines.add(UsageLine(earningId = earning.id, amount = deduction))
             remaining -= deduction
         }
-        require(remaining.signum() == 0) { "사용 가능한 포인트가 부족합니다: 부족액=$remaining" }
+        requireDomain(remaining.signum() == 0) { "사용 가능한 포인트가 부족합니다: 부족액=$remaining" }
         return lines
     }
 

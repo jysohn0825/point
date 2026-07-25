@@ -1,5 +1,6 @@
 package com.jysohn0825.point.domain.vo
 
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.fixture.usageLine
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -18,11 +19,11 @@ class UsageLineTest :
         }
 
         test("차감액이 0이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> { UsageLine(earningId = "earning-1", amount = BigDecimal.ZERO) }
+            shouldThrow<PointDomainException> { UsageLine(earningId = "earning-1", amount = BigDecimal.ZERO) }
         }
 
         test("차감액이 음수이면 예외가 발생한다") {
-            shouldThrow<IllegalArgumentException> { UsageLine(earningId = "earning-1", amount = BigDecimal(-1)) }
+            shouldThrow<PointDomainException> { UsageLine(earningId = "earning-1", amount = BigDecimal(-1)) }
         }
 
         test("같은 값을 가진 UsageLine은 서로 동등하다") {

@@ -2,6 +2,7 @@ package com.jysohn0825.point.domain.service
 
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.pointEarning
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.expirationPeriod
@@ -80,7 +81,7 @@ class PointRedemptionAllocatorTest :
 
             `when`("가용 포인트보다 많은 금액을 배분하려 하면") {
                 then("예외가 발생하고 적립건은 소진된 채로 남는다") {
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         sut.allocate(earnings = listOf(earning), amount = BigDecimal(600))
                     }
                     earning.remainingAmount.value shouldBe BigDecimal.ZERO
