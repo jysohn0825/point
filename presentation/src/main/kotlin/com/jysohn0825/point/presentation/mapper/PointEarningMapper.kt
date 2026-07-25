@@ -1,6 +1,8 @@
 package com.jysohn0825.point.presentation.mapper
 
 import com.jysohn0825.point.domain.entity.PointEarning
+import com.jysohn0825.point.domain.vo.EarningUsageTrace
+import com.jysohn0825.point.presentation.dto.response.EarningUsageTraceResponse
 import com.jysohn0825.point.presentation.dto.response.PointEarningResponse
 
 fun PointEarning.toResponse(memberId: String): PointEarningResponse =
@@ -14,4 +16,10 @@ fun PointEarning.toResponse(memberId: String): PointEarningResponse =
         earnedAt = earnedAt,
         expirationDate = expirationDate.value,
         status = status,
+    )
+
+fun EarningUsageTrace.toResponse(): EarningUsageTraceResponse =
+    EarningUsageTraceResponse(
+        orderNumber = orderNumber.value,
+        amount = amount,
     )

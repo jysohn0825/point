@@ -4,6 +4,7 @@ import com.jysohn0825.point.application.earning.EarnPointDto
 import com.jysohn0825.point.application.earning.EarnPointService
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.presentation.dto.request.EarnPointRequest
+import com.jysohn0825.point.presentation.dto.response.EarningUsageTraceResponse
 import com.jysohn0825.point.presentation.dto.response.PointEarningResponse
 import com.jysohn0825.point.presentation.mapper.toResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -50,4 +52,30 @@ class PointEarningController(
         @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
         @Parameter(description = "취소할 적립 건 식별자") @PathVariable earningId: String,
     ): PointEarningResponse = earnPointService.cancelEarning(memberId, earningId).toResponse(memberId)
+
+    @Operation(summary = "포인트 적립건 목록 조회", description = "회원의 전체 적립건을 상태 무관 최신순으로 조회한다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @GetMapping
+    fun getEarnings(
+        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
+    ): List<PointEarningResponse> = earnPointService.getEarnings(memberId).map { it.toResponse(memberId) }
+
+    @Operation(summary = "포인트 적립건 상세 조회", description = "적립 건 하나의 상세 정보를 조회한다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @GetMapping("/{earningId}")
+    fun getEarning(
+        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
+        @Parameter(description = "조회할 적립 건 식별자") @PathVariable earningId: String,
+    ): PointEarningResponse = earnPointService.getEarning(earningId).toResponse(memberId)
+
+    @Operation(
+        summary = "포인트 적립건 사용 추적 조회",
+        description = "이 적립건이 어느 주문에서 얼마나 사용됐는지 1원 단위로 조회한다.",
+    )
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @GetMapping("/{earningId}/usage-traces")
+    fun getUsageTraces(
+        @Parameter(description = "회원(지갑) 식별자") @PathVariable memberId: String,
+        @Parameter(description = "조회할 적립 건 식별자") @PathVariable earningId: String,
+    ): List<EarningUsageTraceResponse> = earnPointService.getUsageTraces(earningId).map { it.toResponse() }
 }
