@@ -1,6 +1,5 @@
 package com.jysohn0825.point.application.usage
 
-import com.jysohn0825.point.application.exception.PointBusinessException
 import com.jysohn0825.point.application.lock.DistributedLock
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
@@ -11,11 +10,11 @@ import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointUsageRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
+import com.jysohn0825.point.domain.service.CancellationAllocation
+import com.jysohn0825.point.domain.service.PointCancellationAllocator
 import com.jysohn0825.point.domain.service.PointRedemptionAllocator
-import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.PointAmount
-import com.jysohn0825.point.domain.vo.RestorationType
 import com.jysohn0825.point.domain.vo.UsageLine
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -30,6 +29,7 @@ class UsePointService(
     private val policyRepository: PointPolicyRepository,
 ) {
     private val redemptionAllocator: PointRedemptionAllocator = PointRedemptionAllocator()
+    private val cancellationAllocator: PointCancellationAllocator = PointCancellationAllocator()
 
     @DistributedLock(key = "'point-usage-lock:' + #dto.memberId")
     @Transactional
@@ -51,110 +51,49 @@ class UsePointService(
         return usage
     }
 
-    /**
-     * 취소(복원) 시점에 원 적립건이 이미 만료됐다면 그 만료 적립건을 되살리지 않고,
-     * 정책의 기본 만료일을 적용한 신규 적립(RE_EARNED)으로 대체한다.
-     */
     @DistributedLock(key = "'point-usage-lock:' + #dto.memberId")
     @Transactional
     fun cancelUsage(dto: CancelUsagePointDto): CancelUsagePointResult {
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
         val usage: PointUsage = usageRepository.findById(dto.usageId)
-
+        val policy: PointPolicy = policyRepository.getCurrent()
+        val now: LocalDateTime = LocalDateTime.now()
         val cancelAmount: BigDecimal = dto.amount ?: usage.remainingAmount
-        if (cancelAmount.signum() <= 0) {
-            throw PointBusinessException("취소할 사용 금액이 없습니다: usageId=${usage.id}")
-        }
-        if (cancelAmount > usage.remainingAmount) {
-            throw PointBusinessException(
-                "취소 요청 금액이 남은 사용 금액을 초과할 수 없습니다: requested=$cancelAmount, remaining=${usage.remainingAmount}",
-            )
-        }
 
-        val allocations: List<Pair<UsageLine, BigDecimal>> = allocateCancellation(usage = usage, cancelAmount = cancelAmount)
         val earningsById: Map<String, PointEarning> =
             earningRepository
-                .findAllByIds(allocations.map { it.first.earningId }.distinct())
+                .findAllByIds(usage.lines.map { it.earningId }.distinct())
                 .associateBy { it.id }
 
-        val now: LocalDateTime = LocalDateTime.now()
-        val policy: PointPolicy = policyRepository.getCurrent()
-
-        val requestedLines: MutableList<CancellationLine> = mutableListOf()
-        val reearnedEarningIds: MutableList<String?> = mutableListOf()
-        val restoredEarnings: MutableList<PointEarning> = mutableListOf()
-        val reEarnings: MutableList<PointEarning> = mutableListOf()
-
-        allocations.forEach { (line, restoreAmount) ->
-            val earning: PointEarning = earningsById.getValue(line.earningId)
-            if (earning.isExpiredAt(now)) {
-                val reEarned: PointEarning =
-                    PointEarning.earn(
-                        amount = PointAmount(restoreAmount),
-                        earnType = earning.earnType,
-                        sourceReferenceId = "USAGE_CANCEL:${usage.id}:${earning.id}",
-                        grantedBy = earning.grantedBy,
-                        earnedAt = now,
-                        period = policy.defaultExpirationPeriod,
-                    )
-                reEarnings.add(reEarned)
-                requestedLines.add(
-                    CancellationLine(originalLine = line, restoredAmount = restoreAmount, restorationType = RestorationType.RE_EARNED),
-                )
-                reearnedEarningIds.add(reEarned.id)
-            } else {
-                earning.restoreUsage(restoreAmount)
-                restoredEarnings.add(earning)
-                requestedLines.add(
-                    CancellationLine(originalLine = line, restoredAmount = restoreAmount, restorationType = RestorationType.RESTORED),
-                )
-                reearnedEarningIds.add(null)
-            }
-        }
+        val allocation: CancellationAllocation =
+            cancellationAllocator.allocate(
+                usage = usage,
+                cancelAmount = cancelAmount,
+                earningsById = earningsById,
+                policy = policy,
+                now = now,
+            )
 
         // 취소로 복원되는 금액은 RESTORED/RE_EARNED 여부와 무관하게 지갑 잔액을 동일하게 증가시킨다.
         wallet.earn(PointAmount(cancelAmount))
-        usage.cancel(requestedLines)
+        usage.cancel(allocation.requestedLines)
 
         walletRepository.save(wallet = wallet, memberId = dto.memberId)
-        if (restoredEarnings.isNotEmpty()) {
-            earningRepository.updateStatusAll(earnings = restoredEarnings, walletId = wallet.id)
+        if (allocation.restoredEarnings.isNotEmpty()) {
+            earningRepository.updateStatusAll(earnings = allocation.restoredEarnings, walletId = wallet.id)
         }
-        if (reEarnings.isNotEmpty()) {
-            earningRepository.saveAll(earnings = reEarnings, walletId = wallet.id, policyId = policy.id)
+        if (allocation.reEarnings.isNotEmpty()) {
+            earningRepository.saveAll(earnings = allocation.reEarnings, walletId = wallet.id, policyId = policy.id)
         }
         usageRepository.saveCancellation(
             usage = usage,
             walletId = wallet.id,
-            requestedLines = requestedLines,
-            reearnedEarningIds = reearnedEarningIds,
+            requestedLines = allocation.requestedLines,
+            reearnedEarningIds = allocation.reearnedEarningIds,
             canceledAt = now,
         )
 
-        return CancelUsagePointResult(usage = usage, requestedLines = requestedLines, reEarnings = reEarnings)
-    }
-
-    private fun allocateCancellation(
-        usage: PointUsage,
-        cancelAmount: BigDecimal,
-    ): List<Pair<UsageLine, BigDecimal>> {
-        val alreadyCancelledByLine: Map<UsageLine, BigDecimal> =
-            usage.cancellationLines
-                .groupingBy { it.originalLine }
-                .fold(BigDecimal.ZERO) { acc, cancellationLine -> acc + cancellationLine.restoredAmount }
-
-        var remaining: BigDecimal = cancelAmount
-        val allocations: MutableList<Pair<UsageLine, BigDecimal>> = mutableListOf()
-        for (line in usage.lines) {
-            if (remaining.signum() == 0) break
-            val cancellable: BigDecimal = line.amount - alreadyCancelledByLine.getOrDefault(line, BigDecimal.ZERO)
-            if (cancellable.signum() <= 0) continue
-            val take: BigDecimal = minOf(cancellable, remaining)
-            allocations.add(line to take)
-            remaining -= take
-        }
-        check(remaining.signum() == 0) { "취소 가능한 금액이 부족합니다: 부족액=$remaining" }
-        return allocations
+        return CancelUsagePointResult(usage = usage, requestedLines = allocation.requestedLines, reEarnings = allocation.reEarnings)
     }
 
     /**
