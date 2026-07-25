@@ -132,7 +132,7 @@ private class FakeEarnUsageRepository : PointUsageRepository {
         usage: PointUsage,
         walletId: String,
         requestedLines: List<CancellationLine>,
-        reearnedEarningIds: List<String?>,
+        reearnedEarningIds: List<String>,
         canceledAt: LocalDateTime,
     ) {
         walletIdByUsageId[usage.id] = walletId

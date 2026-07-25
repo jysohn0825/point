@@ -40,18 +40,15 @@ class PointUsagePersistenceAdapter(
         usage: PointUsage,
         walletId: String,
         requestedLines: List<CancellationLine>,
-        reearnedEarningIds: List<String?>,
+        reearnedEarningIds: List<String>,
         canceledAt: LocalDateTime,
     ) {
-        require(requestedLines.size == reearnedEarningIds.size) {
-            "requestedLines와 reearnedEarningIds는 같은 길이여야 합니다."
+        // reearnedEarningIds는 requestedLines 중 RE_EARNED인 라인들만, 등장 순서대로 담고 있다(CancellationAllocation 참고).
+        val reEarnedIndices: List<Int> = requestedLines.indices.filter { requestedLines[it].restorationType == RestorationType.RE_EARNED }
+        require(reEarnedIndices.size == reearnedEarningIds.size) {
+            "RE_EARNED 취소 라인 수와 reearnedEarningIds 개수가 일치해야 합니다: lines=${reEarnedIndices.size}, ids=${reearnedEarningIds.size}"
         }
-        requestedLines.forEachIndexed { index, line ->
-            val requiresReearnedId: Boolean = line.restorationType == RestorationType.RE_EARNED
-            require((reearnedEarningIds[index] != null) == requiresReearnedId) {
-                "reearnedEarningIds[$index]는 RE_EARNED일 때만 값이 있어야 합니다: type=${line.restorationType}"
-            }
-        }
+        val reearnedEarningIdByIndex: Map<Int, String> = reEarnedIndices.zip(reearnedEarningIds).toMap()
 
         val existingLinesByEarningId: Map<String, PointUsageLineEntity> =
             lineJpaRepository.findAllByUsageId(usage.id).associateBy { it.earningId }
@@ -80,7 +77,7 @@ class PointUsagePersistenceAdapter(
                     usageLineId = usageLineEntity.id,
                     restoredAmount = line.restoredAmount.longValueExact(),
                     restoreType = line.restorationType.name,
-                    reearnedEarningId = reearnedEarningIds[index],
+                    reearnedEarningId = reearnedEarningIdByIndex[index],
                 )
             }
         cancellationLineJpaRepository.saveAll(newCancellationLineEntities)

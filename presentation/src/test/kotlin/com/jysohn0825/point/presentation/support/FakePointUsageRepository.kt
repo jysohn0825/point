@@ -28,7 +28,7 @@ class FakePointUsageRepository : PointUsageRepository {
         usage: PointUsage,
         walletId: String,
         requestedLines: List<CancellationLine>,
-        reearnedEarningIds: List<String?>,
+        reearnedEarningIds: List<String>,
         canceledAt: LocalDateTime,
     ) {
         usagesById[usage.id] = usage

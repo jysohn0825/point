@@ -3,6 +3,8 @@ package com.jysohn0825.point.domain.service
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointUsage
+import com.jysohn0825.point.domain.exception.checkDomain
+import com.jysohn0825.point.domain.exception.requireDomain
 import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.RestorationType
@@ -22,15 +24,15 @@ class PointCancellationAllocator {
         policy: PointPolicy,
         now: LocalDateTime,
     ): CancellationAllocation {
-        require(cancelAmount.signum() > 0) { "취소할 사용 금액이 없습니다: usageId=${usage.id}" }
-        require(cancelAmount <= usage.remainingAmount) {
+        requireDomain(cancelAmount.signum() > 0) { "취소할 사용 금액이 없습니다: usageId=${usage.id}" }
+        requireDomain(cancelAmount <= usage.remainingAmount) {
             "취소 요청 금액이 남은 사용 금액을 초과할 수 없습니다: requested=$cancelAmount, remaining=${usage.remainingAmount}"
         }
 
         val allocations: List<Pair<UsageLine, BigDecimal>> = allocateByLine(usage = usage, cancelAmount = cancelAmount)
 
         val requestedLines: MutableList<CancellationLine> = mutableListOf()
-        val reearnedEarningIds: MutableList<String?> = mutableListOf()
+        val reearnedEarningIds: MutableList<String> = mutableListOf()
         val restoredEarnings: MutableList<PointEarning> = mutableListOf()
         val reEarnings: MutableList<PointEarning> = mutableListOf()
 
@@ -57,7 +59,6 @@ class PointCancellationAllocator {
                 requestedLines.add(
                     CancellationLine(originalLine = line, restoredAmount = restoreAmount, restorationType = RestorationType.RESTORED),
                 )
-                reearnedEarningIds.add(null)
             }
         }
 
@@ -88,7 +89,7 @@ class PointCancellationAllocator {
             allocations.add(line to take)
             remaining -= take
         }
-        check(remaining.signum() == 0) { "취소 가능한 금액이 부족합니다: 부족액=$remaining" }
+        checkDomain(remaining.signum() == 0) { "취소 가능한 금액이 부족합니다: 부족액=$remaining" }
         return allocations
     }
 }

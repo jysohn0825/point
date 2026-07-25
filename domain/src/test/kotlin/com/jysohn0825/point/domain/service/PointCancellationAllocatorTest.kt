@@ -5,6 +5,7 @@ import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.pointEarning
 import com.jysohn0825.point.domain.entity.pointPolicy
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.fixture.pointUsage
 import com.jysohn0825.point.domain.fixture.usageLine
 import com.jysohn0825.point.domain.vo.RestorationType
@@ -43,7 +44,7 @@ class PointCancellationAllocatorTest :
                     allocation.requestedLines.size shouldBe 1
                     allocation.requestedLines[0].restorationType shouldBe RestorationType.RESTORED
                     allocation.restoredEarnings shouldBe listOf(earning)
-                    allocation.reearnedEarningIds shouldBe listOf(null)
+                    allocation.reearnedEarningIds.shouldBeEmpty()
                     earning.remainingAmount.value shouldBe BigDecimal(1_000)
                 }
             }
@@ -110,7 +111,7 @@ class PointCancellationAllocatorTest :
 
             `when`("0원을 취소 요청하면") {
                 then("예외가 발생한다") {
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         sut.allocate(
                             usage = usage,
                             cancelAmount = BigDecimal.ZERO,
@@ -129,7 +130,7 @@ class PointCancellationAllocatorTest :
 
             `when`("남은 사용 금액을 초과해 취소 요청하면") {
                 then("예외가 발생한다") {
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<PointDomainException> {
                         sut.allocate(
                             usage = usage,
                             cancelAmount = BigDecimal(600),

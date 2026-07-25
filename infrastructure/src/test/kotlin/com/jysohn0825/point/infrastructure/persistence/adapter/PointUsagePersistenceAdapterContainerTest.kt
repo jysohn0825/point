@@ -141,7 +141,6 @@ class PointUsagePersistenceAdapterContainerTest {
             usage = reloaded,
             walletId = walletId,
             requestedLines = requestedLines,
-            reearnedEarningIds = listOf(null),
             canceledAt = LocalDateTime.now(),
         )
         entityManager.flush()

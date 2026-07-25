@@ -16,13 +16,14 @@ interface PointUsageRepository {
      * cancel() 호출 직후, 그 결과(usage)와 이번 호출에서 방금 추가된 취소 라인들(requestedLines)을 함께 저장한다.
      * PointUsage.cancellationLines는 과거 모든 취소를 합친 flat list라 "이번 호출분"만 구분할 수 없으므로,
      * point_usage_cancellation 헤더 1건으로 묶기 위해 requestedLines를 별도로 받는다.
-     * reearnedEarningIds[i]는 requestedLines[i]가 RE_EARNED일 때만 그 신규 적립건의 id여야 하고, 그 외엔 null이어야 한다.
+     * reearnedEarningIds는 requestedLines 중 RE_EARNED인 라인들만, 등장 순서대로 그 신규 적립건의 id를 담는다
+     * (RESTORED 라인은 신규 적립을 만들지 않으므로 이 목록에 나타나지 않는다).
      */
     fun saveCancellation(
         usage: PointUsage,
         walletId: String,
         requestedLines: List<CancellationLine>,
-        reearnedEarningIds: List<String?> = List(requestedLines.size) { null },
+        reearnedEarningIds: List<String> = emptyList(),
         canceledAt: LocalDateTime = LocalDateTime.now(),
     )
 
