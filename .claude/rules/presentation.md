@@ -15,7 +15,7 @@ Spring Boot 진입점(`PointApiApplication`).
 ## 설계 규칙
 
 - 모든 예외는 `GlobalExceptionHandler`에서 중앙 처리하고 `ErrorResponse`로 응답한다. 컨트롤러에서 개별 try/catch를 하지 않는다.
-  - `PointDomainException`/`PointBusinessException`/`IllegalArgumentException` → 400, 그 외 `Exception` → 500
+  - `PointDomainException`/`IllegalArgumentException` → 400, 그 외 `Exception` → 500
 - 도메인 엔티티/값 객체를 컨트롤러 밖으로 그대로 노출하지 않고 DTO로 변환한다.
 
 ## 네이밍 규칙
