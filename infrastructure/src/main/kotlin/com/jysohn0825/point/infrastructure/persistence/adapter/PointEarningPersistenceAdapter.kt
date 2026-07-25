@@ -37,6 +37,34 @@ class PointEarningPersistenceAdapter(
         jpaRepository.saveAll(earnings.map { it.toEntity(walletId, policyId, existingById[it.id]) })
     }
 
+    override fun updateStatus(
+        earning: PointEarning,
+        walletId: String,
+    ) {
+        val existing = earning.requireExisting()
+        jpaRepository.save(earning.toEntity(walletId, existing.policyId, existing))
+    }
+
+    override fun updateStatusAll(
+        earnings: List<PointEarning>,
+        walletId: String,
+    ) {
+        val existingById = jpaRepository.findAllByIdIn(earnings.map { it.id }).associateBy { it.id }
+        jpaRepository.saveAll(
+            earnings.map { earning ->
+                val existing =
+                    existingById[earning.id]
+                        ?: throw PointDomainException("적립건을 찾을 수 없습니다: earningId=${earning.id}")
+                earning.toEntity(walletId, existing.policyId, existing)
+            },
+        )
+    }
+
+    private fun PointEarning.requireExisting(): PointEarningEntity =
+        jpaRepository
+            .findById(id)
+            .orElseThrow { PointDomainException("적립건을 찾을 수 없습니다: earningId=$id") }
+
     override fun findById(earningId: String): PointEarning =
         jpaRepository
             .findById(earningId)
