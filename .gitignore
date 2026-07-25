@@ -46,3 +46,7 @@ Thumbs.db
 ### Env ###
 .env
 .env.*
+
+### Claude ###
+.claude/settings.local.json
+.claude/worktrees/
