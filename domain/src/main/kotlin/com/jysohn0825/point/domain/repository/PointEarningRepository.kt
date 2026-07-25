@@ -17,6 +17,20 @@ interface PointEarningRepository {
         policyId: String,
     )
 
+    /**
+     * 이미 존재하는 적립건의 상태/잔여금액만 갱신한다(취소·사용·사용복원 등 id 기반 갱신).
+     * 이런 전이는 policyId를 쓰지 않으므로 어댑터가 기존 값을 그대로 보존한다.
+     */
+    fun updateStatus(
+        earning: PointEarning,
+        walletId: String,
+    )
+
+    fun updateStatusAll(
+        earnings: List<PointEarning>,
+        walletId: String,
+    )
+
     fun findById(earningId: String): PointEarning
 
     /** 동일 (지갑, 적립유형, 출처참조값) 조합의 기존 적립건이 있는지 조회한다 (적립 멱등성 체크용). */
