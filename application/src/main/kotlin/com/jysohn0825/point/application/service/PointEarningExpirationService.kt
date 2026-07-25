@@ -4,11 +4,11 @@ import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
+import com.jysohn0825.point.domain.service.PointExpirationAllocator
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.support.lock.DistributedLock
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Service
@@ -16,6 +16,8 @@ class PointEarningExpirationService(
     private val walletRepository: PointWalletRepository,
     private val earningRepository: PointEarningRepository,
 ) {
+    private val expirationAllocator: PointExpirationAllocator = PointExpirationAllocator()
+
     /**
      * 만료 배치의 지갑 단위 처리 단위. memberId를 모르는 상태(walletId만 앎)에서 지갑을 잠근다.
      */
@@ -67,17 +69,11 @@ class PointEarningExpirationService(
         return dueEarnings
     }
 
-    /**
-     * TODO 도메인 서비스 만들기
-     * expire()는 상태만 EXPIRED로 바꾸고 remainingAmount는 그대로 두므로(취소취소의 CANCELED와 달리
-     * "얼마가 만료됐는지" 기록으로 남긴다), 지갑 잔액에서 뺄 금액은 expire() 호출 전에 미리 합산해야 한다.
-     */
     private fun applyExpiration(
         wallet: PointWallet,
         dueEarnings: List<PointEarning>,
     ) {
-        val totalExpired: BigDecimal = dueEarnings.sumOf { it.remainingAmount.value }
-        dueEarnings.forEach { it.expire() }
-        wallet.decrease(PointAmount(totalExpired))
+        val totalExpired: PointAmount = expirationAllocator.allocate(dueEarnings = dueEarnings)
+        wallet.decrease(totalExpired)
     }
 }
