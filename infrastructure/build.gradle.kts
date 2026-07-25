@@ -17,12 +17,11 @@ dependencies {
     implementation(libs.redisson.spring.boot.starter)
     implementation(libs.kotlin.reflect)
 
-    runtimeOnly("com.h2database:h2")
+    runtimeOnly("com.mysql:mysql-connector-j")
 
     testImplementation(testFixtures(project(":domain")))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:mysql")
-    testRuntimeOnly("com.mysql:mysql-connector-j")
 }
