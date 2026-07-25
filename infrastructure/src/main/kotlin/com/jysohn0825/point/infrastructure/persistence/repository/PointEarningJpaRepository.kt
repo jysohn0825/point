@@ -34,4 +34,35 @@ interface PointEarningJpaRepository : JpaRepository<PointEarningEntity, String> 
         earnType: String,
         sourceReferenceId: String,
     ): PointEarningEntity?
+
+    /** 조회 API용 — 상태 무관, 최신순. */
+    fun findAllByWalletIdOrderByEarnedAtDesc(walletId: String): List<PointEarningEntity>
+
+    /** 만료 배치의 순회 대상 지갑 id (ACTIVE·잔여금액>0·이미 만료). */
+    @Query(
+        """
+        select distinct e.walletId from PointEarningEntity e
+        where e.status = 'ACTIVE'
+          and e.remainingAmount > 0
+          and e.expiresAt <= :now
+        """,
+    )
+    fun findExpiredCandidateWalletIds(
+        @Param("now") now: LocalDateTime,
+    ): List<String>
+
+    /** findRedeemableByWalletId의 만료 버전 — 만료 배치가 특정 지갑에서 처리할 대상 건. */
+    @Query(
+        """
+        select e from PointEarningEntity e
+        where e.walletId = :walletId
+          and e.status = 'ACTIVE'
+          and e.remainingAmount > 0
+          and e.expiresAt <= :now
+        """,
+    )
+    fun findExpiringByWalletId(
+        @Param("walletId") walletId: String,
+        @Param("now") now: LocalDateTime,
+    ): List<PointEarningEntity>
 }

@@ -33,6 +33,25 @@ class PointWalletPersistenceAdapter(
         jpaRepository.save(wallet.toEntity(memberId, existingOverride))
     }
 
+    override fun findByMemberId(memberId: String): PointWallet? =
+        jpaRepository.findByMemberId(memberId)?.let { it.toDomain(resolveHoldingLimit(it)) }
+
+    override fun findByIdForUpdate(walletId: String): PointWallet {
+        val entity =
+            jpaRepository.findByIdForUpdate(walletId)
+                ?: throw PointDomainException("포인트 지갑을 찾을 수 없습니다: walletId=$walletId")
+        return entity.toDomain(resolveHoldingLimit(entity))
+    }
+
+    override fun updateBalance(wallet: PointWallet) {
+        // memberId를 모르는 호출 경로(배치)를 위한 갱신 — 기존 row에서 memberId/holdingLimitOverride를 그대로 보존한다.
+        val existing =
+            jpaRepository
+                .findById(wallet.id)
+                .orElseThrow { PointDomainException("포인트 지갑을 찾을 수 없습니다: walletId=${wallet.id}") }
+        jpaRepository.save(wallet.toEntity(existing.memberId, existing.holdingLimitOverride))
+    }
+
     private fun resolveHoldingLimit(entity: PointWalletEntity): HoldingLimit =
         entity.holdingLimitOverride
             ?.let { HoldingLimit(BigDecimal(it)) }

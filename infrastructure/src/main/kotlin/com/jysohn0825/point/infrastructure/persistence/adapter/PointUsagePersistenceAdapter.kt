@@ -109,31 +109,7 @@ class PointUsagePersistenceAdapter(
             usageJpaRepository
                 .findById(usageId)
                 .orElseThrow { PointDomainException("사용건을 찾을 수 없습니다: usageId=$usageId") }
-        val lineEntities = lineJpaRepository.findAllByUsageId(usageId)
-        val lineEntityById = lineEntities.associateBy { it.id }
-        val cancellationIds = cancellationJpaRepository.findAllByUsageId(usageId).map { it.id }
-        val cancellationLineEntities =
-            if (cancellationIds.isEmpty()) {
-                emptyList()
-            } else {
-                cancellationLineJpaRepository.findAllByCancellationIdIn(cancellationIds)
-            }
-
-        return PointUsage.reconstitute(
-            id = entity.id,
-            orderNumber = OrderNumber(entity.orderNumber),
-            lines = lineEntities.map { it.toUsageLine() },
-            usedAt = entity.usedAt,
-            cancellationLines =
-                cancellationLineEntities.map { cl ->
-                    val lineEntity = lineEntityById.getValue(cl.usageLineId)
-                    CancellationLine(
-                        originalLine = lineEntity.toUsageLine(),
-                        restoredAmount = BigDecimal.valueOf(cl.restoredAmount),
-                        restorationType = RestorationType.valueOf(cl.restoreType),
-                    )
-                },
-        )
+        return entity.toDomain()
     }
 
     override fun findLinesByEarningId(earningId: String): List<EarningUsageTrace> {
@@ -145,6 +121,38 @@ class PointUsagePersistenceAdapter(
                 amount = BigDecimal.valueOf(line.amount),
             )
         }
+    }
+
+    override fun findAllByWalletId(walletId: String): List<PointUsage> =
+        usageJpaRepository.findAllByWalletIdOrderByUsedAtDesc(walletId).map { it.toDomain() }
+
+    /** usage 하나를 라인·취소이력까지 포함해 완전히 조립한다 (findById/findAllByWalletId 공용). */
+    private fun PointUsageEntity.toDomain(): PointUsage {
+        val lineEntities = lineJpaRepository.findAllByUsageId(id)
+        val lineEntityById = lineEntities.associateBy { it.id }
+        val cancellationIds = cancellationJpaRepository.findAllByUsageId(id).map { it.id }
+        val cancellationLineEntities =
+            if (cancellationIds.isEmpty()) {
+                emptyList()
+            } else {
+                cancellationLineJpaRepository.findAllByCancellationIdIn(cancellationIds)
+            }
+
+        return PointUsage.reconstitute(
+            id = id,
+            orderNumber = OrderNumber(orderNumber),
+            lines = lineEntities.map { it.toUsageLine() },
+            usedAt = usedAt,
+            cancellationLines =
+                cancellationLineEntities.map { cl ->
+                    val lineEntity = lineEntityById.getValue(cl.usageLineId)
+                    CancellationLine(
+                        originalLine = lineEntity.toUsageLine(),
+                        restoredAmount = BigDecimal.valueOf(cl.restoredAmount),
+                        restorationType = RestorationType.valueOf(cl.restoreType),
+                    )
+                },
+        )
     }
 }
 

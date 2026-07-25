@@ -81,6 +81,16 @@ class PointEarningPersistenceAdapter(
         earnType: EarnType,
         sourceReferenceId: String,
     ): PointEarning? = jpaRepository.findByWalletIdAndEarnTypeAndSourceReferenceId(walletId, earnType.name, sourceReferenceId)?.toDomain()
+
+    override fun findAllByWalletId(walletId: String): List<PointEarning> =
+        jpaRepository.findAllByWalletIdOrderByEarnedAtDesc(walletId).map { it.toDomain() }
+
+    override fun findExpiredCandidateWalletIds(now: LocalDateTime): List<String> = jpaRepository.findExpiredCandidateWalletIds(now)
+
+    override fun findExpiringByWalletId(
+        walletId: String,
+        now: LocalDateTime,
+    ): List<PointEarning> = jpaRepository.findExpiringByWalletId(walletId, now).map { it.toDomain() }
 }
 
 private fun PointEarningEntity.toDomain(): PointEarning =
