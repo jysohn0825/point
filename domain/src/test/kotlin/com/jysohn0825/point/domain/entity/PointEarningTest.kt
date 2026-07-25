@@ -20,6 +20,7 @@ class PointEarningTest :
                     PointEarning.earn(
                         amount = pointAmount(BigDecimal(500)),
                         earnType = EarnType.SYSTEM,
+                        sourceReferenceId = "ORDER-0001",
                     )
 
                 Then("지급 관리자 없이 기본 만료 기간(365일)이 적용된다") {

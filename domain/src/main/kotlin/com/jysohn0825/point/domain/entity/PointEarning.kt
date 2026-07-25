@@ -15,6 +15,7 @@ class PointEarning private constructor(
     val id: String,
     val amount: PointAmount,
     val earnType: EarnType,
+    val sourceReferenceId: String,
     val grantedBy: GrantedBy?,
     val earnedAt: LocalDateTime,
     val expirationDate: ExpirationDate,
@@ -70,12 +71,14 @@ class PointEarning private constructor(
         fun earn(
             amount: PointAmount,
             earnType: EarnType,
+            sourceReferenceId: String,
             id: String = UUID.randomUUID().toString(),
             grantedBy: GrantedBy? = null,
             earnedAt: LocalDateTime = LocalDateTime.now(),
             period: ExpirationPeriod = ExpirationPeriod.DEFAULT,
         ): PointEarning {
             require(id.isNotBlank()) { "적립 식별자는 비어있을 수 없습니다." }
+            require(sourceReferenceId.isNotBlank()) { "적립 출처 참조값은 비어있을 수 없습니다." }
             require((earnType == EarnType.MANUAL) == (grantedBy != null)) {
                 "수기지급(MANUAL)인 경우에만 지급 관리자(GrantedBy)를 가질 수 있습니다."
             }
@@ -83,6 +86,7 @@ class PointEarning private constructor(
                 id = id,
                 amount = amount,
                 earnType = earnType,
+                sourceReferenceId = sourceReferenceId,
                 grantedBy = grantedBy,
                 earnedAt = earnedAt,
                 expirationDate = ExpirationDate.from(earnedAt, period),
