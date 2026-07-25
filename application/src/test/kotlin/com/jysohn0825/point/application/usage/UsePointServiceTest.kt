@@ -1,6 +1,5 @@
 package com.jysohn0825.point.application.usage
 
-import com.jysohn0825.point.application.exception.PointBusinessException
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointUsage
@@ -247,7 +246,7 @@ class UsePointServiceTest :
 
             When("사용을 시도하면") {
                 Then("예외가 발생하고 잔액은 변하지 않는다") {
-                    shouldThrow<PointBusinessException> {
+                    shouldThrow<IllegalArgumentException> {
                         usePointService.use(UsePointDto(memberId = "member-1", orderNumber = "ORDER-3", amount = BigDecimal(600)))
                     }
                     walletRepository.wallet.balance.amount shouldBe BigDecimal(500)

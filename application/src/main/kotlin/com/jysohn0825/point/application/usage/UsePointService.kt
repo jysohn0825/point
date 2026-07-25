@@ -11,8 +11,8 @@ import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointUsageRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
+import com.jysohn0825.point.domain.service.PointRedemptionAllocator
 import com.jysohn0825.point.domain.vo.CancellationLine
-import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.RestorationType
@@ -29,17 +29,15 @@ class UsePointService(
     private val usageRepository: PointUsageRepository,
     private val policyRepository: PointPolicyRepository,
 ) {
-    /**
-     * 사용 가능한 적립건 중 수기지급 우선, 그 다음 만료 임박 순으로 소진한다.
-     */
+    private val redemptionAllocator: PointRedemptionAllocator = PointRedemptionAllocator()
+
     @DistributedLock(key = "'point-usage-lock:' + #dto.memberId")
     @Transactional
     fun use(dto: UsePointDto): PointUsage {
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
-        val redeemable: List<PointEarning> =
-            sortedByConsumptionPriority(earnings = earningRepository.findRedeemableByWalletId(wallet.id))
+        val redeemable: List<PointEarning> = earningRepository.findRedeemableByWalletId(wallet.id)
 
-        val lines: List<UsageLine> = allocateUsage(redeemable = redeemable, amount = dto.amount)
+        val lines: List<UsageLine> = redemptionAllocator.allocate(earnings = redeemable, amount = dto.amount)
         val usedEarningIds: Set<String> = lines.map { it.earningId }.toSet()
         val touchedEarnings: List<PointEarning> = redeemable.filter { it.id in usedEarningIds }
 
@@ -51,28 +49,6 @@ class UsePointService(
         usageRepository.save(usage = usage, walletId = wallet.id)
 
         return usage
-    }
-
-    private fun sortedByConsumptionPriority(earnings: List<PointEarning>): List<PointEarning> =
-        earnings.sortedWith(compareBy({ it.earnType != EarnType.MANUAL }, { it.expirationDate.value }))
-
-    private fun allocateUsage(
-        redeemable: List<PointEarning>,
-        amount: BigDecimal,
-    ): List<UsageLine> {
-        var remaining: BigDecimal = amount
-        val lines: MutableList<UsageLine> = mutableListOf()
-        for (earning in redeemable) {
-            if (remaining.signum() == 0) break
-            val deduction: BigDecimal = minOf(earning.remainingAmount.value, remaining)
-            earning.use(deduction)
-            lines.add(UsageLine(earningId = earning.id, amount = deduction))
-            remaining -= deduction
-        }
-        if (remaining.signum() > 0) {
-            throw PointBusinessException("사용 가능한 포인트가 부족합니다: 부족액=$remaining")
-        }
-        return lines
     }
 
     /**
