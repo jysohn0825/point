@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class RedissonConfig(
-    @Value("\${redis.host:localhost}") private val host: String,
-    @Value("\${redis.port:6379}") private val port: Int,
+    @Value("\${spring.data.redis.host:localhost}") private val host: String,
+    @Value("\${spring.data.redis.port:6379}") private val port: Int,
 ) {
     @Bean(destroyMethod = "shutdown")
     fun redissonClient(): RedissonClient {

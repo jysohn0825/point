@@ -1,6 +1,5 @@
 package com.jysohn0825.point.infrastructure.key
 
-import com.jysohn0825.point.infrastructure.config.RedisTestContainer
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.AfterAll
@@ -20,8 +19,7 @@ class RedissonDistributedKeyGeneratorContainerTest {
     private val redissonClient: RedissonClient =
         Redisson.create(
             Config().apply {
-                useSingleServer().address =
-                    "redis://${RedisTestContainer.instance.host}:${RedisTestContainer.instance.getMappedPort(6379)}"
+                useSingleServer().address = "redis://localhost:6379"
             },
         )
 

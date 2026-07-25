@@ -1,6 +1,5 @@
 package com.jysohn0825.point.infrastructure.cache
 
-import com.jysohn0825.point.infrastructure.config.RedisTestContainer
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.AfterAll
@@ -17,8 +16,7 @@ class RedissonCacheExecutorContainerTest {
     private val redissonClient: RedissonClient =
         Redisson.create(
             Config().apply {
-                useSingleServer().address =
-                    "redis://${RedisTestContainer.instance.host}:${RedisTestContainer.instance.getMappedPort(6379)}"
+                useSingleServer().address = "redis://localhost:6379"
             },
         )
 

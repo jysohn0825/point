@@ -1,6 +1,5 @@
 package com.jysohn0825.point.infrastructure.lock
 
-import com.jysohn0825.point.infrastructure.config.RedisTestContainer
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
@@ -20,8 +19,7 @@ class RedissonDistributedLockExecutorContainerTest {
     private val redissonClient: RedissonClient =
         Redisson.create(
             Config().apply {
-                useSingleServer().address =
-                    "redis://${RedisTestContainer.instance.host}:${RedisTestContainer.instance.getMappedPort(6379)}"
+                useSingleServer().address = "redis://localhost:6379"
             },
         )
 

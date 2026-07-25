@@ -24,6 +24,9 @@ paths:
 
 - Kotest `BehaviorSpec`(Given/When/Then), 시나리오는 한글로 작성.
 - `XxxMapper`는 Spring/DB에 의존하지 않는 순수 함수이므로 `BehaviorSpec` 단위 테스트로 커버한다(가장 저비용으로 커버리지를 확보할 수 있는 지점).
-- 컨테이너 기반 테스트(`*ContainerTest`)는 Testcontainers(MySQL) 또는 Redis 컨테이너 사용, 실행 전 Docker 필요. 이 저장소의 실행 환경에 따라 Docker에 도달하지 못해 로컬에서 못 돌리는 경우가 있을 수 있는데, 이는 코드 결함이 아니라 환경 제약이다.
+- 컨테이너 기반 테스트(`*ContainerTest`)는 MySQL/Redis 둘 다 Docker가 있어야 실행된다는 공통점이 있지만, 컨테이너를 띄우는 주체가 다르다.
+  - MySQL: Testcontainers(`MySqlTestContainer`, JVM 싱글턴으로 1회만 기동)가 자체적으로 컨테이너를 띄운다. Docker 데몬만 있으면 되고 별도 준비 불필요.
+  - Redis: 별도 컨테이너를 띄우지 않고, `docker-compose.yml`이 띄운 `localhost:6379`(prod와 동일한 인스턴스)에 직접 연결한다. 실행 전 리포지토리 루트에서 `docker compose up -d`가 되어 있어야 한다.
+  - 이 저장소의 실행 환경에 따라 Docker에 도달하지 못해 로컬에서 못 돌리는 경우가 있을 수 있는데, 이는 코드 결함이 아니라 환경 제약이다.
 - `testFixtures(project(":domain"))`을 `testImplementation`으로 참조하고, `domain`의 엔티티/인터페이스는 그 테스트 픽스처와 fake 구현체를 그대로 사용한다.
 - 테스트 커버리지는 80% 이상을 유지한다.
