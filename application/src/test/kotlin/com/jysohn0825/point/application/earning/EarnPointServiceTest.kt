@@ -10,6 +10,7 @@ import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
 import com.jysohn0825.point.domain.vo.EarnType
+import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -49,6 +50,20 @@ private class FakePointEarningRepository : PointEarningRepository {
         policyId: String,
     ) {
         this.earnings.addAll(earnings)
+        earnings.forEach { walletIdByEarningId[it.id] = walletId }
+    }
+
+    override fun updateStatus(
+        earning: PointEarning,
+        walletId: String,
+    ) {
+        walletIdByEarningId[earning.id] = walletId
+    }
+
+    override fun updateStatusAll(
+        earnings: List<PointEarning>,
+        walletId: String,
+    ) {
         earnings.forEach { walletIdByEarningId[it.id] = walletId }
     }
 
@@ -163,6 +178,55 @@ class EarnPointServiceTest :
                         )
                     }
                     walletRepository.wallet.balance.amount shouldBe BigDecimal.ZERO
+                }
+            }
+        }
+
+        Given("사용되지 않은 적립건을 취소하면") {
+            val walletRepository = FakePointWalletRepository(pointWallet())
+            val earningRepository = FakePointEarningRepository()
+            val earnPointService = service(walletRepository, earningRepository)
+            val earning =
+                earnPointService.earn(
+                    EarnPointDto(
+                        memberId = "member-1",
+                        amount = BigDecimal(1_000),
+                        earnType = EarnType.SYSTEM,
+                        sourceReferenceId = "ORDER-3",
+                    ),
+                )
+
+            When("적립 취소를 실행하면") {
+                val canceled = earnPointService.cancelEarning("member-1", earning.id)
+
+                Then("적립건이 취소 상태가 되고 지갑 잔액이 원복된다") {
+                    canceled.status shouldBe EarningStatus.CANCELED
+                    canceled.remainingAmount.value shouldBe BigDecimal.ZERO
+                    walletRepository.wallet.balance.amount shouldBe BigDecimal.ZERO
+                }
+            }
+        }
+
+        Given("일부 사용된 적립건을 취소하려고 하면") {
+            val walletRepository = FakePointWalletRepository(pointWallet())
+            val earningRepository = FakePointEarningRepository()
+            val earnPointService = service(walletRepository, earningRepository)
+            val earning =
+                earnPointService.earn(
+                    EarnPointDto(
+                        memberId = "member-1",
+                        amount = BigDecimal(1_000),
+                        earnType = EarnType.SYSTEM,
+                        sourceReferenceId = "ORDER-4",
+                    ),
+                )
+            earning.use(BigDecimal(400))
+
+            When("적립 취소를 시도하면") {
+                Then("예외가 발생한다") {
+                    shouldThrow<IllegalStateException> {
+                        earnPointService.cancelEarning("member-1", earning.id)
+                    }
                 }
             }
         }

@@ -59,7 +59,7 @@ class EarnPointService(
                 earnType = dto.earnType,
                 sourceReferenceId = dto.sourceReferenceId,
                 grantedBy = dto.grantedByAdminId?.let(::GrantedBy),
-                period = policy.defaultExpirationPeriod,
+                period = dto.expirationPeriod ?: policy.defaultExpirationPeriod,
             )
 
         walletRepository.save(wallet, dto.memberId)
@@ -77,5 +77,27 @@ class EarnPointService(
                 "1회 적립 한도(${policy.maxEarnPerTransaction.value})를 초과했습니다: ${dto.amount}",
             )
         }
+    }
+
+    /**
+     * 적립건 중 아직 하나도 사용되지 않은 전액을 취소한다. 일부라도 사용됐다면 canCancelEarning()이 false라
+     * PointEarning.cancelEarning()에서 예외가 발생한다.
+     */
+    @DistributedLock(key = "'point-earning-lock:' + #memberId + ':cancel:' + #earningId")
+    @Transactional
+    fun cancelEarning(
+        memberId: String,
+        earningId: String,
+    ): PointEarning {
+        val wallet = walletRepository.findByMemberIdForUpdate(memberId)
+        val earning = earningRepository.findById(earningId)
+
+        earning.cancelEarning()
+        wallet.decrease(earning.amount)
+
+        walletRepository.save(wallet, memberId)
+        earningRepository.updateStatus(earning, wallet.id)
+
+        return earning
     }
 }
