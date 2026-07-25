@@ -3,14 +3,20 @@ package com.jysohn0825.point.application.earning
 import com.jysohn0825.point.application.exception.PointBusinessException
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
+import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointPolicy
 import com.jysohn0825.point.domain.entity.pointWallet
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
+import com.jysohn0825.point.domain.repository.PointUsageRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
+import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
+import com.jysohn0825.point.domain.vo.EarningUsageTrace
+import com.jysohn0825.point.domain.vo.OrderNumber
+import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -23,10 +29,18 @@ private class FakePointWalletRepository(
 ) : PointWalletRepository {
     override fun findByMemberIdForUpdate(memberId: String): PointWallet = wallet
 
+    override fun findByMemberId(memberId: String): PointWallet = wallet
+
+    override fun findByIdForUpdate(walletId: String): PointWallet = wallet
+
     override fun save(
         wallet: PointWallet,
         memberId: String,
     ) {
+        this.wallet = wallet
+    }
+
+    override fun updateBalance(wallet: PointWallet) {
         this.wallet = wallet
     }
 }
@@ -81,6 +95,59 @@ private class FakePointEarningRepository : PointEarningRepository {
         earnings.firstOrNull {
             walletIdByEarningId[it.id] == walletId && it.earnType == earnType && it.sourceReferenceId == sourceReferenceId
         }
+
+    override fun findAllByWalletId(walletId: String): List<PointEarning> = earnings.filter { walletIdByEarningId[it.id] == walletId }
+
+    override fun findExpiredCandidateWalletIds(now: LocalDateTime): List<String> =
+        earnings
+            .filter { it.status.isActive() && it.remainingAmount.value.signum() > 0 && it.isExpiredAt(now) }
+            .mapNotNull { walletIdByEarningId[it.id] }
+            .distinct()
+
+    override fun findExpiringByWalletId(
+        walletId: String,
+        now: LocalDateTime,
+    ): List<PointEarning> =
+        earnings.filter {
+            walletIdByEarningId[it.id] == walletId &&
+                it.status.isActive() &&
+                it.remainingAmount.value.signum() > 0 &&
+                it.isExpiredAt(now)
+        }
+}
+
+private class FakePointUsageRepository : PointUsageRepository {
+    val usages = mutableListOf<PointUsage>()
+    private val walletIdByUsageId = mutableMapOf<String, String>()
+
+    override fun save(
+        usage: PointUsage,
+        walletId: String,
+    ) {
+        usages.add(usage)
+        walletIdByUsageId[usage.id] = walletId
+    }
+
+    override fun saveCancellation(
+        usage: PointUsage,
+        walletId: String,
+        requestedLines: List<CancellationLine>,
+        reearnedEarningIds: List<String?>,
+        canceledAt: LocalDateTime,
+    ) {
+        walletIdByUsageId[usage.id] = walletId
+    }
+
+    override fun findById(usageId: String): PointUsage = usages.first { it.id == usageId }
+
+    override fun findLinesByEarningId(earningId: String): List<EarningUsageTrace> =
+        usages.flatMap { usage ->
+            usage.lines.filter { it.earningId == earningId }.map { line ->
+                EarningUsageTrace(orderNumber = usage.orderNumber, amount = line.amount)
+            }
+        }
+
+    override fun findAllByWalletId(walletId: String): List<PointUsage> = usages.filter { walletIdByUsageId[it.id] == walletId }
 }
 
 private class FakePointPolicyRepository(
@@ -101,11 +168,13 @@ private fun service(
     walletRepository: FakePointWalletRepository,
     earningRepository: FakePointEarningRepository = FakePointEarningRepository(),
     policyRepository: FakePointPolicyRepository = FakePointPolicyRepository(pointPolicy()),
+    usageRepository: FakePointUsageRepository = FakePointUsageRepository(),
 ): EarnPointService =
     EarnPointService(
         walletRepository = walletRepository,
         earningRepository = earningRepository,
         policyRepository = policyRepository,
+        usageRepository = usageRepository,
     )
 
 class EarnPointServiceTest :
@@ -227,6 +296,65 @@ class EarnPointServiceTest :
                     shouldThrow<IllegalStateException> {
                         earnPointService.cancelEarning("member-1", earning.id)
                     }
+                }
+            }
+        }
+
+        Given("적립건이 여러 개 있을 때") {
+            val walletRepository = FakePointWalletRepository(pointWallet())
+            val earningRepository = FakePointEarningRepository()
+            val earnPointService = service(walletRepository, earningRepository)
+            earnPointService.earn(
+                EarnPointDto(memberId = "member-1", amount = BigDecimal(1_000), earnType = EarnType.SYSTEM, sourceReferenceId = "ORDER-5"),
+            )
+            val second =
+                earnPointService.earn(
+                    EarnPointDto(memberId = "member-1", amount = BigDecimal(500), earnType = EarnType.SYSTEM, sourceReferenceId = "ORDER-6"),
+                )
+
+            When("목록을 조회하면") {
+                val earnings = earnPointService.getEarnings("member-1")
+
+                Then("회원의 전체 적립건이 반환된다") {
+                    earnings.size shouldBe 2
+                }
+            }
+
+            When("상세를 조회하면") {
+                val earning = earnPointService.getEarning(second.id)
+
+                Then("해당 적립건이 반환된다") {
+                    earning.id shouldBe second.id
+                    earning.amount.value shouldBe BigDecimal(500)
+                }
+            }
+        }
+
+        Given("적립건이 특정 주문에서 사용된 이력이 있을 때") {
+            val walletRepository = FakePointWalletRepository(pointWallet())
+            val earningRepository = FakePointEarningRepository()
+            val usageRepository = FakePointUsageRepository()
+            val earnPointService = service(walletRepository, earningRepository, usageRepository = usageRepository)
+            val earning =
+                earnPointService.earn(
+                    EarnPointDto(memberId = "member-1", amount = BigDecimal(1_000), earnType = EarnType.SYSTEM, sourceReferenceId = "ORDER-7"),
+                )
+            earning.use(BigDecimal(300))
+            usageRepository.save(
+                PointUsage.use(
+                    orderNumber = OrderNumber("A1234"),
+                    lines = listOf(UsageLine(earning.id, BigDecimal(300))),
+                ),
+                walletId = walletRepository.wallet.id,
+            )
+
+            When("사용 추적을 조회하면") {
+                val traces = earnPointService.getUsageTraces(earning.id)
+
+                Then("차감된 주문번호와 금액이 반환된다") {
+                    traces.size shouldBe 1
+                    traces[0].orderNumber.value shouldBe "A1234"
+                    traces[0].amount shouldBe BigDecimal(300)
                 }
             }
         }

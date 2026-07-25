@@ -5,9 +5,12 @@ import com.jysohn0825.point.application.lock.DistributedLock
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointWallet
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
+import com.jysohn0825.point.domain.repository.PointUsageRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
+import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import com.jysohn0825.point.domain.vo.GrantedBy
 import com.jysohn0825.point.domain.vo.PointAmount
 import org.springframework.stereotype.Service
@@ -18,6 +21,7 @@ class EarnPointService(
     private val walletRepository: PointWalletRepository,
     private val earningRepository: PointEarningRepository,
     private val policyRepository: PointPolicyRepository,
+    private val usageRepository: PointUsageRepository,
 ) {
     /**
      * 동일 (memberId, earnType, sourceReferenceId) 조합의 요청이 재시도되어도,
@@ -100,4 +104,27 @@ class EarnPointService(
 
         return earning
     }
+
+    /**
+     * 조회 API용 — 회원(지갑) 기준 전체 적립건 목록(상태 무관, 최신순).
+     */
+    @Transactional(readOnly = true)
+    fun getEarnings(memberId: String): List<PointEarning> {
+        val wallet =
+            walletRepository.findByMemberId(memberId)
+                ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
+        return earningRepository.findAllByWalletId(wallet.id)
+    }
+
+    /**
+     * 조회 API용 — 적립건 상세. cancelEarning()과 동일하게 지갑 소유권 교차검증은 하지 않는다(기존 관례).
+     */
+    @Transactional(readOnly = true)
+    fun getEarning(earningId: String): PointEarning = earningRepository.findById(earningId)
+
+    /**
+     * 조회 API용 — 이 적립건이 어느 주문에서 얼마나 사용됐는지 1원 단위로 역추적한다.
+     */
+    @Transactional(readOnly = true)
+    fun getUsageTraces(earningId: String): List<EarningUsageTrace> = usageRepository.findLinesByEarningId(earningId)
 }

@@ -4,6 +4,7 @@ import com.jysohn0825.point.application.exception.PointBusinessException
 import com.jysohn0825.point.application.lock.DistributedLock
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointUsage
+import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointUsageRepository
@@ -166,4 +167,21 @@ class UsePointService(
         check(remaining.signum() == 0) { "취소 가능한 금액이 부족합니다: 부족액=$remaining" }
         return allocations
     }
+
+    /**
+     * 조회 API용 — 회원(지갑) 기준 전체 사용건 목록(최신순).
+     */
+    @Transactional(readOnly = true)
+    fun getUsages(memberId: String): List<PointUsage> {
+        val wallet =
+            walletRepository.findByMemberId(memberId)
+                ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
+        return usageRepository.findAllByWalletId(wallet.id)
+    }
+
+    /**
+     * 조회 API용 — 사용건 상세(취소 이력 포함).
+     */
+    @Transactional(readOnly = true)
+    fun getUsage(usageId: String): PointUsage = usageRepository.findById(usageId)
 }
