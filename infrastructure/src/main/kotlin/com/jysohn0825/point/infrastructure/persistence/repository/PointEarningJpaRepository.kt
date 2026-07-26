@@ -19,7 +19,6 @@ interface PointEarningJpaRepository : JpaRepository<PointEarningEntity, String> 
           and e.status = 'ACTIVE'
           and e.remainingAmount > 0
           and e.expiresAt > :now
-        order by e.expiresAt asc, e.earnedAt asc
         """,
     )
     fun findRedeemableByWalletId(

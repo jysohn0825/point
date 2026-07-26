@@ -41,9 +41,10 @@ CREATE TABLE IF NOT EXISTS point_earning (
     updated_at           DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uk_earning_source (wallet_id, earn_type, source_reference_id),
-    KEY idx_earning_fifo   (wallet_id, status, expires_at, earned_at),
+    KEY idx_earning_fifo   (wallet_id, status, expires_at),
     KEY idx_earning_expire (status, expires_at),
     KEY idx_earning_policy (policy_id),
+    KEY idx_earning_wallet (wallet_id, earned_at),
 
     CONSTRAINT fk_earning_wallet FOREIGN KEY (wallet_id) REFERENCES point_wallet (id),
     CONSTRAINT fk_earning_policy FOREIGN KEY (policy_id) REFERENCES point_policy (id)
@@ -92,7 +93,7 @@ CREATE TABLE IF NOT EXISTS point_usage_cancellation (
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    KEY idx_cancellation_usage (usage_id, canceled_at),
+    KEY idx_cancellation_usage (usage_id),
 
     CONSTRAINT fk_cancellation_usage
         FOREIGN KEY (usage_id) REFERENCES point_usage (id)

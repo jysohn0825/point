@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 @Table(
     name = "point_usage_cancellation",
     indexes = [
-        Index(name = "idx_cancellation_usage", columnList = "usage_id, canceled_at"),
+        Index(name = "idx_cancellation_usage", columnList = "usage_id"),
     ],
 )
 @Comment("포인트 사용취소 헤더")
