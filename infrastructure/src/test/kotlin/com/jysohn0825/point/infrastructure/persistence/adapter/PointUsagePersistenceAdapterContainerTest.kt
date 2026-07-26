@@ -43,13 +43,13 @@ class PointUsagePersistenceAdapterContainerTest {
     fun setUp() {
         val policyId: String = UUID.randomUUID().toString()
         earningId = UUID.randomUUID().toString()
-        entityManager.persist(PointWalletEntity(id = walletId, memberId = UUID.randomUUID().toString(), balance = 1_000L))
+        entityManager.persist(PointWalletEntity(id = walletId, memberId = UUID.randomUUID().toString(), balance = BigDecimal(1_000)))
         entityManager.persist(
             PointPolicyEntity(
                 id = policyId,
                 policyVersion = 1,
-                maxEarnPerTransaction = 50_000,
-                maxHoldingAmount = 1_000_000L,
+                maxEarnPerTransaction = BigDecimal(50_000),
+                maxHoldingAmount = BigDecimal(1_000_000),
                 defaultExpirationDays = 365,
                 appliedAt = LocalDateTime.now().minusDays(1),
                 createdByAdminId = "admin-01",
@@ -60,8 +60,8 @@ class PointUsagePersistenceAdapterContainerTest {
                 id = earningId,
                 walletId = walletId,
                 policyId = policyId,
-                amount = 1_000L,
-                remainingAmount = 700L,
+                amount = BigDecimal(1_000),
+                remainingAmount = BigDecimal(700),
                 earnType = EarnType.SYSTEM.name,
                 sourceReferenceId = "ORDER-BASE",
                 earnedAt = LocalDateTime.now().minusDays(1),

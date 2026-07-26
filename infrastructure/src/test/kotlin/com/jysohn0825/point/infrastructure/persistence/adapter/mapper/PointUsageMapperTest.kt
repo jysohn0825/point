@@ -24,8 +24,8 @@ class PointUsageMapperTest :
                     entity.id shouldBe usage.id
                     entity.walletId shouldBe "wallet-1"
                     entity.orderNumber shouldBe usage.orderNumber.value
-                    entity.totalAmount shouldBe usage.totalAmount.longValueExact()
-                    entity.canceledAmount shouldBe usage.cancelledAmount.longValueExact()
+                    entity.totalAmount shouldBe usage.totalAmount
+                    entity.canceledAmount shouldBe usage.cancelledAmount
                     entity.status shouldBe UsageStatus.USED.name
                 }
             }
@@ -41,21 +41,21 @@ class PointUsageMapperTest :
                     entity.id.shouldNotBeBlank()
                     entity.usageId shouldBe "usage-1"
                     entity.earningId shouldBe "earning-1"
-                    entity.amount shouldBe 300L
+                    entity.amount shouldBe BigDecimal(300)
                 }
             }
         }
 
         Given("사용 라인 엔티티가 있을 때") {
             val entity: PointUsageLineEntity =
-                PointUsageLineEntity(id = "line-1", usageId = "usage-1", earningId = "earning-1", amount = 700L)
+                PointUsageLineEntity(id = "line-1", usageId = "usage-1", earningId = "earning-1", amount = BigDecimal(700))
 
             When("도메인 UsageLine으로 변환하면") {
                 val line: UsageLine = PointUsageMapper.of(entity)
 
                 Then("적립건 식별자와 금액이 매핑된다") {
                     line.earningId shouldBe "earning-1"
-                    line.amount shouldBe BigDecimal.valueOf(700L)
+                    line.amount shouldBe BigDecimal(700)
                 }
             }
         }

@@ -3,6 +3,7 @@ package com.jysohn0825.point.infrastructure.persistence.entity
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class PointWalletHistoryEntityTest :
@@ -16,8 +17,8 @@ class PointWalletHistoryEntityTest :
                         id = "history-1",
                         walletId = "wallet-1",
                         historyType = "EARN",
-                        amount = 1_000L,
-                        balanceAfter = 1_000L,
+                        amount = BigDecimal(1_000),
+                        balanceAfter = BigDecimal(1_000),
                         earningId = "earning-1",
                         occurredAt = occurredAt,
                     )

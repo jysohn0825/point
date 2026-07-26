@@ -15,18 +15,18 @@ class PointWalletMapper {
             PointWallet.open(
                 id = entity.id,
                 holdingLimit = holdingLimit,
-                balance = Balance(BigDecimal.valueOf(entity.balance)),
+                balance = Balance(entity.balance),
             )
 
         fun of(
             wallet: PointWallet,
             memberId: String,
-            holdingLimitOverride: Long?,
+            holdingLimitOverride: BigDecimal?,
         ): PointWalletEntity =
             PointWalletEntity(
                 id = wallet.id,
                 memberId = memberId,
-                balance = wallet.balance.amount.longValueExact(),
+                balance = wallet.balance.amount,
                 holdingLimitOverride = holdingLimitOverride,
             )
     }

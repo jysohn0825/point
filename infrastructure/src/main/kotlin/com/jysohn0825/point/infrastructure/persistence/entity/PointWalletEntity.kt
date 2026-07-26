@@ -6,6 +6,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.Comment
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Entity
@@ -24,12 +25,12 @@ class PointWalletEntity(
     @Column(name = "member_id", nullable = false, length = 36)
     @Comment("회원 ID")
     val memberId: String,
-    @Column(name = "balance", nullable = false)
+    @Column(name = "balance", nullable = false, precision = 19, scale = 0)
     @Comment("총 잔액")
-    val balance: Long = 0,
-    @Column(name = "holding_limit_override")
+    val balance: BigDecimal = BigDecimal.ZERO,
+    @Column(name = "holding_limit_override", precision = 19, scale = 0)
     @Comment("개인 한도 예외. NULL이면 정책값 적용")
-    val holdingLimitOverride: Long? = null,
+    val holdingLimitOverride: BigDecimal? = null,
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     @Comment("생성 일시")
     val createdAt: LocalDateTime = LocalDateTime.now(),

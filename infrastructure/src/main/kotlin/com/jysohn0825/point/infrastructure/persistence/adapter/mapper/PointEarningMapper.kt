@@ -8,7 +8,6 @@ import com.jysohn0825.point.domain.vo.GrantedBy
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.RemainingAmount
 import com.jysohn0825.point.infrastructure.persistence.entity.PointEarningEntity
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class PointEarningMapper {
@@ -16,13 +15,13 @@ class PointEarningMapper {
         fun of(entity: PointEarningEntity): PointEarning =
             PointEarning.reconstitute(
                 id = entity.id,
-                amount = PointAmount(BigDecimal.valueOf(entity.amount)),
+                amount = PointAmount(entity.amount),
                 earnType = EarnType.valueOf(entity.earnType),
                 sourceReferenceId = entity.sourceReferenceId,
                 grantedBy = entity.grantedByAdminId?.let { GrantedBy(it) },
                 earnedAt = entity.earnedAt,
                 expirationDate = ExpirationDate(entity.expiresAt),
-                remainingAmount = RemainingAmount(BigDecimal.valueOf(entity.remainingAmount)),
+                remainingAmount = RemainingAmount(entity.remainingAmount),
                 status = EarningStatus.valueOf(entity.status),
             )
 
@@ -36,8 +35,8 @@ class PointEarningMapper {
                 id = earning.id,
                 walletId = walletId,
                 policyId = policyId,
-                amount = earning.amount.value.longValueExact(),
-                remainingAmount = earning.remainingAmount.value.longValueExact(),
+                amount = earning.amount.value,
+                remainingAmount = earning.remainingAmount.value,
                 earnType = earning.earnType.name,
                 sourceReferenceId = earning.sourceReferenceId,
                 grantedByAdminId = earning.grantedBy?.adminId,

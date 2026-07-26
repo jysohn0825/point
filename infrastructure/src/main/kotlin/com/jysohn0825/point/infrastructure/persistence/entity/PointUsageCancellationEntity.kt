@@ -6,6 +6,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import org.hibernate.annotations.Comment
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Entity
@@ -24,9 +25,9 @@ class PointUsageCancellationEntity(
     @Column(name = "usage_id", nullable = false, length = 36)
     @Comment("원 사용건")
     val usageId: String,
-    @Column(name = "restored_amount", nullable = false)
+    @Column(name = "restored_amount", nullable = false, precision = 19, scale = 0)
     @Comment("복원 총액 (라인 합계)")
-    val restoredAmount: Long,
+    val restoredAmount: BigDecimal,
     @Column(name = "canceled_at", nullable = false)
     @Comment("취소 일시")
     val canceledAt: LocalDateTime,

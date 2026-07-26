@@ -46,7 +46,7 @@ class PointWalletPersistenceAdapterContainerTest {
             appliedAt = LocalDateTime.now().minusDays(1),
             createdByAdminId = "admin-01",
         )
-        entityManager.persist(PointWalletEntity(id = UUID.randomUUID().toString(), memberId = "member-1", balance = 1_000L))
+        entityManager.persist(PointWalletEntity(id = UUID.randomUUID().toString(), memberId = "member-1", balance = BigDecimal(1_000)))
         entityManager.flush()
         entityManager.clear()
 
@@ -67,8 +67,8 @@ class PointWalletPersistenceAdapterContainerTest {
             PointWalletEntity(
                 id = UUID.randomUUID().toString(),
                 memberId = "member-2",
-                balance = 0L,
-                holdingLimitOverride = 5_000_000L,
+                balance = BigDecimal.ZERO,
+                holdingLimitOverride = BigDecimal(5_000_000),
             ),
         )
         entityManager.flush()
@@ -111,7 +111,12 @@ class PointWalletPersistenceAdapterContainerTest {
         )
         val walletId: String = UUID.randomUUID().toString()
         entityManager.persist(
-            PointWalletEntity(id = walletId, memberId = "member-4", balance = 1_000L, holdingLimitOverride = 9_000_000L),
+            PointWalletEntity(
+                id = walletId,
+                memberId = "member-4",
+                balance = BigDecimal(1_000),
+                holdingLimitOverride = BigDecimal(9_000_000),
+            ),
         )
         entityManager.flush()
         entityManager.clear()

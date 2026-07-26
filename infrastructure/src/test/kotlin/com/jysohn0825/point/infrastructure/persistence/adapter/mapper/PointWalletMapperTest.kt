@@ -14,7 +14,7 @@ class PointWalletMapperTest :
     BehaviorSpec({
         Given("지갑 엔티티가 있을 때") {
             val entity: PointWalletEntity =
-                PointWalletEntity(id = "wallet-1", memberId = "member-1", balance = 1_400L, holdingLimitOverride = null)
+                PointWalletEntity(id = "wallet-1", memberId = "member-1", balance = BigDecimal(1_400), holdingLimitOverride = null)
 
             When("정책의 보유한도를 적용해 도메인으로 변환하면") {
                 val wallet: PointWallet = PointWalletMapper.of(entity = entity, holdingLimit = holdingLimit(BigDecimal(2_000_000)))
@@ -37,7 +37,7 @@ class PointWalletMapperTest :
                 Then("holdingLimitOverride가 null로 유지된다") {
                     entity.id shouldBe "wallet-2"
                     entity.memberId shouldBe "member-2"
-                    entity.balance shouldBe 700L
+                    entity.balance shouldBe BigDecimal(700)
                     entity.holdingLimitOverride.shouldBeNull()
                 }
             }
@@ -48,10 +48,10 @@ class PointWalletMapperTest :
 
             When("엔티티로 변환하면") {
                 val entity: PointWalletEntity =
-                    PointWalletMapper.of(wallet = wallet, memberId = "member-3", holdingLimitOverride = 3_000_000L)
+                    PointWalletMapper.of(wallet = wallet, memberId = "member-3", holdingLimitOverride = BigDecimal(3_000_000))
 
                 Then("기존 holdingLimitOverride가 그대로 보존된다") {
-                    entity.holdingLimitOverride shouldBe 3_000_000L
+                    entity.holdingLimitOverride shouldBe BigDecimal(3_000_000)
                 }
             }
         }

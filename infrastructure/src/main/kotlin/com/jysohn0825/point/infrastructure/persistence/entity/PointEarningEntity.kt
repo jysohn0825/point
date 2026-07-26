@@ -7,6 +7,7 @@ import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.Comment
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Entity
@@ -37,12 +38,12 @@ class PointEarningEntity(
     @Column(name = "policy_id", nullable = false, length = 36)
     @Comment("적립 당시 적용 정책")
     val policyId: String,
-    @Column(name = "amount", nullable = false)
+    @Column(name = "amount", nullable = false, precision = 19, scale = 0)
     @Comment("최초 적립액 (불변)")
-    val amount: Long,
-    @Column(name = "remaining_amount", nullable = false)
+    val amount: BigDecimal,
+    @Column(name = "remaining_amount", nullable = false, precision = 19, scale = 0)
     @Comment("잔여액")
-    val remainingAmount: Long,
+    val remainingAmount: BigDecimal,
     @Column(name = "earn_type", nullable = false, length = 10)
     @Comment("SYSTEM / MANUAL")
     val earnType: String,

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
+import java.math.BigDecimal
 import java.util.UUID
 
 @DataJpaTest
@@ -23,7 +24,7 @@ class PointWalletEntityContainerTest {
             PointWalletEntity(
                 id = UUID.randomUUID().toString(),
                 memberId = UUID.randomUUID().toString(),
-                balance = 1_000L,
+                balance = BigDecimal(1_000),
             )
 
         entityManager.persist(wallet)
@@ -33,6 +34,6 @@ class PointWalletEntityContainerTest {
         val found: PointWalletEntity = entityManager.find(PointWalletEntity::class.java, wallet.id)
 
         found.memberId shouldBe wallet.memberId
-        found.balance shouldBe 1_000L
+        found.balance shouldBe BigDecimal(1_000)
     }
 }

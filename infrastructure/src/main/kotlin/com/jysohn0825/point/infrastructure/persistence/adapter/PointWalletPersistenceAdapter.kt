@@ -29,7 +29,7 @@ class PointWalletPersistenceAdapter(
     ) {
         // holdingLimitOverride는 도메인 PointWallet이 들고 있지 않은 컬럼이므로(항상 balance만 변경),
         // 기존 row의 값을 그대로 보존해서 다시 쓴다. 신규 지갑이면 기존 row가 없어 null(정책값 적용)로 유지된다.
-        val existingOverride: Long? = jpaRepository.findById(wallet.id).orElse(null)?.holdingLimitOverride
+        val existingOverride: BigDecimal? = jpaRepository.findById(wallet.id).orElse(null)?.holdingLimitOverride
         jpaRepository.save(PointWalletMapper.of(wallet = wallet, memberId = memberId, holdingLimitOverride = existingOverride))
     }
 
@@ -56,6 +56,6 @@ class PointWalletPersistenceAdapter(
 
     private fun resolveHoldingLimit(entity: PointWalletEntity): HoldingLimit =
         entity.holdingLimitOverride
-            ?.let { HoldingLimit(BigDecimal(it)) }
+            ?.let { HoldingLimit(it) }
             ?: HoldingLimit(policyRepository.getCurrent().maxHoldingAmount.value)
 }

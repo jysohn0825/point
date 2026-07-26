@@ -59,7 +59,7 @@ class PointUsagePersistenceAdapter(
             PointUsageCancellationEntity(
                 id = cancellationId,
                 usageId = usage.id,
-                restoredAmount = requestedLines.sumOf { it.restoredAmount }.longValueExact(),
+                restoredAmount = requestedLines.sumOf { it.restoredAmount },
                 canceledAt = canceledAt,
             ),
         )
@@ -75,7 +75,7 @@ class PointUsagePersistenceAdapter(
                     id = UUID.randomUUID().toString(),
                     cancellationId = cancellationId,
                     usageLineId = usageLineEntity.id,
-                    restoredAmount = line.restoredAmount.longValueExact(),
+                    restoredAmount = line.restoredAmount,
                     restoreType = line.restorationType.name,
                     reearnedEarningId = reearnedEarningIdByIndex[index],
                 )
@@ -94,7 +94,7 @@ class PointUsagePersistenceAdapter(
                     usageId = existing.usageId,
                     earningId = existing.earningId,
                     amount = existing.amount,
-                    canceledAmount = cancelledAmountByEarningId[existing.earningId]?.longValueExact() ?: 0L,
+                    canceledAmount = cancelledAmountByEarningId[existing.earningId] ?: BigDecimal.ZERO,
                 )
             }
         lineJpaRepository.saveAll(updatedLineEntities)
@@ -117,7 +117,7 @@ class PointUsagePersistenceAdapter(
         return lineEntities.map { line ->
             EarningUsageTrace(
                 orderNumber = OrderNumber(usagesById.getValue(line.usageId).orderNumber),
-                amount = BigDecimal.valueOf(line.amount),
+                amount = line.amount,
             )
         }
     }

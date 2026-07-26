@@ -6,6 +6,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.Comment
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Entity
@@ -25,12 +26,12 @@ class PointPolicyEntity(
     @Column(name = "policy_version", nullable = false)
     @Comment("정책 버전 (증가)")
     val policyVersion: Int,
-    @Column(name = "max_earn_per_transaction", nullable = false)
+    @Column(name = "max_earn_per_transaction", nullable = false, precision = 19, scale = 0)
     @Comment("1회 적립 상한 (1~100,000)")
-    val maxEarnPerTransaction: Int,
-    @Column(name = "max_holding_amount", nullable = false)
+    val maxEarnPerTransaction: BigDecimal,
+    @Column(name = "max_holding_amount", nullable = false, precision = 19, scale = 0)
     @Comment("개인 보유한도 기본값")
-    val maxHoldingAmount: Long,
+    val maxHoldingAmount: BigDecimal,
     @Column(name = "default_expiration_days", nullable = false)
     @Comment("기본 유효기간 (일). 1~1824")
     val defaultExpirationDays: Int,

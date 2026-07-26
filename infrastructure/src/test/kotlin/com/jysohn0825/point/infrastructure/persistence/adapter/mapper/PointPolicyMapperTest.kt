@@ -19,8 +19,8 @@ class PointPolicyMapperTest :
                 PointPolicyEntity(
                     id = "policy-1",
                     policyVersion = 3,
-                    maxEarnPerTransaction = 50_000,
-                    maxHoldingAmount = 1_000_000L,
+                    maxEarnPerTransaction = BigDecimal(50_000),
+                    maxHoldingAmount = BigDecimal(1_000_000),
                     defaultExpirationDays = 365,
                     appliedAt = LocalDateTime.of(2026, 1, 1, 0, 0),
                     createdByAdminId = "admin-01",
@@ -58,8 +58,8 @@ class PointPolicyMapperTest :
                 Then("새 row 식별자가 채번되고 나머지 필드가 매핑된다") {
                     entity.id.shouldNotBeBlank()
                     entity.policyVersion shouldBe 4
-                    entity.maxEarnPerTransaction shouldBe 30_000
-                    entity.maxHoldingAmount shouldBe 500_000L
+                    entity.maxEarnPerTransaction shouldBe BigDecimal(30_000)
+                    entity.maxHoldingAmount shouldBe BigDecimal(500_000)
                     entity.defaultExpirationDays shouldBe 180
                     entity.appliedAt shouldBe LocalDateTime.of(2026, 6, 1, 0, 0)
                     entity.createdByAdminId shouldBe "admin-02"

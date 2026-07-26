@@ -8,7 +8,6 @@ import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.infrastructure.persistence.entity.PointUsageCancellationLineEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointUsageEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointUsageLineEntity
-import java.math.BigDecimal
 import java.util.UUID
 
 class PointUsageMapper {
@@ -31,7 +30,7 @@ class PointUsageMapper {
                             lineEntityById.getValue(cancellationLineEntity.usageLineId)
                         CancellationLine(
                             originalLine = of(entity = lineEntity),
-                            restoredAmount = BigDecimal.valueOf(cancellationLineEntity.restoredAmount),
+                            restoredAmount = cancellationLineEntity.restoredAmount,
                             restorationType = RestorationType.valueOf(cancellationLineEntity.restoreType),
                         )
                     },
@@ -46,8 +45,8 @@ class PointUsageMapper {
                 id = usage.id,
                 walletId = walletId,
                 orderNumber = usage.orderNumber.value,
-                totalAmount = usage.totalAmount.longValueExact(),
-                canceledAmount = usage.cancelledAmount.longValueExact(),
+                totalAmount = usage.totalAmount,
+                canceledAmount = usage.cancelledAmount,
                 status = usage.status.name,
                 usedAt = usage.usedAt,
             )
@@ -60,10 +59,9 @@ class PointUsageMapper {
                 id = UUID.randomUUID().toString(),
                 usageId = usageId,
                 earningId = usageLine.earningId,
-                amount = usageLine.amount.longValueExact(),
+                amount = usageLine.amount,
             )
 
-        fun of(entity: PointUsageLineEntity): UsageLine =
-            UsageLine(earningId = entity.earningId, amount = BigDecimal.valueOf(entity.amount))
+        fun of(entity: PointUsageLineEntity): UsageLine = UsageLine(earningId = entity.earningId, amount = entity.amount)
     }
 }

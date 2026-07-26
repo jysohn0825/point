@@ -22,8 +22,8 @@ class PointEarningMapperTest :
                     id = "earning-1",
                     walletId = "wallet-1",
                     policyId = "policy-1",
-                    amount = 1_000L,
-                    remainingAmount = 400L,
+                    amount = BigDecimal(1_000),
+                    remainingAmount = BigDecimal(400),
                     earnType = EarnType.MANUAL.name,
                     sourceReferenceId = "admin-01",
                     grantedByAdminId = "admin-01",
@@ -55,8 +55,8 @@ class PointEarningMapperTest :
                     id = "earning-2",
                     walletId = "wallet-1",
                     policyId = "policy-1",
-                    amount = 1_000L,
-                    remainingAmount = 1_000L,
+                    amount = BigDecimal(1_000),
+                    remainingAmount = BigDecimal(1_000),
                     earnType = EarnType.SYSTEM.name,
                     sourceReferenceId = "ORDER-1",
                     grantedByAdminId = null,
@@ -84,7 +84,7 @@ class PointEarningMapperTest :
                 Then("FK와 금액이 채워지고 canceledAt은 null이다") {
                     entity.walletId shouldBe "wallet-1"
                     entity.policyId shouldBe "policy-1"
-                    entity.amount shouldBe 1_000L
+                    entity.amount shouldBe BigDecimal(1_000)
                     entity.canceledAt.shouldBeNull()
                 }
             }
@@ -98,8 +98,8 @@ class PointEarningMapperTest :
                     id = "earning-4",
                     walletId = "wallet-1",
                     policyId = "policy-1",
-                    amount = 1_000L,
-                    remainingAmount = 1_000L,
+                    amount = BigDecimal(1_000),
+                    remainingAmount = BigDecimal(1_000),
                     earnType = EarnType.SYSTEM.name,
                     sourceReferenceId = "ORDER-1",
                     earnedAt = LocalDateTime.now(),
@@ -128,8 +128,8 @@ class PointEarningMapperTest :
                     id = "earning-5",
                     walletId = "wallet-1",
                     policyId = "policy-1",
-                    amount = 1_000L,
-                    remainingAmount = 0L,
+                    amount = BigDecimal(1_000),
+                    remainingAmount = BigDecimal.ZERO,
                     earnType = EarnType.SYSTEM.name,
                     sourceReferenceId = "ORDER-1",
                     earnedAt = LocalDateTime.now(),

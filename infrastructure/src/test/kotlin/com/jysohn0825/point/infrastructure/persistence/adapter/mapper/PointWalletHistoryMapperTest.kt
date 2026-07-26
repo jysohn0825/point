@@ -31,8 +31,8 @@ class PointWalletHistoryMapperTest :
                     entity.id shouldBe "history-1"
                     entity.walletId shouldBe "wallet-1"
                     entity.historyType shouldBe "USE"
-                    entity.amount shouldBe -300L
-                    entity.balanceAfter shouldBe 700L
+                    entity.amount shouldBe BigDecimal(-300)
+                    entity.balanceAfter shouldBe BigDecimal(700)
                     entity.earningId.shouldBeNull()
                     entity.usageId shouldBe "usage-1"
                     entity.cancellationId.shouldBeNull()

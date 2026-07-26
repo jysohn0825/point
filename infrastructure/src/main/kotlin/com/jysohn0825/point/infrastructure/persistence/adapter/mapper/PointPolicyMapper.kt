@@ -5,7 +5,6 @@ import com.jysohn0825.point.domain.vo.ExpirationPeriod
 import com.jysohn0825.point.domain.vo.MaxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.MaxHoldingAmount
 import com.jysohn0825.point.infrastructure.persistence.entity.PointPolicyEntity
-import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -14,8 +13,8 @@ class PointPolicyMapper {
         fun of(entity: PointPolicyEntity): PointPolicy =
             PointPolicy(
                 id = entity.id,
-                maxEarnPerTransaction = MaxEarnPerTransaction(BigDecimal.valueOf(entity.maxEarnPerTransaction.toLong())),
-                maxHoldingAmount = MaxHoldingAmount(BigDecimal.valueOf(entity.maxHoldingAmount)),
+                maxEarnPerTransaction = MaxEarnPerTransaction(entity.maxEarnPerTransaction),
+                maxHoldingAmount = MaxHoldingAmount(entity.maxHoldingAmount),
                 defaultExpirationPeriod = ExpirationPeriod(entity.defaultExpirationDays.toLong()),
             )
 
@@ -28,8 +27,8 @@ class PointPolicyMapper {
             PointPolicyEntity(
                 id = UUID.randomUUID().toString(),
                 policyVersion = policyVersion,
-                maxEarnPerTransaction = policy.maxEarnPerTransaction.value.intValueExact(),
-                maxHoldingAmount = policy.maxHoldingAmount.value.longValueExact(),
+                maxEarnPerTransaction = policy.maxEarnPerTransaction.value,
+                maxHoldingAmount = policy.maxHoldingAmount.value,
                 defaultExpirationDays = policy.defaultExpirationPeriod.days.toInt(),
                 appliedAt = appliedAt,
                 createdByAdminId = createdByAdminId,

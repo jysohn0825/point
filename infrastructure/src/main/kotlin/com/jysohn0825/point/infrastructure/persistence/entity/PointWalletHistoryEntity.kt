@@ -6,6 +6,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import org.hibernate.annotations.Comment
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Entity
@@ -30,12 +31,12 @@ class PointWalletHistoryEntity(
     @Column(name = "history_type", nullable = false, length = 20)
     @Comment("EARN / USE / EARN_CANCEL / USE_CANCEL / EXPIRE")
     val historyType: String,
-    @Column(name = "amount", nullable = false)
+    @Column(name = "amount", nullable = false, precision = 19, scale = 0)
     @Comment("증감액. 증가 +, 감소 -")
-    val amount: Long,
-    @Column(name = "balance_after", nullable = false)
+    val amount: BigDecimal,
+    @Column(name = "balance_after", nullable = false, precision = 19, scale = 0)
     @Comment("기록 시점 잔액")
-    val balanceAfter: Long,
+    val balanceAfter: BigDecimal,
     @Column(name = "earning_id", length = 36)
     @Comment("EARN / EARN_CANCEL / EXPIRE")
     val earningId: String? = null,
