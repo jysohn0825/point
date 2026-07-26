@@ -1,8 +1,8 @@
 package com.jysohn0825.point.presentation.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.jysohn0825.point.domain.repository.FakePointPolicyRepository
 import com.jysohn0825.point.presentation.controller.dto.request.UpsertPointPolicyRequest
-import com.jysohn0825.point.presentation.support.FakePointPolicyRepository
 import com.jysohn0825.point.presentation.support.PresentationTestApplication
 import com.jysohn0825.point.presentation.support.PresentationTestConfig
 import org.junit.jupiter.api.BeforeEach

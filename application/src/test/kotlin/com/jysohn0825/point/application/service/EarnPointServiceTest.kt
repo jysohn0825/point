@@ -4,20 +4,17 @@ import com.jysohn0825.point.application.service.dto.EarnPointDto
 import com.jysohn0825.point.application.service.dto.EarningUsageTraceResultDto
 import com.jysohn0825.point.application.service.dto.PointEarningResultDto
 import com.jysohn0825.point.domain.entity.PointEarning
-import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointPolicy
 import com.jysohn0825.point.domain.entity.pointWallet
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.repository.PointEarningRepository
-import com.jysohn0825.point.domain.repository.PointPolicyRepository
-import com.jysohn0825.point.domain.repository.PointUsageRepository
-import com.jysohn0825.point.domain.repository.PointWalletRepository
-import com.jysohn0825.point.domain.vo.CancellationLine
+import com.jysohn0825.point.domain.repository.FakePointEarningRepository
+import com.jysohn0825.point.domain.repository.FakePointPolicyRepository
+import com.jysohn0825.point.domain.repository.FakePointUsageRepository
+import com.jysohn0825.point.domain.repository.FakePointWalletRepository
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
-import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
@@ -26,148 +23,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
-import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicLong
-
-private class FakeEarnWalletRepository(
-    var wallet: PointWallet,
-) : PointWalletRepository {
-    override fun findByMemberIdForUpdate(memberId: String): PointWallet = wallet
-
-    override fun findByMemberId(memberId: String): PointWallet = wallet
-
-    override fun findByIdForUpdate(walletId: String): PointWallet = wallet
-
-    override fun save(
-        wallet: PointWallet,
-        memberId: String,
-    ) {
-        this.wallet = wallet
-    }
-
-    override fun updateBalance(wallet: PointWallet) {
-        this.wallet = wallet
-    }
-}
-
-private class FakeEarnEarningRepository : PointEarningRepository {
-    val earnings: MutableList<PointEarning> = mutableListOf()
-    private val walletIdByEarningId: MutableMap<String, String> = mutableMapOf()
-
-    override fun save(
-        earning: PointEarning,
-        walletId: String,
-        policyId: String,
-    ) {
-        earnings.add(earning)
-        walletIdByEarningId[earning.id] = walletId
-    }
-
-    override fun saveAll(
-        earnings: List<PointEarning>,
-        walletId: String,
-        policyId: String,
-    ) {
-        this.earnings.addAll(earnings)
-        earnings.forEach { walletIdByEarningId[it.id] = walletId }
-    }
-
-    override fun updateStatus(
-        earning: PointEarning,
-        walletId: String,
-    ) {
-        walletIdByEarningId[earning.id] = walletId
-    }
-
-    override fun updateStatusAll(
-        earnings: List<PointEarning>,
-        walletId: String,
-    ) {
-        earnings.forEach { walletIdByEarningId[it.id] = walletId }
-    }
-
-    override fun findById(earningId: String): PointEarning = earnings.first { it.id == earningId }
-
-    override fun findRedeemableByWalletId(walletId: String): List<PointEarning> = earnings.filter { walletIdByEarningId[it.id] == walletId }
-
-    override fun findAllByIds(earningIds: List<String>): List<PointEarning> = earnings.filter { it.id in earningIds }
-
-    override fun findByWalletIdAndEarnTypeAndSourceReferenceId(
-        walletId: String,
-        earnType: EarnType,
-        sourceReferenceId: String,
-    ): PointEarning? =
-        earnings.firstOrNull {
-            walletIdByEarningId[it.id] == walletId && it.earnType == earnType && it.sourceReferenceId == sourceReferenceId
-        }
-
-    override fun findAllByWalletId(walletId: String): List<PointEarning> = earnings.filter { walletIdByEarningId[it.id] == walletId }
-
-    override fun findExpiredCandidateWalletIds(now: LocalDateTime): List<String> =
-        earnings
-            .filter { it.status.isActive() && it.remainingAmount.value.signum() > 0 && it.isExpiredAt(now) }
-            .mapNotNull { walletIdByEarningId[it.id] }
-            .distinct()
-
-    override fun findExpiringByWalletId(
-        walletId: String,
-        now: LocalDateTime,
-    ): List<PointEarning> =
-        earnings.filter {
-            walletIdByEarningId[it.id] == walletId &&
-                it.status.isActive() &&
-                it.remainingAmount.value.signum() > 0 &&
-                it.isExpiredAt(now)
-        }
-}
-
-private class FakeEarnUsageRepository : PointUsageRepository {
-    val usages: MutableList<PointUsage> = mutableListOf()
-    private val walletIdByUsageId: MutableMap<String, String> = mutableMapOf()
-
-    override fun save(
-        usage: PointUsage,
-        walletId: String,
-    ) {
-        usages.add(usage)
-        walletIdByUsageId[usage.id] = walletId
-    }
-
-    override fun saveCancellation(
-        usage: PointUsage,
-        walletId: String,
-        requestedLines: List<CancellationLine>,
-        reearnedEarningIds: List<String>,
-        canceledAt: LocalDateTime,
-    ) {
-        walletIdByUsageId[usage.id] = walletId
-    }
-
-    override fun findById(usageId: String): PointUsage = usages.first { it.id == usageId }
-
-    override fun findLinesByEarningId(earningId: String): List<EarningUsageTrace> =
-        usages.flatMap { usage ->
-            usage.lines.filter { it.earningId == earningId }.map { line ->
-                EarningUsageTrace(orderNumber = usage.orderNumber, amount = line.amount)
-            }
-        }
-
-    override fun findAllByWalletId(walletId: String): List<PointUsage> = usages.filter { walletIdByUsageId[it.id] == walletId }
-}
-
-private class FakeEarnPolicyRepository(
-    var policy: PointPolicy,
-) : PointPolicyRepository {
-    override fun getCurrent(): PointPolicy = policy
-
-    override fun save(
-        policy: PointPolicy,
-        appliedAt: LocalDateTime,
-        createdByAdminId: String,
-    ) {
-        this.policy = policy
-    }
-}
 
 private class FakeEarnKeyGenerator : DistributedKeyGenerator {
     private val counter: AtomicLong = AtomicLong()
@@ -176,10 +32,10 @@ private class FakeEarnKeyGenerator : DistributedKeyGenerator {
 }
 
 private fun service(
-    walletRepository: FakeEarnWalletRepository,
-    earningRepository: FakeEarnEarningRepository = FakeEarnEarningRepository(),
-    policyRepository: FakeEarnPolicyRepository = FakeEarnPolicyRepository(pointPolicy()),
-    usageRepository: FakeEarnUsageRepository = FakeEarnUsageRepository(),
+    walletRepository: FakePointWalletRepository,
+    earningRepository: FakePointEarningRepository = FakePointEarningRepository(),
+    policyRepository: FakePointPolicyRepository = FakePointPolicyRepository(),
+    usageRepository: FakePointUsageRepository = FakePointUsageRepository(),
     keyGenerator: DistributedKeyGenerator = FakeEarnKeyGenerator(),
 ): EarnPointService =
     EarnPointService(
@@ -193,8 +49,10 @@ private fun service(
 class EarnPointServiceTest :
     BehaviorSpec({
         Given("처음 보는 sourceReferenceId로 적립을 요청하면") {
-            val walletRepository: FakeEarnWalletRepository = FakeEarnWalletRepository(pointWallet())
-            val earningRepository: FakeEarnEarningRepository = FakeEarnEarningRepository()
+            val wallet: PointWallet = pointWallet()
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
             val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
 
             When("적립을 실행하면") {
@@ -212,15 +70,17 @@ class EarnPointServiceTest :
                 Then("새 적립건이 생성되고 지갑 잔액이 증가한다") {
                     earning.amount.value shouldBe BigDecimal(1_000)
                     earning.sourceReferenceId shouldBe "ORDER-1"
-                    earningRepository.earnings.size shouldBe 1
-                    walletRepository.wallet.balance.amount shouldBe BigDecimal(1_000)
+                    earningRepository.findAllByWalletId(walletId = wallet.id).size shouldBe 1
+                    wallet.balance.amount shouldBe BigDecimal(1_000)
                 }
             }
         }
 
         Given("이미 처리된 sourceReferenceId로 동일한 적립을 다시 요청하면") {
-            val walletRepository: FakeEarnWalletRepository = FakeEarnWalletRepository(pointWallet())
-            val earningRepository: FakeEarnEarningRepository = FakeEarnEarningRepository()
+            val wallet: PointWallet = pointWallet()
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
             val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
             val dto: EarnPointDto =
                 EarnPointDto(
@@ -237,16 +97,18 @@ class EarnPointServiceTest :
 
                 Then("새 적립건을 만들지 않고 기존 적립건을 그대로 반환한다") {
                     secondEarning.id shouldBe firstEarning.id
-                    earningRepository.earnings.size shouldBe 1
-                    walletRepository.wallet.balance.amount shouldBe BigDecimal(1_000)
+                    earningRepository.findAllByWalletId(walletId = wallet.id).size shouldBe 1
+                    wallet.balance.amount shouldBe BigDecimal(1_000)
                 }
             }
         }
 
         Given("1회 적립 한도를 초과하는 금액으로 요청하면") {
-            val walletRepository: FakeEarnWalletRepository = FakeEarnWalletRepository(pointWallet())
-            val policyRepository: FakeEarnPolicyRepository =
-                FakeEarnPolicyRepository(pointPolicy(maxEarnPerTransaction = maxEarnPerTransaction(BigDecimal(10_000))))
+            val wallet: PointWallet = pointWallet()
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val policyRepository: FakePointPolicyRepository = FakePointPolicyRepository()
+            policyRepository.reset(policy = pointPolicy(maxEarnPerTransaction = maxEarnPerTransaction(BigDecimal(10_000))))
             val earnPointService: EarnPointService = service(walletRepository = walletRepository, policyRepository = policyRepository)
 
             When("적립을 시도하면") {
@@ -261,14 +123,16 @@ class EarnPointServiceTest :
                             ),
                         )
                     }
-                    walletRepository.wallet.balance.amount shouldBe BigDecimal.ZERO
+                    wallet.balance.amount shouldBe BigDecimal.ZERO
                 }
             }
         }
 
         Given("사용되지 않은 적립건을 취소하면") {
-            val walletRepository: FakeEarnWalletRepository = FakeEarnWalletRepository(pointWallet())
-            val earningRepository: FakeEarnEarningRepository = FakeEarnEarningRepository()
+            val wallet: PointWallet = pointWallet()
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
             val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
             val earning: PointEarning =
                 earnPointService
@@ -287,14 +151,16 @@ class EarnPointServiceTest :
                 Then("적립건이 취소 상태가 되고 지갑 잔액이 원복된다") {
                     canceled.status shouldBe EarningStatus.CANCELED
                     canceled.remainingAmount.value shouldBe BigDecimal.ZERO
-                    walletRepository.wallet.balance.amount shouldBe BigDecimal.ZERO
+                    wallet.balance.amount shouldBe BigDecimal.ZERO
                 }
             }
         }
 
         Given("일부 사용된 적립건을 취소하려고 하면") {
-            val walletRepository: FakeEarnWalletRepository = FakeEarnWalletRepository(pointWallet())
-            val earningRepository: FakeEarnEarningRepository = FakeEarnEarningRepository()
+            val wallet: PointWallet = pointWallet()
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
             val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
             val earning: PointEarning =
                 earnPointService
@@ -318,8 +184,10 @@ class EarnPointServiceTest :
         }
 
         Given("적립건이 여러 개 있을 때") {
-            val walletRepository: FakeEarnWalletRepository = FakeEarnWalletRepository(pointWallet())
-            val earningRepository: FakeEarnEarningRepository = FakeEarnEarningRepository()
+            val wallet: PointWallet = pointWallet()
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
             val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
             earnPointService.earn(
                 EarnPointDto(
@@ -359,9 +227,11 @@ class EarnPointServiceTest :
         }
 
         Given("적립건이 특정 주문에서 사용된 이력이 있을 때") {
-            val walletRepository: FakeEarnWalletRepository = FakeEarnWalletRepository(pointWallet())
-            val earningRepository: FakeEarnEarningRepository = FakeEarnEarningRepository()
-            val usageRepository: FakeEarnUsageRepository = FakeEarnUsageRepository()
+            val wallet: PointWallet = pointWallet()
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            val usageRepository: FakePointUsageRepository = FakePointUsageRepository()
             val earnPointService: EarnPointService =
                 service(walletRepository = walletRepository, earningRepository = earningRepository, usageRepository = usageRepository)
             val earning: PointEarning =
@@ -381,7 +251,7 @@ class EarnPointServiceTest :
                         orderNumber = OrderNumber("A1234"),
                         lines = listOf(UsageLine(earningId = earning.id, amount = BigDecimal(300))),
                     ),
-                walletId = walletRepository.wallet.id,
+                walletId = wallet.id,
             )
 
             When("사용 추적을 조회하면") {

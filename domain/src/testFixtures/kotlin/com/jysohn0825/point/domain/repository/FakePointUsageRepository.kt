@@ -1,8 +1,7 @@
-package com.jysohn0825.point.presentation.support
+package com.jysohn0825.point.domain.repository
 
 import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.repository.PointUsageRepository
 import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import java.time.LocalDateTime
@@ -11,9 +10,18 @@ class FakePointUsageRepository : PointUsageRepository {
     private val usagesById: MutableMap<String, PointUsage> = mutableMapOf()
     private val walletIdByUsageId: MutableMap<String, String> = mutableMapOf()
 
+    var lastSaveCancellationCall: SaveCancellationCall? = null
+        private set
+
+    data class SaveCancellationCall(
+        val requestedLines: List<CancellationLine>,
+        val reearnedEarningIds: List<String>,
+    )
+
     fun clear() {
         usagesById.clear()
         walletIdByUsageId.clear()
+        lastSaveCancellationCall = null
     }
 
     override fun save(
@@ -33,6 +41,7 @@ class FakePointUsageRepository : PointUsageRepository {
     ) {
         usagesById[usage.id] = usage
         walletIdByUsageId[usage.id] = walletId
+        lastSaveCancellationCall = SaveCancellationCall(requestedLines = requestedLines, reearnedEarningIds = reearnedEarningIds)
     }
 
     override fun findById(usageId: String): PointUsage =

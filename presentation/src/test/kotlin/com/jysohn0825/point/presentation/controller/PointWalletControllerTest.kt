@@ -1,9 +1,9 @@
 package com.jysohn0825.point.presentation.controller
 
 import com.jysohn0825.point.domain.entity.pointWallet
+import com.jysohn0825.point.domain.repository.FakePointPolicyRepository
+import com.jysohn0825.point.domain.repository.FakePointWalletRepository
 import com.jysohn0825.point.domain.vo.balance
-import com.jysohn0825.point.presentation.support.FakePointPolicyRepository
-import com.jysohn0825.point.presentation.support.FakePointWalletRepository
 import com.jysohn0825.point.presentation.support.PresentationTestApplication
 import com.jysohn0825.point.presentation.support.PresentationTestConfig
 import org.junit.jupiter.api.BeforeEach

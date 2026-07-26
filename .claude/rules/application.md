@@ -33,6 +33,7 @@ paths:
 ## 테스트 작성 규칙
 
 - Kotest `BehaviorSpec`(Given/When/Then), 시나리오는 한글로 작성.
-- 테스트 파일은 대상 서비스와 동일한 패키지(`service`)에 둔다. 서비스가 기능별로 나뉘지 않으므로, 파일마다 정의하는 fake repository 클래스명이 서로 충돌하지 않도록 접두어를 붙여 구분한다(예: `EarnPointServiceTest`의 `FakeEarnWalletRepository` vs `UsePointServiceTest`의 `FakeUseWalletRepository`). Kotlin top-level `private` 클래스는 파일 스코프만 가릴 뿐 클래스 파일명은 그대로 노출되므로, 같은 패키지에서 동일 이름을 재선언하면 컴파일 에러가 난다.
-- `domain`의 엔티티/인터페이스를 참조할 때는 `domain`의 테스트 픽스처와 fake 구현체를 그대로 사용한다.
+- 테스트 파일은 대상 서비스와 동일한 패키지(`service`)에 둔다.
+- `domain`의 repository 포트를 fake로 대체할 때는 파일마다 새로 만들지 않고 `domain`의 `testFixtures`에 있는 `FakeXxxRepository`(예: `FakePointWalletRepository`)를 그대로 가져다 쓴다([domain.md](./domain.md) 참고). `seed()`/`save()` 등으로 상태를 준비하고, 잔액처럼 엔티티가 in-place로 변경되는 값은 repository를 거치지 않고 테스트가 들고 있는 엔티티 참조로 직접 검증한다.
+- `domain` 인터페이스가 아닌 `support`의 포트(`DistributedKeyGenerator` 등)는 서비스마다 필요한 동작이 다를 수 있으므로 테스트 파일별로 fake를 정의한다. 이때 파일마다 정의하는 fake 클래스명이 서로 충돌하지 않도록 접두어를 붙여 구분한다(예: `EarnPointServiceTest`의 `FakeEarnKeyGenerator` vs `UsePointServiceTest`의 `FakeUseKeyGenerator`). Kotlin top-level `private` 클래스는 파일 스코프만 가릴 뿐 클래스 파일명은 그대로 노출되므로, 같은 패키지에서 동일 이름을 재선언하면 컴파일 에러가 난다.
 - 테스트 커버리지는 80% 이상을 유지한다.

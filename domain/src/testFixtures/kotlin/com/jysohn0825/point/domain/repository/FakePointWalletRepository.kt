@@ -1,8 +1,7 @@
-package com.jysohn0825.point.presentation.support
+package com.jysohn0825.point.domain.repository
 
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.repository.PointWalletRepository
 
 class FakePointWalletRepository : PointWalletRepository {
     private val walletsByMemberId: MutableMap<String, PointWallet> = mutableMapOf()

@@ -1,5 +1,9 @@
 package com.jysohn0825.point.presentation.support
 
+import com.jysohn0825.point.domain.repository.FakePointEarningRepository
+import com.jysohn0825.point.domain.repository.FakePointPolicyRepository
+import com.jysohn0825.point.domain.repository.FakePointUsageRepository
+import com.jysohn0825.point.domain.repository.FakePointWalletRepository
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 

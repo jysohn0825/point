@@ -28,6 +28,6 @@ Spring Boot 진입점(`PointApiApplication`).
 ## 테스트 작성 규칙
 
 - Spring 컨텍스트를 띄우는 테스트(`@SpringBootTest` 기반 e2e)는 Kotest와의 통합이 세팅되어 있지 않으므로 JUnit5 `@Test`로 작성한다(`infrastructure`의 `*ContainerTest`와 동일한 관례). 그 외 순수 Kotlin 단위 테스트는 Kotest `BehaviorSpec`(Given/When/Then)을 쓴다. 시나리오는 한글로 작성.
-- 시나리오 기반 e2e 테스트로 작성한다: 실제 컨트롤러 + 실제 application 서비스를 그대로 띄우고, `domain`의 repository 포트와 `DistributedLockExecutor`만 fake 구현체로 대체한 뒤 MockMvc로 HTTP 요청·응답(상태 코드, JSON, `GlobalExceptionHandler` 처리 결과)을 검증한다. 서비스 계층을 Mock 프레임워크로 목킹하지 않는다(다른 모듈과 동일하게 fake 우선).
+- 시나리오 기반 e2e 테스트로 작성한다: 실제 컨트롤러 + 실제 application 서비스를 그대로 띄우고, `domain`의 repository 포트와 `DistributedLockExecutor`만 fake 구현체로 대체한 뒤 MockMvc로 HTTP 요청·응답(상태 코드, JSON, `GlobalExceptionHandler` 처리 결과)을 검증한다. 서비스 계층을 Mock 프레임워크로 목킹하지 않는다(다른 모듈과 동일하게 fake 우선). repository 포트의 fake는 이 모듈에서 새로 만들지 않고 `domain`의 `testFixtures`에 있는 `FakeXxxRepository`를 `PresentationTestConfig`의 `@Bean`으로 등록해 재사용한다([domain.md](./domain.md) 참고). `DistributedLockExecutor`/`DistributedKeyGenerator`처럼 `domain` 인터페이스가 아닌 fake만 `presentation/support`에 둔다.
 - `infrastructure`는 컴파일 의존이 아니지만(`runtimeOnly`) 실행 시 클래스패스에는 그대로 존재하고, Spring Boot 자동설정(JPA/Redisson)은 컴포넌트 스캔 범위가 아니라 클래스패스 존재 여부로 동작하므로 `scanBasePackages`를 좁히는 것만으로는 실제 DB/Redis 연결을 막을 수 없다. e2e 테스트용 부트 클래스에서 `DataSourceAutoConfiguration`/`HibernateJpaAutoConfiguration`/`JpaRepositoriesAutoConfiguration`/`RedissonAutoConfigurationV2`를 명시적으로 `exclude`해야 한다.
 - 테스트 커버리지는 80% 이상을 유지한다.

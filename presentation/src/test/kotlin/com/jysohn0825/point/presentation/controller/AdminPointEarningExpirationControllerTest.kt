@@ -2,11 +2,11 @@ package com.jysohn0825.point.presentation.controller
 
 import com.jysohn0825.point.domain.entity.pointEarning
 import com.jysohn0825.point.domain.entity.pointWallet
+import com.jysohn0825.point.domain.repository.FakePointEarningRepository
+import com.jysohn0825.point.domain.repository.FakePointWalletRepository
 import com.jysohn0825.point.domain.vo.balance
 import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.pointAmount
-import com.jysohn0825.point.presentation.support.FakePointEarningRepository
-import com.jysohn0825.point.presentation.support.FakePointWalletRepository
 import com.jysohn0825.point.presentation.support.PresentationTestApplication
 import com.jysohn0825.point.presentation.support.PresentationTestConfig
 import org.junit.jupiter.api.BeforeEach

@@ -1,8 +1,7 @@
-package com.jysohn0825.point.presentation.support
+package com.jysohn0825.point.domain.repository
 
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.vo.EarnType
 import java.time.LocalDateTime
 
@@ -10,9 +9,13 @@ class FakePointEarningRepository : PointEarningRepository {
     private val earningsById: MutableMap<String, PointEarning> = mutableMapOf()
     private val walletIdByEarningId: MutableMap<String, String> = mutableMapOf()
 
+    var updateStatusAllCallCount: Int = 0
+        private set
+
     fun clear() {
         earningsById.clear()
         walletIdByEarningId.clear()
+        updateStatusAllCallCount = 0
     }
 
     override fun save(
@@ -43,6 +46,7 @@ class FakePointEarningRepository : PointEarningRepository {
         earnings: List<PointEarning>,
         walletId: String,
     ) {
+        updateStatusAllCallCount++
         earnings.forEach { earningsById[it.id] = it }
     }
 

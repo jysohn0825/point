@@ -5,22 +5,18 @@ import com.jysohn0825.point.application.service.dto.CancelUsagePointResultDto
 import com.jysohn0825.point.application.service.dto.PointUsageResultDto
 import com.jysohn0825.point.application.service.dto.UsePointDto
 import com.jysohn0825.point.domain.entity.PointEarning
-import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointEarning
-import com.jysohn0825.point.domain.entity.pointPolicy
 import com.jysohn0825.point.domain.entity.pointWallet
 import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.fixture.pointUsage
-import com.jysohn0825.point.domain.repository.PointEarningRepository
-import com.jysohn0825.point.domain.repository.PointPolicyRepository
-import com.jysohn0825.point.domain.repository.PointUsageRepository
-import com.jysohn0825.point.domain.repository.PointWalletRepository
+import com.jysohn0825.point.domain.repository.FakePointEarningRepository
+import com.jysohn0825.point.domain.repository.FakePointPolicyRepository
+import com.jysohn0825.point.domain.repository.FakePointUsageRepository
+import com.jysohn0825.point.domain.repository.FakePointWalletRepository
 import com.jysohn0825.point.domain.vo.Balance
-import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.EarnType
-import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import com.jysohn0825.point.domain.vo.RestorationType
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.UsageStatus
@@ -36,133 +32,6 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicLong
 
-private class FakeUseWalletRepository(
-    var wallet: PointWallet,
-) : PointWalletRepository {
-    override fun findByMemberIdForUpdate(memberId: String): PointWallet = wallet
-
-    override fun findByMemberId(memberId: String): PointWallet = wallet
-
-    override fun findByIdForUpdate(walletId: String): PointWallet = wallet
-
-    override fun save(
-        wallet: PointWallet,
-        memberId: String,
-    ) {
-        this.wallet = wallet
-    }
-
-    override fun updateBalance(wallet: PointWallet) {
-        this.wallet = wallet
-    }
-}
-
-private class FakeUseEarningRepository(
-    initial: List<PointEarning> = emptyList(),
-) : PointEarningRepository {
-    val earnings: MutableList<PointEarning> = initial.toMutableList()
-
-    override fun save(
-        earning: PointEarning,
-        walletId: String,
-        policyId: String,
-    ) {
-        earnings.add(earning)
-    }
-
-    override fun saveAll(
-        earnings: List<PointEarning>,
-        walletId: String,
-        policyId: String,
-    ) {
-        this.earnings.addAll(earnings)
-    }
-
-    override fun updateStatus(
-        earning: PointEarning,
-        walletId: String,
-    ) = Unit
-
-    override fun updateStatusAll(
-        earnings: List<PointEarning>,
-        walletId: String,
-    ) = Unit
-
-    override fun findById(earningId: String): PointEarning = earnings.first { it.id == earningId }
-
-    override fun findByWalletIdAndEarnTypeAndSourceReferenceId(
-        walletId: String,
-        earnType: EarnType,
-        sourceReferenceId: String,
-    ): PointEarning? = earnings.firstOrNull { it.earnType == earnType && it.sourceReferenceId == sourceReferenceId }
-
-    override fun findRedeemableByWalletId(walletId: String): List<PointEarning> = earnings.filter { canBeRedeemed(earning = it) }
-
-    override fun findAllByIds(earningIds: List<String>): List<PointEarning> = earnings.filter { it.id in earningIds }
-
-    override fun findAllByWalletId(walletId: String): List<PointEarning> = earnings.toList()
-
-    override fun findExpiredCandidateWalletIds(now: LocalDateTime): List<String> = emptyList()
-
-    override fun findExpiringByWalletId(
-        walletId: String,
-        now: LocalDateTime,
-    ): List<PointEarning> = emptyList()
-
-    private fun canBeRedeemed(earning: PointEarning): Boolean =
-        earning.status.isActive() && earning.remainingAmount.value.signum() > 0 && !earning.isExpiredAt(LocalDateTime.now())
-}
-
-private class FakeUseUsageRepository(
-    initial: PointUsage? = null,
-) : PointUsageRepository {
-    var usage: PointUsage? = initial
-    var lastSaveCancellationCall: SaveCancellationCall? = null
-
-    data class SaveCancellationCall(
-        val requestedLines: List<CancellationLine>,
-        val reearnedEarningIds: List<String>,
-    )
-
-    override fun save(
-        usage: PointUsage,
-        walletId: String,
-    ) {
-        this.usage = usage
-    }
-
-    override fun saveCancellation(
-        usage: PointUsage,
-        walletId: String,
-        requestedLines: List<CancellationLine>,
-        reearnedEarningIds: List<String>,
-        canceledAt: LocalDateTime,
-    ) {
-        this.usage = usage
-        lastSaveCancellationCall = SaveCancellationCall(requestedLines = requestedLines, reearnedEarningIds = reearnedEarningIds)
-    }
-
-    override fun findById(usageId: String): PointUsage = requireNotNull(usage) { "usage not found: $usageId" }
-
-    override fun findLinesByEarningId(earningId: String): List<EarningUsageTrace> = emptyList()
-
-    override fun findAllByWalletId(walletId: String): List<PointUsage> = listOfNotNull(usage)
-}
-
-private class FakeUsePolicyRepository(
-    var policy: PointPolicy,
-) : PointPolicyRepository {
-    override fun getCurrent(): PointPolicy = policy
-
-    override fun save(
-        policy: PointPolicy,
-        appliedAt: LocalDateTime,
-        createdByAdminId: String,
-    ) {
-        this.policy = policy
-    }
-}
-
 private class FakeUseKeyGenerator : DistributedKeyGenerator {
     private val counter: AtomicLong = AtomicLong()
 
@@ -170,10 +39,10 @@ private class FakeUseKeyGenerator : DistributedKeyGenerator {
 }
 
 private fun service(
-    walletRepository: FakeUseWalletRepository,
-    earningRepository: FakeUseEarningRepository = FakeUseEarningRepository(),
-    usageRepository: FakeUseUsageRepository = FakeUseUsageRepository(),
-    policyRepository: FakeUsePolicyRepository = FakeUsePolicyRepository(pointPolicy()),
+    walletRepository: FakePointWalletRepository,
+    earningRepository: FakePointEarningRepository = FakePointEarningRepository(),
+    usageRepository: FakePointUsageRepository = FakePointUsageRepository(),
+    policyRepository: FakePointPolicyRepository = FakePointPolicyRepository(),
     keyGenerator: DistributedKeyGenerator = FakeUseKeyGenerator(),
 ): UsePointService =
     UsePointService(
@@ -202,8 +71,12 @@ class UsePointServiceTest :
                     earnType = EarnType.SYSTEM,
                     earnedAt = LocalDateTime.now().minusDays(2),
                 )
-            val walletRepository: FakeUseWalletRepository = FakeUseWalletRepository(pointWallet(balance = Balance(BigDecimal(2_000))))
-            val earningRepository: FakeUseEarningRepository = FakeUseEarningRepository(listOf(systemEarning, manualEarning))
+            val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(2_000)))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            earningRepository.save(earning = systemEarning, walletId = wallet.id, policyId = "policy-1")
+            earningRepository.save(earning = manualEarning, walletId = wallet.id, policyId = "policy-1")
             val usePointService: UsePointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
 
             When("일반 적립건보다 먼저 만료되지 않더라도 수기지급건을 사용하면") {
@@ -218,7 +91,7 @@ class UsePointServiceTest :
                     usage.lines[0].earningId shouldBe "manual-1"
                     manualEarning.remainingAmount.value shouldBe BigDecimal(500)
                     systemEarning.remainingAmount.value shouldBe BigDecimal(1_000)
-                    walletRepository.wallet.balance.amount shouldBe BigDecimal(1_500)
+                    wallet.balance.amount shouldBe BigDecimal(1_500)
                 }
             }
         }
@@ -240,8 +113,12 @@ class UsePointServiceTest :
                     earnedAt = LocalDateTime.now(),
                     period = expirationPeriod(30),
                 )
-            val walletRepository: FakeUseWalletRepository = FakeUseWalletRepository(pointWallet(balance = Balance(BigDecimal(1_000))))
-            val earningRepository: FakeUseEarningRepository = FakeUseEarningRepository(listOf(laterExpiring, soonExpiring))
+            val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(1_000)))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            earningRepository.save(earning = laterExpiring, walletId = wallet.id, policyId = "policy-1")
+            earningRepository.save(earning = soonExpiring, walletId = wallet.id, policyId = "policy-1")
             val usePointService: UsePointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
 
             When("포인트를 사용하면") {
@@ -262,8 +139,11 @@ class UsePointServiceTest :
 
         Given("가용 포인트보다 많은 금액을 사용하려고 하면") {
             val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(500)))
-            val walletRepository: FakeUseWalletRepository = FakeUseWalletRepository(pointWallet(balance = Balance(BigDecimal(500))))
-            val earningRepository: FakeUseEarningRepository = FakeUseEarningRepository(listOf(earning))
+            val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(500)))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            earningRepository.save(earning = earning, walletId = wallet.id, policyId = "policy-1")
             val usePointService: UsePointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
 
             When("사용을 시도하면") {
@@ -277,7 +157,7 @@ class UsePointServiceTest :
                             ),
                         )
                     }
-                    walletRepository.wallet.balance.amount shouldBe BigDecimal(500)
+                    wallet.balance.amount shouldBe BigDecimal(500)
                 }
             }
         }
@@ -286,9 +166,13 @@ class UsePointServiceTest :
             val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))
             earning.use(BigDecimal(300))
             val usage: PointUsage = pointUsage(lines = listOf(UsageLine(earningId = "e1", amount = BigDecimal(300))))
-            val walletRepository: FakeUseWalletRepository = FakeUseWalletRepository(pointWallet(balance = Balance(BigDecimal(700))))
-            val earningRepository: FakeUseEarningRepository = FakeUseEarningRepository(listOf(earning))
-            val usageRepository: FakeUseUsageRepository = FakeUseUsageRepository(usage)
+            val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(700)))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            earningRepository.save(earning = earning, walletId = wallet.id, policyId = "policy-1")
+            val usageRepository: FakePointUsageRepository = FakePointUsageRepository()
+            usageRepository.save(usage = usage, walletId = wallet.id)
             val usePointService: UsePointService =
                 service(walletRepository = walletRepository, earningRepository = earningRepository, usageRepository = usageRepository)
 
@@ -301,7 +185,7 @@ class UsePointServiceTest :
                     result.requestedLines.size shouldBe 1
                     result.requestedLines[0].restorationType shouldBe RestorationType.RESTORED
                     earning.remainingAmount.value shouldBe BigDecimal(1_000)
-                    walletRepository.wallet.balance.amount shouldBe BigDecimal(1_000)
+                    wallet.balance.amount shouldBe BigDecimal(1_000)
                     result.usage.status shouldBe UsageStatus.FULLY_CANCELED
                 }
             }
@@ -317,9 +201,13 @@ class UsePointServiceTest :
                 )
             expiredEarning.use(BigDecimal(400))
             val usage: PointUsage = pointUsage(lines = listOf(UsageLine(earningId = "expired-1", amount = BigDecimal(400))))
-            val walletRepository: FakeUseWalletRepository = FakeUseWalletRepository(pointWallet(balance = Balance(BigDecimal(600))))
-            val earningRepository: FakeUseEarningRepository = FakeUseEarningRepository(listOf(expiredEarning))
-            val usageRepository: FakeUseUsageRepository = FakeUseUsageRepository(usage)
+            val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(600)))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            earningRepository.save(earning = expiredEarning, walletId = wallet.id, policyId = "policy-1")
+            val usageRepository: FakePointUsageRepository = FakePointUsageRepository()
+            usageRepository.save(usage = usage, walletId = wallet.id)
             val usePointService: UsePointService =
                 service(walletRepository = walletRepository, earningRepository = earningRepository, usageRepository = usageRepository)
 
@@ -332,7 +220,7 @@ class UsePointServiceTest :
                     result.reEarnings[0].amount.value shouldBe BigDecimal(400)
                     result.requestedLines[0].restorationType shouldBe RestorationType.RE_EARNED
                     expiredEarning.remainingAmount.value shouldBe BigDecimal(600)
-                    walletRepository.wallet.balance.amount shouldBe BigDecimal(1_000)
+                    wallet.balance.amount shouldBe BigDecimal(1_000)
                 }
             }
         }
@@ -341,9 +229,13 @@ class UsePointServiceTest :
             val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))
             earning.use(BigDecimal(500))
             val usage: PointUsage = pointUsage(lines = listOf(UsageLine(earningId = "e1", amount = BigDecimal(500))))
-            val walletRepository: FakeUseWalletRepository = FakeUseWalletRepository(pointWallet(balance = Balance(BigDecimal(500))))
-            val earningRepository: FakeUseEarningRepository = FakeUseEarningRepository(listOf(earning))
-            val usageRepository: FakeUseUsageRepository = FakeUseUsageRepository(usage)
+            val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(500)))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            earningRepository.save(earning = earning, walletId = wallet.id, policyId = "policy-1")
+            val usageRepository: FakePointUsageRepository = FakePointUsageRepository()
+            usageRepository.save(usage = usage, walletId = wallet.id)
             val usePointService: UsePointService =
                 service(walletRepository = walletRepository, earningRepository = earningRepository, usageRepository = usageRepository)
 
@@ -356,15 +248,18 @@ class UsePointServiceTest :
                 Then("사용 건은 부분취소 상태가 되고 남은 사용 금액이 갱신된다") {
                     result.usage.status shouldBe UsageStatus.PARTIALLY_CANCELED
                     result.usage.remainingAmount shouldBe BigDecimal(300)
-                    walletRepository.wallet.balance.amount shouldBe BigDecimal(700)
+                    wallet.balance.amount shouldBe BigDecimal(700)
                 }
             }
         }
 
         Given("회원이 주문에서 포인트를 사용한 이력이 있을 때") {
             val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))
-            val walletRepository: FakeUseWalletRepository = FakeUseWalletRepository(pointWallet(balance = Balance(BigDecimal(1_000))))
-            val earningRepository: FakeUseEarningRepository = FakeUseEarningRepository(listOf(earning))
+            val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(1_000)))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            earningRepository.save(earning = earning, walletId = wallet.id, policyId = "policy-1")
             val usePointService: UsePointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
             val usage: PointUsage =
                 usePointService

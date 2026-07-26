@@ -30,4 +30,4 @@ paths:
 - `testFixtures`: 값 객체는 소문자 팩토리 함수(`pointAmount()` 등), 엔티티는 `XxxFixture.kt` 헬퍼.
 - 테스트 커버리지는 95% 이상을 유지한다.
 - 테스트 픽스처를 먼저 만들고, 그 픽스처를 기반으로 테스트를 작성한다.
-- repository 등 인터페이스는 mocking하지 않고 fake 구현체를 만들어 테스트에 사용한다.
+- repository 등 도메인 인터페이스는 mocking하지 않고 fake 구현체를 만들어 테스트에 사용한다. 이 fake 구현체는 인터페이스별로 단 하나만 `testFixtures`의 `repository` 패키지에 `FakeXxxRepository.kt`로 두고(예: `FakePointWalletRepository`), `application`/`presentation` 등 소비 모듈은 각자 별도 fake를 만들지 않고 이것을 그대로 가져다 쓴다. 특정 테스트에서만 필요한 조회/트래킹은 fake 자체에 범용 기능(예: `seed()`, `lastSaved~` 필드)으로 추가하고, 테스트별 서브클래싱이나 파일 로컬 fake로 우회하지 않는다.
