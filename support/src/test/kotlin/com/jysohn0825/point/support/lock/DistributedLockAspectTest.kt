@@ -25,7 +25,6 @@ private class RecordingLockExecutor : DistributedLockExecutor {
     override fun <T> executeWithLock(
         key: String,
         waitTime: Duration,
-        leaseTime: Duration,
         action: () -> T,
     ): T {
         capturedKeys.add(key)

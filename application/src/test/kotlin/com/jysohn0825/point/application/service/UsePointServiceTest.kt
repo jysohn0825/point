@@ -178,6 +178,40 @@ class UsePointServiceTest :
             }
         }
 
+        Given("이미 처리된 orderNumber로 동일한 사용을 다시 요청하면") {
+            val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))
+            val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(1_000)))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            earningRepository.save(earning = earning, walletId = wallet.id, policyId = "policy-1")
+            val usageRepository: FakePointUsageRepository = FakePointUsageRepository()
+            val eventPublisher: FakeUseEventPublisher = FakeUseEventPublisher()
+            val usePointService: UsePointService =
+                service(
+                    walletRepository = walletRepository,
+                    earningRepository = earningRepository,
+                    usageRepository = usageRepository,
+                    eventPublisher = eventPublisher,
+                )
+            val dto: UsePointDto = UsePointDto(memberId = "member-1", orderNumber = "ORDER-RETRY", amount = BigDecimal(300))
+
+            val firstUsage: PointUsage = usePointService.use(dto).pointUsage
+
+            When("같은 요청을 재시도하면") {
+                val secondUsage: PointUsage = usePointService.use(dto).pointUsage
+
+                Then("새 사용건을 만들지 않고 기존 사용건을 그대로 반환한다") {
+                    secondUsage.id shouldBe firstUsage.id
+                    wallet.balance.amount shouldBe BigDecimal(700)
+                }
+
+                Then("잔액 변동이 없으므로 이벤트가 추가로 발행되지 않는다") {
+                    eventPublisher.publishedEvents.size shouldBe 1
+                }
+            }
+        }
+
         Given("가용 포인트보다 많은 금액을 사용하려고 하면") {
             val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(500)))
             val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(500)))

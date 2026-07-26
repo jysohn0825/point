@@ -41,9 +41,18 @@ class UsePointService(
     private val redemptionAllocator: PointRedemptionAllocator = PointRedemptionAllocator()
     private val cancellationAllocator: PointCancellationAllocator = PointCancellationAllocator()
 
-    @DistributedLock(key = "'point-usage-lock:' + #dto.memberId + #dto.orderNumber")
+    /**
+     * 동일 orderNumber 요청이 재시도되어도, 락으로 직렬화한 뒤 기존 사용건을 그대로 반환해
+     * 커밋 후 재시도가 DB 유니크 제약 위반(uk_usage_order)으로 떨어지지 않도록 한다.
+     */
+    @DistributedLock(key = "'point-usage-lock:' + #dto.memberId + ':' + #dto.orderNumber")
     @Transactional
     fun use(dto: UsePointDto): PointUsageResultDto {
+        val existingUsage: PointUsage? = usageRepository.findByOrderNumber(dto.orderNumber)
+        if (existingUsage != null) {
+            return PointUsageResultDto.of(pointUsage = existingUsage)
+        }
+
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
         val redeemable: List<PointEarning> = earningRepository.findRedeemableByWalletId(wallet.id)
 

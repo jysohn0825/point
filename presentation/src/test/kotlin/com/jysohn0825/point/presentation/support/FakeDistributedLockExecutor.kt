@@ -8,7 +8,6 @@ class FakeDistributedLockExecutor : DistributedLockExecutor {
     override fun <T> executeWithLock(
         key: String,
         waitTime: Duration,
-        leaseTime: Duration,
         action: () -> T,
     ): T = action()
 }

@@ -32,6 +32,9 @@ interface PointUsageRepository {
 
     fun findById(usageId: String): PointUsage
 
+    /** 동일 주문번호로 재시도된 요청을 멱등하게 처리하기 위해, 이미 처리된 사용건이 있는지 조회한다. */
+    fun findByOrderNumber(orderNumber: String): PointUsage?
+
     /** 적립건이 어느 주문에서 얼마나 사용됐는지 역추적한다. */
     fun findLinesByEarningId(earningId: String): List<EarningUsageTrace>
 

@@ -10,6 +10,7 @@ import com.jysohn0825.point.domain.service.PointExpirationAllocator
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.support.lock.DistributedLock
 import org.springframework.context.ApplicationEventPublisher
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -19,8 +20,17 @@ class PointEarningExpirationService(
     private val walletRepository: PointWalletRepository,
     private val earningRepository: PointEarningRepository,
     private val eventPublisher: ApplicationEventPublisher,
+    @Lazy self: PointEarningExpirationService? = null,
 ) {
     private val expirationAllocator: PointExpirationAllocator = PointExpirationAllocator()
+
+    /**
+     * expireAllDue()가 expireWalletEarnings()를 자기 자신(this)으로 호출하면 Spring AOP 프록시를 우회해
+     * @DistributedLock/@Transactional이 걸리지 않는다. 프록시를 통해서만 호출하도록 자기 자신의 빈을
+     * 지연 주입받는다(순환 참조 방지를 위해 @Lazy). 단위 테스트처럼 Spring 컨테이너 없이 직접 생성할 때는
+     * self가 null이라 this로 대체된다.
+     */
+    private val proxy: PointEarningExpirationService = self ?: this
 
     /**
      * 만료 배치의 지갑 단위 처리 단위. memberId를 모르는 상태(walletId만 앎)에서 지갑을 잠근다.
@@ -32,10 +42,13 @@ class PointEarningExpirationService(
         now: LocalDateTime = LocalDateTime.now(),
     ): List<PointEarning> = expire(walletId = walletId, now = now)
 
-    @Transactional
+    /**
+     * 지갑마다 별도 트랜잭션·별도 락으로 처리되도록 이 메서드 자체는 @Transactional을 걸지 않는다
+     * (걸면 expireWalletEarnings 호출이 이 트랜잭션에 합류해 배치 전체가 하나의 트랜잭션으로 묶인다).
+     */
     fun expireAllDue(now: LocalDateTime = LocalDateTime.now()): Int {
         val walletIds: List<String> = earningRepository.findExpiredCandidateWalletIds(now)
-        walletIds.forEach { walletId -> expireWalletEarnings(walletId = walletId, now = now) }
+        walletIds.forEach { walletId -> proxy.expireWalletEarnings(walletId = walletId, now = now) }
         return walletIds.size
     }
 

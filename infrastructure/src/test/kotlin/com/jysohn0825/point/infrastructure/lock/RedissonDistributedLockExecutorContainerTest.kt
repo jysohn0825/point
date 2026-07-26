@@ -41,7 +41,7 @@ class RedissonDistributedLockExecutorContainerTest {
         repeat(threadCount) {
             pool.submit {
                 try {
-                    executor.executeWithLock(key = key, waitTime = Duration.ofSeconds(5), leaseTime = Duration.ofSeconds(5)) {
+                    executor.executeWithLock(key = key, waitTime = Duration.ofSeconds(5)) {
                         val current: Int = counter.get()
                         Thread.sleep(10)
                         counter.set(current + 1)
@@ -63,13 +63,13 @@ class RedissonDistributedLockExecutorContainerTest {
         val key: String = "test-lock-key-release-on-error"
 
         runCatching {
-            executor.executeWithLock(key = key, waitTime = Duration.ofSeconds(5), leaseTime = Duration.ofSeconds(5)) {
+            executor.executeWithLock(key = key, waitTime = Duration.ofSeconds(5)) {
                 throw IllegalStateException("작업 중 실패")
             }
         }
 
         val result: String =
-            executor.executeWithLock(key = key, waitTime = Duration.ofSeconds(5), leaseTime = Duration.ofSeconds(5)) {
+            executor.executeWithLock(key = key, waitTime = Duration.ofSeconds(5)) {
                 "released"
             }
 

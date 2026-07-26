@@ -37,7 +37,6 @@ class DistributedLockAspect(
         return lockExecutor.executeWithLock(
             key = key,
             waitTime = Duration.ofSeconds(distributedLock.waitTimeSeconds),
-            leaseTime = Duration.ofSeconds(distributedLock.leaseTimeSeconds),
         ) {
             joinPoint.proceed()
         }
