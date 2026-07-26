@@ -8,6 +8,8 @@ import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.PointWallet
+import com.jysohn0825.point.domain.event.PointsUsageCancelled
+import com.jysohn0825.point.domain.event.PointsUsed
 import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
@@ -21,6 +23,7 @@ import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import com.jysohn0825.point.support.lock.DistributedLock
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -33,6 +36,7 @@ class UsePointService(
     private val usageRepository: PointUsageRepository,
     private val policyRepository: PointPolicyRepository,
     private val keyGenerator: DistributedKeyGenerator,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     private val redemptionAllocator: PointRedemptionAllocator = PointRedemptionAllocator()
     private val cancellationAllocator: PointCancellationAllocator = PointCancellationAllocator()
@@ -58,6 +62,14 @@ class UsePointService(
         walletRepository.save(wallet = wallet, memberId = dto.memberId)
         earningRepository.updateStatusAll(earnings = touchedEarnings, walletId = wallet.id)
         usageRepository.save(usage = usage, walletId = wallet.id)
+        eventPublisher.publishEvent(
+            PointsUsed(
+                walletId = wallet.id,
+                amount = lines.sumOf { it.amount }.negate(),
+                balanceAfter = wallet.balance.amount,
+                usageId = usage.id,
+            ),
+        )
 
         return PointUsageResultDto.of(pointUsage = usage)
     }
@@ -90,6 +102,8 @@ class UsePointService(
         wallet.earn(allocation.totalRestoredAmount)
         usage.cancel(allocation.requestedLines)
 
+        val cancellationId: String = keyGenerator.next(USAGE_CANCELLATION_KEY_NAME).toString()
+
         walletRepository.save(wallet = wallet, memberId = dto.memberId)
         if (allocation.restoredEarnings.isNotEmpty()) {
             earningRepository.updateStatusAll(earnings = allocation.restoredEarnings, walletId = wallet.id)
@@ -101,8 +115,17 @@ class UsePointService(
             usage = usage,
             walletId = wallet.id,
             requestedLines = allocation.requestedLines,
+            cancellationId = cancellationId,
             reearnedEarningIds = allocation.reearnedEarningIds,
             canceledAt = now,
+        )
+        eventPublisher.publishEvent(
+            PointsUsageCancelled(
+                walletId = wallet.id,
+                amount = allocation.totalRestoredAmount.value,
+                balanceAfter = wallet.balance.amount,
+                cancellationId = cancellationId,
+            ),
         )
 
         return CancelUsagePointResultDto(
@@ -131,5 +154,6 @@ class UsePointService(
 
     companion object {
         private const val USAGE_KEY_NAME: String = "point-usage"
+        private const val USAGE_CANCELLATION_KEY_NAME: String = "point-usage-cancellation"
     }
 }

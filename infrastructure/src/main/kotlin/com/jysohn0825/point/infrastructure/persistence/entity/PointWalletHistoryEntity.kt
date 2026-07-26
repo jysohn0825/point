@@ -10,26 +10,26 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(
-    name = "point_wallet_transaction",
+    name = "point_wallet_history",
     indexes = [
-        Index(name = "idx_transaction_wallet", columnList = "wallet_id, occurred_at, id"),
-        Index(name = "idx_transaction_earning", columnList = "earning_id"),
-        Index(name = "idx_transaction_usage", columnList = "usage_id"),
-        Index(name = "idx_transaction_cancellation", columnList = "cancellation_id"),
+        Index(name = "idx_history_wallet", columnList = "wallet_id, occurred_at, id"),
+        Index(name = "idx_history_earning", columnList = "earning_id"),
+        Index(name = "idx_history_usage", columnList = "usage_id"),
+        Index(name = "idx_history_cancellation", columnList = "cancellation_id"),
     ],
 )
-@Comment("포인트 지갑 거래 원장")
-class PointWalletTransactionEntity(
+@Comment("포인트 지갑 히스토리")
+class PointWalletHistoryEntity(
     @Id
     @Column(name = "id", length = 36)
-    @Comment("거래 ID")
+    @Comment("히스토리 ID")
     val id: String,
     @Column(name = "wallet_id", nullable = false, length = 36)
     @Comment("지갑 ID")
     val walletId: String,
-    @Column(name = "transaction_type", nullable = false, length = 20)
+    @Column(name = "history_type", nullable = false, length = 20)
     @Comment("EARN / USE / EARN_CANCEL / USE_CANCEL / EXPIRE")
-    val transactionType: String,
+    val historyType: String,
     @Column(name = "amount", nullable = false)
     @Comment("증감액. 증가 +, 감소 -")
     val amount: Long,

@@ -9,6 +9,8 @@ import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointEarning
 import com.jysohn0825.point.domain.entity.pointWallet
+import com.jysohn0825.point.domain.event.PointsUsageCancelled
+import com.jysohn0825.point.domain.event.PointsUsed
 import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.fixture.pointUsage
 import com.jysohn0825.point.domain.repository.FakePointEarningRepository
@@ -28,6 +30,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import org.springframework.context.ApplicationEventPublisher
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicLong
@@ -38,12 +41,21 @@ private class FakeUseKeyGenerator : DistributedKeyGenerator {
     override fun next(name: String): Long = counter.incrementAndGet()
 }
 
+private class FakeUseEventPublisher : ApplicationEventPublisher {
+    val publishedEvents: MutableList<Any> = mutableListOf()
+
+    override fun publishEvent(event: Any) {
+        publishedEvents.add(event)
+    }
+}
+
 private fun service(
     walletRepository: FakePointWalletRepository,
     earningRepository: FakePointEarningRepository = FakePointEarningRepository(),
     usageRepository: FakePointUsageRepository = FakePointUsageRepository(),
     policyRepository: FakePointPolicyRepository = FakePointPolicyRepository(),
     keyGenerator: DistributedKeyGenerator = FakeUseKeyGenerator(),
+    eventPublisher: ApplicationEventPublisher = FakeUseEventPublisher(),
 ): UsePointService =
     UsePointService(
         walletRepository = walletRepository,
@@ -51,6 +63,7 @@ private fun service(
         usageRepository = usageRepository,
         policyRepository = policyRepository,
         keyGenerator = keyGenerator,
+        eventPublisher = eventPublisher,
     )
 
 class UsePointServiceTest :
@@ -137,6 +150,34 @@ class UsePointServiceTest :
             }
         }
 
+        Given("포인트 사용을 요청하면") {
+            val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))
+            val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(1_000)))
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            earningRepository.save(earning = earning, walletId = wallet.id, policyId = "policy-1")
+            val eventPublisher: FakeUseEventPublisher = FakeUseEventPublisher()
+            val usePointService: UsePointService =
+                service(walletRepository = walletRepository, earningRepository = earningRepository, eventPublisher = eventPublisher)
+
+            When("사용을 실행하면") {
+                val usage: PointUsage =
+                    usePointService
+                        .use(UsePointDto(memberId = "member-1", orderNumber = "ORDER-USE", amount = BigDecimal(300)))
+                        .pointUsage
+
+                Then("PointsUsed 이벤트가 발행된다") {
+                    eventPublisher.publishedEvents.size shouldBe 1
+                    val event: PointsUsed = eventPublisher.publishedEvents[0] as PointsUsed
+                    event.walletId shouldBe wallet.id
+                    event.amount shouldBe BigDecimal(-300)
+                    event.balanceAfter shouldBe BigDecimal(700)
+                    event.usageId shouldBe usage.id
+                }
+            }
+        }
+
         Given("가용 포인트보다 많은 금액을 사용하려고 하면") {
             val earning: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(500)))
             val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(500)))
@@ -173,8 +214,14 @@ class UsePointServiceTest :
             earningRepository.save(earning = earning, walletId = wallet.id, policyId = "policy-1")
             val usageRepository: FakePointUsageRepository = FakePointUsageRepository()
             usageRepository.save(usage = usage, walletId = wallet.id)
+            val eventPublisher: FakeUseEventPublisher = FakeUseEventPublisher()
             val usePointService: UsePointService =
-                service(walletRepository = walletRepository, earningRepository = earningRepository, usageRepository = usageRepository)
+                service(
+                    walletRepository = walletRepository,
+                    earningRepository = earningRepository,
+                    usageRepository = usageRepository,
+                    eventPublisher = eventPublisher,
+                )
 
             When("사용취소를 실행하면") {
                 val result: CancelUsagePointResultDto =
@@ -187,6 +234,15 @@ class UsePointServiceTest :
                     earning.remainingAmount.value shouldBe BigDecimal(1_000)
                     wallet.balance.amount shouldBe BigDecimal(1_000)
                     result.usage.status shouldBe UsageStatus.FULLY_CANCELED
+                }
+
+                Then("PointsUsageCancelled 이벤트가 saveCancellation에 전달된 것과 같은 cancellationId로 발행된다") {
+                    eventPublisher.publishedEvents.size shouldBe 1
+                    val event: PointsUsageCancelled = eventPublisher.publishedEvents[0] as PointsUsageCancelled
+                    event.walletId shouldBe wallet.id
+                    event.amount shouldBe BigDecimal(300)
+                    event.balanceAfter shouldBe BigDecimal(1_000)
+                    event.cancellationId shouldBe usageRepository.lastSaveCancellationCall?.cancellationId
                 }
             }
         }

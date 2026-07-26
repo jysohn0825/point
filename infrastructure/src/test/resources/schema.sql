@@ -121,10 +121,10 @@ CREATE TABLE IF NOT EXISTS point_usage_cancellation_line (
         FOREIGN KEY (reearned_earning_id) REFERENCES point_earning (id)
 ) COMMENT='포인트 사용취소 라인';
 
-CREATE TABLE IF NOT EXISTS point_wallet_transaction (
-    id                CHAR(36)    NOT NULL                COMMENT '거래 ID',
+CREATE TABLE IF NOT EXISTS point_wallet_history (
+    id                CHAR(36)    NOT NULL                COMMENT '히스토리 ID',
     wallet_id         CHAR(36)    NOT NULL                COMMENT '지갑 ID',
-    transaction_type  VARCHAR(20) NOT NULL                COMMENT 'EARN / USE / EARN_CANCEL / USE_CANCEL / EXPIRE',
+    history_type      VARCHAR(20) NOT NULL                COMMENT 'EARN / USE / EARN_CANCEL / USE_CANCEL / EXPIRE',
     amount            BIGINT      NOT NULL                COMMENT '증감액. 증가 +, 감소 -',
     balance_after     BIGINT      NOT NULL                COMMENT '기록 시점 잔액',
     earning_id        CHAR(36)    NULL                    COMMENT 'EARN / EARN_CANCEL / EXPIRE',
@@ -134,17 +134,17 @@ CREATE TABLE IF NOT EXISTS point_wallet_transaction (
     created_at        DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    KEY idx_transaction_wallet       (wallet_id, occurred_at, id),
-    KEY idx_transaction_earning      (earning_id),
-    KEY idx_transaction_usage        (usage_id),
-    KEY idx_transaction_cancellation (cancellation_id),
+    KEY idx_history_wallet       (wallet_id, occurred_at, id),
+    KEY idx_history_earning      (earning_id),
+    KEY idx_history_usage        (usage_id),
+    KEY idx_history_cancellation (cancellation_id),
 
-    CONSTRAINT fk_transaction_wallet
+    CONSTRAINT fk_history_wallet
         FOREIGN KEY (wallet_id) REFERENCES point_wallet (id),
-    CONSTRAINT fk_transaction_earning
+    CONSTRAINT fk_history_earning
         FOREIGN KEY (earning_id) REFERENCES point_earning (id),
-    CONSTRAINT fk_transaction_usage
+    CONSTRAINT fk_history_usage
         FOREIGN KEY (usage_id) REFERENCES point_usage (id),
-    CONSTRAINT fk_transaction_cancellation
+    CONSTRAINT fk_history_cancellation
         FOREIGN KEY (cancellation_id) REFERENCES point_usage_cancellation (id)
-) COMMENT='포인트 지갑 거래 원장';
+) COMMENT='포인트 지갑 히스토리';

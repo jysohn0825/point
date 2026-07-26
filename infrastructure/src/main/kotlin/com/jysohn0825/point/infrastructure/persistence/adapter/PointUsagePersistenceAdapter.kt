@@ -40,6 +40,7 @@ class PointUsagePersistenceAdapter(
         usage: PointUsage,
         walletId: String,
         requestedLines: List<CancellationLine>,
+        cancellationId: String,
         reearnedEarningIds: List<String>,
         canceledAt: LocalDateTime,
     ) {
@@ -52,7 +53,8 @@ class PointUsagePersistenceAdapter(
         val existingLinesByEarningId: Map<String, PointUsageLineEntity> =
             lineJpaRepository.findAllByUsageId(usage.id).associateBy { it.earningId }
 
-        val cancellationId: String = UUID.randomUUID().toString()
+        // 이번 cancel() 호출 하나 = point_usage_cancellation 헤더 1건. cancellationId는 호출자(UsePointService)가
+        // 미리 채번해 전달한다 — PointsUsageCancelled 이벤트가 이 id를 참조해야 하기 때문.
         cancellationJpaRepository.save(
             PointUsageCancellationEntity(
                 id = cancellationId,

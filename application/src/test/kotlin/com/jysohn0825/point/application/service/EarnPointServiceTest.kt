@@ -8,6 +8,8 @@ import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointPolicy
 import com.jysohn0825.point.domain.entity.pointWallet
+import com.jysohn0825.point.domain.event.PointsEarned
+import com.jysohn0825.point.domain.event.PointsEarningCancelled
 import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.FakePointEarningRepository
 import com.jysohn0825.point.domain.repository.FakePointPolicyRepository
@@ -22,6 +24,7 @@ import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import org.springframework.context.ApplicationEventPublisher
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicLong
 
@@ -31,12 +34,21 @@ private class FakeEarnKeyGenerator : DistributedKeyGenerator {
     override fun next(name: String): Long = counter.incrementAndGet()
 }
 
+private class FakeEarnEventPublisher : ApplicationEventPublisher {
+    val publishedEvents: MutableList<Any> = mutableListOf()
+
+    override fun publishEvent(event: Any) {
+        publishedEvents.add(event)
+    }
+}
+
 private fun service(
     walletRepository: FakePointWalletRepository,
     earningRepository: FakePointEarningRepository = FakePointEarningRepository(),
     policyRepository: FakePointPolicyRepository = FakePointPolicyRepository(),
     usageRepository: FakePointUsageRepository = FakePointUsageRepository(),
     keyGenerator: DistributedKeyGenerator = FakeEarnKeyGenerator(),
+    eventPublisher: ApplicationEventPublisher = FakeEarnEventPublisher(),
 ): EarnPointService =
     EarnPointService(
         walletRepository = walletRepository,
@@ -44,6 +56,7 @@ private fun service(
         policyRepository = policyRepository,
         usageRepository = usageRepository,
         keyGenerator = keyGenerator,
+        eventPublisher = eventPublisher,
     )
 
 class EarnPointServiceTest :
@@ -53,7 +66,9 @@ class EarnPointServiceTest :
             val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
             walletRepository.seed(memberId = "member-1", wallet = wallet)
             val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
-            val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
+            val eventPublisher: FakeEarnEventPublisher = FakeEarnEventPublisher()
+            val earnPointService: EarnPointService =
+                service(walletRepository = walletRepository, earningRepository = earningRepository, eventPublisher = eventPublisher)
 
             When("적립을 실행하면") {
                 val result: PointEarningResultDto =
@@ -73,6 +88,15 @@ class EarnPointServiceTest :
                     earningRepository.findAllByWalletId(walletId = wallet.id).size shouldBe 1
                     wallet.balance.amount shouldBe BigDecimal(1_000)
                 }
+
+                Then("PointsEarned 이벤트가 발행된다") {
+                    eventPublisher.publishedEvents.size shouldBe 1
+                    val event: PointsEarned = eventPublisher.publishedEvents[0] as PointsEarned
+                    event.walletId shouldBe wallet.id
+                    event.amount shouldBe BigDecimal(1_000)
+                    event.balanceAfter shouldBe BigDecimal(1_000)
+                    event.earningId shouldBe earning.id
+                }
             }
         }
 
@@ -81,7 +105,9 @@ class EarnPointServiceTest :
             val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
             walletRepository.seed(memberId = "member-1", wallet = wallet)
             val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
-            val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
+            val eventPublisher: FakeEarnEventPublisher = FakeEarnEventPublisher()
+            val earnPointService: EarnPointService =
+                service(walletRepository = walletRepository, earningRepository = earningRepository, eventPublisher = eventPublisher)
             val dto: EarnPointDto =
                 EarnPointDto(
                     memberId = "member-1",
@@ -99,6 +125,10 @@ class EarnPointServiceTest :
                     secondEarning.id shouldBe firstEarning.id
                     earningRepository.findAllByWalletId(walletId = wallet.id).size shouldBe 1
                     wallet.balance.amount shouldBe BigDecimal(1_000)
+                }
+
+                Then("잔액 변동이 없으므로 이벤트가 추가로 발행되지 않는다") {
+                    eventPublisher.publishedEvents.size shouldBe 1
                 }
             }
         }
@@ -133,7 +163,9 @@ class EarnPointServiceTest :
             val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
             walletRepository.seed(memberId = "member-1", wallet = wallet)
             val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
-            val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
+            val eventPublisher: FakeEarnEventPublisher = FakeEarnEventPublisher()
+            val earnPointService: EarnPointService =
+                service(walletRepository = walletRepository, earningRepository = earningRepository, eventPublisher = eventPublisher)
             val earning: PointEarning =
                 earnPointService
                     .earn(
@@ -146,12 +178,22 @@ class EarnPointServiceTest :
                     ).pointEarning
 
             When("적립 취소를 실행하면") {
+                eventPublisher.publishedEvents.clear()
                 val canceled: PointEarning = earnPointService.cancelEarning(memberId = "member-1", earningId = earning.id).pointEarning
 
                 Then("적립건이 취소 상태가 되고 지갑 잔액이 원복된다") {
                     canceled.status shouldBe EarningStatus.CANCELED
                     canceled.remainingAmount.value shouldBe BigDecimal.ZERO
                     wallet.balance.amount shouldBe BigDecimal.ZERO
+                }
+
+                Then("PointsEarningCancelled 이벤트가 발행된다") {
+                    eventPublisher.publishedEvents.size shouldBe 1
+                    val event: PointsEarningCancelled = eventPublisher.publishedEvents[0] as PointsEarningCancelled
+                    event.walletId shouldBe wallet.id
+                    event.amount shouldBe BigDecimal(-1_000)
+                    event.balanceAfter shouldBe BigDecimal.ZERO
+                    event.earningId shouldBe earning.id
                 }
             }
         }

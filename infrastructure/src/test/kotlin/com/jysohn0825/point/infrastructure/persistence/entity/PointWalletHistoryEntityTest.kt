@@ -5,17 +5,17 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import java.time.LocalDateTime
 
-class PointWalletTransactionEntityTest :
+class PointWalletHistoryEntityTest :
     BehaviorSpec({
-        Given("적립으로 인한 지갑 거래 내역을 만들 때") {
+        Given("적립으로 인한 지갑 히스토리를 만들 때") {
             val occurredAt: LocalDateTime = LocalDateTime.of(2026, 1, 1, 0, 0)
 
-            When("EARN 타입 거래를 생성하면") {
-                val entity: PointWalletTransactionEntity =
-                    PointWalletTransactionEntity(
-                        id = "tx-1",
+            When("EARN 타입 히스토리를 생성하면") {
+                val entity: PointWalletHistoryEntity =
+                    PointWalletHistoryEntity(
+                        id = "history-1",
                         walletId = "wallet-1",
-                        transactionType = "EARN",
+                        historyType = "EARN",
                         amount = 1_000L,
                         balanceAfter = 1_000L,
                         earningId = "earning-1",
@@ -23,7 +23,7 @@ class PointWalletTransactionEntityTest :
                     )
 
                 Then("적립 관련 필드는 채워지고 사용/취소 관련 필드는 비어있다") {
-                    entity.transactionType shouldBe "EARN"
+                    entity.historyType shouldBe "EARN"
                     entity.earningId shouldBe "earning-1"
                     entity.usageId.shouldBeNull()
                     entity.cancellationId.shouldBeNull()

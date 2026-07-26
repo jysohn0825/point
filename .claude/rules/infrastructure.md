@@ -10,15 +10,17 @@ paths:
 ## 필수 규칙
 
 - 의존 방향: `domain`/`support`를 `implementation`으로 의존. `spring-boot-starter-data-jpa` + MySQL(runtime, `mysql-connector-j`).
-- 패키지 구조: `persistence/adapter`(구현체), `persistence/adapter/mapper`(엔티티↔도메인 매퍼), `persistence/entity`(JPA 엔티티), `persistence/repository`(Spring Data JPA), `config`(`DatasourceConfig`, `RedissonConfig`), `lock`(`RedissonDistributedLockExecutor`, `support.lock.DistributedLockExecutor` 구현체), `cache`(`RedissonCacheExecutor`, `support.cache.CacheExecutor` 구현체), `key`(`RedissonDistributedKeyGenerator`, `support.key.DistributedKeyGenerator` 구현체)
+- 패키지 구조: `persistence/adapter`(구현체), `persistence/adapter/mapper`(엔티티↔도메인 매퍼), `persistence/entity`(JPA 엔티티), `persistence/repository`(Spring Data JPA), `event`(도메인 이벤트 리스너 — `domain`의 이벤트를 구독해 부가 기록을 영속화), `config`(`DatasourceConfig`, `RedissonConfig`), `lock`(`RedissonDistributedLockExecutor`, `support.lock.DistributedLockExecutor` 구현체), `cache`(`RedissonCacheExecutor`, `support.cache.CacheExecutor` 구현체), `key`(`RedissonDistributedKeyGenerator`, `support.key.DistributedKeyGenerator` 구현체)
 
 ## 설계 규칙
 - FK 파라미터(`walletId`, `policyId` 등)는 어댑터 `save()` 파라미터로 받아 JPA 엔티티 FK 컬럼에 채운다 ([domain.md](./domain.md) 참고).
 - 엔티티↔도메인 변환(`toDomain`/`toEntity`)은 어댑터에 private 함수로 두지 않고 `persistence/adapter/mapper`의 전용 `XxxMapper` 클래스로 뺀다. 변환 방향이 여러 개면(엔티티→도메인, 도메인→엔티티, VO→엔티티 등) 모두 `of(...)`라는 이름의 오버로드로 companion object에 둔다(파라미터 타입으로 구분되므로 이름을 나눌 필요 없음).
+- `event` 패키지의 리스너는 `@EventListener`(기본 동기 실행)만 사용한다. `@Async`나 `@TransactionalEventListener(phase = AFTER_COMMIT)`으로 바꾸면 발행자의 트랜잭션과 분리되어 [application.md](./application.md)가 전제하는 "같은 트랜잭션 안에서 커밋·롤백" 보장이 깨지므로 사용하지 않는다.
 
 ## 네이밍 규칙
 
 - 어댑터: `XxxPersistenceAdapter`, JPA 엔티티: `XxxEntity`, Spring Data 리포지토리: `XxxJpaRepository`, 매퍼: `XxxMapper`(companion object의 `of()` 정적 팩토리로만 사용, 인스턴스화하지 않음)
+- 이벤트 리스너: `XxxEventListener`
 
 ## 테스트 작성 규칙
 

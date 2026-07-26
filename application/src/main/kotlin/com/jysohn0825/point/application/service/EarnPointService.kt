@@ -6,6 +6,8 @@ import com.jysohn0825.point.application.service.dto.PointEarningResultDto
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointWallet
+import com.jysohn0825.point.domain.event.PointsEarned
+import com.jysohn0825.point.domain.event.PointsEarningCancelled
 import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
@@ -16,6 +18,7 @@ import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import com.jysohn0825.point.support.key.DistributedKeyGenerator.Companion.EARNING_KEY_NAME
 import com.jysohn0825.point.support.lock.DistributedLock
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -26,6 +29,7 @@ class EarnPointService(
     private val policyRepository: PointPolicyRepository,
     private val usageRepository: PointUsageRepository,
     private val keyGenerator: DistributedKeyGenerator,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     /**
      * 동일 (memberId, earnType, sourceReferenceId) 조합의 요청이 재시도되어도,
@@ -74,6 +78,9 @@ class EarnPointService(
 
         walletRepository.save(wallet = wallet, memberId = dto.memberId)
         earningRepository.save(earning = earning, walletId = wallet.id, policyId = policy.id)
+        eventPublisher.publishEvent(
+            PointsEarned(walletId = wallet.id, amount = pointAmount.value, balanceAfter = wallet.balance.amount, earningId = earning.id),
+        )
 
         return earning
     }
@@ -96,6 +103,14 @@ class EarnPointService(
 
         walletRepository.save(wallet = wallet, memberId = memberId)
         earningRepository.updateStatus(earning = earning, walletId = wallet.id)
+        eventPublisher.publishEvent(
+            PointsEarningCancelled(
+                walletId = wallet.id,
+                amount = earning.amount.value.negate(),
+                balanceAfter = wallet.balance.amount,
+                earningId = earning.id,
+            ),
+        )
 
         return PointEarningResultDto.of(pointEarning = earning)
     }

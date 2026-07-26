@@ -141,6 +141,7 @@ class PointUsagePersistenceAdapterContainerTest {
             usage = reloaded,
             walletId = walletId,
             requestedLines = requestedLines,
+            cancellationId = UUID.randomUUID().toString(),
             canceledAt = LocalDateTime.now(),
         )
         entityManager.flush()

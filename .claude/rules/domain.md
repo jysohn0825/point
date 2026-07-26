@@ -10,7 +10,7 @@ paths:
 ## 필수 규칙
 
 - 의존 방향: 어떤 프레임워크(Spring, JPA 등)에도 의존하지 않는다. `java-library` + `java-test-fixtures`만 적용.
-- 패키지 구조: `entity`(애그리거트), `vo`(값 객체), `repository`(포트 인터페이스), `exception`(도메인 예외)
+- 패키지 구조: `entity`(애그리거트), `vo`(값 객체), `repository`(포트 인터페이스), `exception`(도메인 예외), `event`(도메인 이벤트 — 프레임워크 의존 없는 순수 데이터 클래스)
 - 잔액 변경은 `PointWallet`을 경유한다. 원장(`PointEarning`/`PointUsage`)을 직접 수정해 잔액을 바꾸지 않는다.
 
 ## 설계 규칙
