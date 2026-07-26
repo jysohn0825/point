@@ -8,14 +8,15 @@ dependencies {
 
     implementation(project(":domain"))
     implementation(project(":application"))
+    implementation(project(":support"))
     runtimeOnly(project(":infrastructure"))
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework:spring-tx")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17")
     implementation(libs.kotlin.reflect)
 
     testImplementation(testFixtures(project(":domain")))
-    testImplementation(project(":support"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

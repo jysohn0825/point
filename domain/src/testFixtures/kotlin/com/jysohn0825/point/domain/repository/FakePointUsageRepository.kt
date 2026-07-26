@@ -50,8 +50,6 @@ class FakePointUsageRepository : PointUsageRepository {
     override fun findById(usageId: String): PointUsage =
         usagesById[usageId] ?: throw PointDomainException("사용건을 찾을 수 없습니다: usageId=$usageId")
 
-    override fun findByOrderNumber(orderNumber: String): PointUsage? = usagesById.values.find { it.orderNumber.value == orderNumber }
-
     override fun findLinesByEarningId(earningId: String): List<EarningUsageTrace> =
         usagesById.values.flatMap { usage ->
             usage.lines.filter { it.earningId == earningId }.map { line ->

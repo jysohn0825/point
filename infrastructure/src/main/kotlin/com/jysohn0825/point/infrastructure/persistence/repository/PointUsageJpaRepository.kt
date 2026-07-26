@@ -6,6 +6,4 @@ import org.springframework.data.jpa.repository.JpaRepository
 interface PointUsageJpaRepository : JpaRepository<PointUsageEntity, String> {
     /** 조회 API용 — 최신순. */
     fun findAllByWalletIdOrderByUsedAtDesc(walletId: String): List<PointUsageEntity>
-
-    fun findByOrderNumber(orderNumber: String): PointUsageEntity?
 }

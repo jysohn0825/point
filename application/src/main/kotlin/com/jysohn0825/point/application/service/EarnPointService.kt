@@ -32,8 +32,9 @@ class EarnPointService(
     private val eventPublisher: ApplicationEventPublisher,
 ) {
     /**
-     * 동일 (memberId, earnType, sourceReferenceId) 조합의 요청이 재시도되어도,
-     * 락으로 직렬화한 뒤 기존 적립건을 그대로 반환해 중복 적립을 막는다.
+     * 동일 (memberId, earnType, sourceReferenceId) 조합의 요청이 진짜 동시(in-flight)에 들어오면
+     * 락 획득에 실패해 409로 응답한다. 이미 끝난 요청의 재시도(락은 곧바로 잡힘)는 기존 적립건을
+     * 그대로 반환해 멱등하게 처리하고 중복 적립을 막는다.
      */
     @DistributedLock(
         key = "'point-earning-lock:' + #dto.memberId + ':' + #dto.earnType + ':' + #dto.sourceReferenceId",

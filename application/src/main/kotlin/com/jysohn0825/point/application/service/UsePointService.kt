@@ -42,17 +42,13 @@ class UsePointService(
     private val cancellationAllocator: PointCancellationAllocator = PointCancellationAllocator()
 
     /**
-     * 동일 orderNumber 요청이 재시도되어도, 락으로 직렬화한 뒤 기존 사용건을 그대로 반환해
-     * 커밋 후 재시도가 DB 유니크 제약 위반(uk_usage_order)으로 떨어지지 않도록 한다.
+     * 동일 orderNumber 요청이 진짜 동시(in-flight)에 들어오면 락 획득에 실패해 409로 응답한다.
+     * 이미 끝난 요청의 재시도(락은 곧바로 잡힘)는 애플리케이션에서 걸러내지 않고 그대로 실행되며,
+     * DB 유니크 제약(uk_usage_order) 위반으로 커밋이 실패해 GlobalExceptionHandler가 이를 409로 응답한다.
      */
     @DistributedLock(key = "'point-usage-lock:' + #dto.memberId + ':' + #dto.orderNumber")
     @Transactional
     fun use(dto: UsePointDto): PointUsageResultDto {
-        val existingUsage: PointUsage? = usageRepository.findByOrderNumber(dto.orderNumber)
-        if (existingUsage != null) {
-            return PointUsageResultDto.of(pointUsage = existingUsage)
-        }
-
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
         val redeemable: List<PointEarning> = earningRepository.findRedeemableByWalletId(wallet.id)
 

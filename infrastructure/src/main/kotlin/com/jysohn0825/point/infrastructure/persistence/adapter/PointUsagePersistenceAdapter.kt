@@ -122,9 +122,6 @@ class PointUsagePersistenceAdapter(
         }
     }
 
-    override fun findByOrderNumber(orderNumber: String): PointUsage? =
-        usageJpaRepository.findByOrderNumber(orderNumber)?.let { toDomain(entity = it) }
-
     override fun findAllByWalletId(walletId: String): List<PointUsage> =
         usageJpaRepository.findAllByWalletIdOrderByUsedAtDesc(walletId).map { toDomain(entity = it) }
 

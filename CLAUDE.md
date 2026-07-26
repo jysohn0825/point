@@ -7,10 +7,10 @@
 Gradle 멀티모듈, 의존 방향은 아래로 고정한다. 새 코드를 추가할 때 이 방향을 거스르지 않는다 
 
 - `domain` — 순수 Kotlin, 프레임워크 의존성 없음. 애그리거트/값 객체/repository 포트.
-- `support` — 포인트 도메인과 무관한 기술 공통 기능(캐싱, 분산 키 채번, 멱등성을 위한 분산락)의 포트 + Spring AOP 구현. `domain`에 의존하지 않는다.
+- `support` — 포인트 도메인과 무관한 기술 공통 기능(캐싱, 분산 키 채번, 동시 요청 직렬화를 위한 분산락)의 포트 + Spring AOP 구현. `domain`에 의존하지 않는다.
 - `application` — 서비스 계층. `domain`의 포트, `support`의 포트/애너테이션만 의존.
 - `infrastructure` — JPA 영속성 어댑터이자 Redisson 등 외부 인프라 연동 구현체 모듈. `domain`의 repository 인터페이스와 `support`의 포트(캐시/키 채번/분산락)를 구현.
-- `presentation` — Spring Boot 진입점. `domain`/`application`은 `implementation`, `infrastructure`는 `runtimeOnly`로만 참조.
+- `presentation` — Spring Boot 진입점. `domain`/`application`/`support`는 `implementation`, `infrastructure`는 `runtimeOnly`로만 참조. `support`는 `LockAcquisitionException` 등 예외를 `GlobalExceptionHandler`에서 HTTP 상태로 매핑하기 위해 참조한다.
 
 각 모듈의 세부 규칙(설계 패턴, 네이밍, 테스트 컨벤션)은 `.claude/rules/<module>.md`에 있으며, 해당 모듈 하위 파일을 열면 자동으로 로드된다.
 

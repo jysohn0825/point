@@ -9,13 +9,16 @@ Spring Boot 진입점(`PointApiApplication`).
 
 ## 필수 규칙
 
-- 의존 방향: `domain`/`application`은 `implementation`, `infrastructure`는 `runtimeOnly`. `infrastructure` 클래스를 직접 import하지 않는다.
+- 의존 방향: `domain`/`application`/`support`는 `implementation`, `infrastructure`는 `runtimeOnly`. `infrastructure` 클래스를 직접 import하지 않는다. `support`는 `LockAcquisitionException`을 `GlobalExceptionHandler`에서 HTTP 상태로 매핑하는 용도로만 참조한다. `org.springframework:spring-tx`는 `DataIntegrityViolationException`을 같은 용도로 매핑하기 위해 별도로 추가했다(JPA 자체는 `infrastructure`에만 있고 `runtimeOnly`).
 - 패키지 구조: `controller`(일반 API + 관리자 API 모두 포함, 관리자 컨트롤러는 별도 패키지로 빼지 않고 `Admin~Controller` 네이밍으로만 구분), `controller/dto/request`·`controller/dto/response`, `exception`(`GlobalExceptionHandler`, `ErrorResponse`), `scheduler`(`@Scheduled` 진입점), `config`(`OpenApiConfig` 등 프레젠테이션 전용 설정)
 
 ## 설계 규칙
 
 - 모든 예외는 `GlobalExceptionHandler`에서 중앙 처리하고 `ErrorResponse`로 응답한다. 컨트롤러에서 개별 try/catch를 하지 않는다.
-  - `PointDomainException`/`IllegalArgumentException`/`MethodArgumentNotValidException`(`@Valid` 검증 실패)/`HttpMessageNotReadableException`(요청 본문 파싱 실패) → 400, 그 외 `Exception` → 500
+  - `PointDomainException`/`IllegalArgumentException`/`MethodArgumentNotValidException`(`@Valid` 검증 실패)/`HttpMessageNotReadableException`(요청 본문 파싱 실패) → 400
+  - `LockAcquisitionException`(동일 key에 대한 진짜 동시(in-flight) 요청이라 분산락 획득에 실패한 경우) → 409
+  - `DataIntegrityViolationException`(이미 끝난 요청의 재시도가 DB 유니크 제약 위반으로 커밋에 실패한 경우, 예: `uk_usage_order`) → 409
+  - 그 외 `Exception` → 500
 - 도메인 엔티티/값 객체를 컨트롤러 밖으로 그대로 노출하지 않고 DTO로 변환한다.
 - 도메인 ↔ 응답 DTO 변환은 별도의 `mapper` 패키지를 두지 않고, 응답 DTO 자신의 companion object `of()` 팩토리로 처리한다(단건/리스트 오버로드 포함). 요청 DTO는 반대 방향으로 자기 자신에 `to(...)` 메서드를 둬서 application DTO로 변환한다.
 - 중첩 응답 항목(사용 라인, 취소 라인 등)은 별도 top-level 파일로 빼지 않고 부모 응답 DTO 안에 nested data class로 둔다(예: `PointUsageResponse.UsageLineResponse`).

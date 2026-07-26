@@ -2,8 +2,10 @@ package com.jysohn0825.point.presentation.exception
 
 import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.presentation.exception.ErrorResponse
+import com.jysohn0825.point.support.lock.LockAcquisitionException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -38,6 +40,24 @@ class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ErrorResponse.of(status = HttpStatus.BAD_REQUEST, message = "요청 본문을 읽을 수 없습니다."))
+    }
+
+    /** 동일 key에 대한 진짜 동시(in-flight) 요청이라 분산락 획득에 실패한 경우 — 이미 끝난 요청의 재시도는 락 획득에 성공한다. */
+    @ExceptionHandler(LockAcquisitionException::class)
+    fun handleLockAcquisitionException(e: LockAcquisitionException): ResponseEntity<ErrorResponse> {
+        log.warn("LockAcquisitionException: {}", e.message)
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(ErrorResponse.of(status = HttpStatus.CONFLICT, message = e.message))
+    }
+
+    /** 이미 끝난 요청의 재시도가 DB 유니크 제약(예: uk_usage_order, uk_wallet_member)을 위반한 경우. */
+    @ExceptionHandler(DataIntegrityViolationException::class)
+    fun handleDataIntegrityViolationException(e: DataIntegrityViolationException): ResponseEntity<ErrorResponse> {
+        log.warn("DataIntegrityViolationException: {}", e.message)
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(ErrorResponse.of(status = HttpStatus.CONFLICT, message = "이미 처리되었거나 중복된 요청입니다."))
     }
 
     @ExceptionHandler(IllegalArgumentException::class)
