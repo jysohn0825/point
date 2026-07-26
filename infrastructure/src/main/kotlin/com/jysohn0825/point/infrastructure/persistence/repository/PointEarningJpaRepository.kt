@@ -9,8 +9,8 @@ import java.time.LocalDateTime
 interface PointEarningJpaRepository : JpaRepository<PointEarningEntity, String> {
     /**
      * ACTIVE·미만료·잔여금액>0 인 적립건만 조회한다.
-     * earnType asc 정렬은 조회 성능을 위한 편의일 뿐, 소진 우선순위(수기지급 우선·만료 임박 우선)의
-     * 실제 소유자는 도메인의 allocator이므로 최종 정렬은 그쪽에서 다시 보장해야 한다.
+     * 소진 우선순위(수기지급 우선·만료 임박 우선)는 도메인의 allocator가 전담하므로
+     * 여기서는 정렬을 강제하지 않는다.
      */
     @Query(
         """
@@ -19,7 +19,7 @@ interface PointEarningJpaRepository : JpaRepository<PointEarningEntity, String> 
           and e.status = 'ACTIVE'
           and e.remainingAmount > 0
           and e.expiresAt > :now
-        order by e.earnType asc, e.expiresAt asc, e.earnedAt asc
+        order by e.expiresAt asc, e.earnedAt asc
         """,
     )
     fun findRedeemableByWalletId(
