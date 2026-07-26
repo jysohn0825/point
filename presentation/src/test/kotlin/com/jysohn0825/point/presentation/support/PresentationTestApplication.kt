@@ -19,7 +19,6 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
     scanBasePackages = [
         "com.jysohn0825.point.presentation.controller",
         "com.jysohn0825.point.presentation.exception",
-        "com.jysohn0825.point.presentation.scheduler",
         "com.jysohn0825.point.application",
         "com.jysohn0825.point.support",
     ],

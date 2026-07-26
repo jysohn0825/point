@@ -43,7 +43,6 @@ class PointUsagePersistenceAdapter(
         reearnedEarningIds: List<String>,
         canceledAt: LocalDateTime,
     ) {
-        // reearnedEarningIds는 requestedLines 중 RE_EARNED인 라인들만, 등장 순서대로 담고 있다(CancellationAllocation 참고).
         val reEarnedIndices: List<Int> = requestedLines.indices.filter { requestedLines[it].restorationType == RestorationType.RE_EARNED }
         require(reEarnedIndices.size == reearnedEarningIds.size) {
             "RE_EARNED 취소 라인 수와 reearnedEarningIds 개수가 일치해야 합니다: lines=${reEarnedIndices.size}, ids=${reearnedEarningIds.size}"
@@ -53,7 +52,6 @@ class PointUsagePersistenceAdapter(
         val existingLinesByEarningId: Map<String, PointUsageLineEntity> =
             lineJpaRepository.findAllByUsageId(usage.id).associateBy { it.earningId }
 
-        // 이번 cancel() 호출 하나 = point_usage_cancellation 헤더 1건
         val cancellationId: String = UUID.randomUUID().toString()
         cancellationJpaRepository.save(
             PointUsageCancellationEntity(

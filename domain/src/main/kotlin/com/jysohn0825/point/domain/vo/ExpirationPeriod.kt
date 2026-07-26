@@ -14,8 +14,6 @@ value class ExpirationPeriod(
 
     companion object {
         const val MIN_DAYS = 1L
-
-        // 5년 미만: 5년(365일 * 5)에서 하루를 뺀 값을 상한으로 둔다.
         const val MAX_DAYS = 365L * 5 - 1
         const val DEFAULT_DAYS = 365L
 

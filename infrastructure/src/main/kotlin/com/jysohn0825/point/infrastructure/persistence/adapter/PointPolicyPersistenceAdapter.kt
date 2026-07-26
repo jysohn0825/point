@@ -36,7 +36,6 @@ class PointPolicyPersistenceAdapter(
         jpaRepository.save(
             PointPolicyMapper.of(policy = policy, policyVersion = nextVersion, appliedAt = appliedAt, createdByAdminId = createdByAdminId),
         )
-        // 새로 저장된 정책이 오늘부터 즉시 적용될 수 있으므로, 오늘자 캐시를 무효화해 다음 조회에서 다시 채운다.
         cacheExecutor.evict(currentCacheKey())
     }
 
