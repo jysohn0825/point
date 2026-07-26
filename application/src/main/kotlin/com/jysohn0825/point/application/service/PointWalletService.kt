@@ -7,7 +7,6 @@ import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
 import com.jysohn0825.point.domain.vo.HoldingLimit
-import com.jysohn0825.point.support.lock.DistributedLock
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -17,8 +16,6 @@ class PointWalletService(
     private val walletRepository: PointWalletRepository,
     private val policyRepository: PointPolicyRepository,
 ) {
-    /** 회원당 지갑이 1개인 스키마 제약을 지키기 위해, 동일 회원의 동시 생성 요청을 락으로 직렬화한다. */
-    @DistributedLock(key = "'point-wallet-create-lock:' + #memberId")
     @Transactional
     fun createWallet(memberId: String): PointWalletResultDto {
         walletRepository.findByMemberId(memberId)?.let {

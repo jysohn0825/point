@@ -7,16 +7,15 @@ import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
 import com.jysohn0825.point.domain.service.PointExpirationAllocator
 import com.jysohn0825.point.domain.vo.PointAmount
-import com.jysohn0825.point.support.lock.DistributedLock
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 /**
- * 지갑 하나의 적립 만료 처리를 락+트랜잭션으로 감싸는 단위 서비스.
+ * 지갑 하나의 적립 만료 처리를 트랜잭션으로 감싸는 단위 서비스.
  * PointEarningExpirationService(배치/관리자 트리거 오케스트레이션)가 이 서비스를 별도 빈으로 주입받아 호출한다.
- * 같은 클래스에 두고 self-invocation으로 호출하면 Spring AOP 프록시(락·트랜잭션 어드바이스)를 건너뛰므로
+ * 같은 클래스에 두고 self-invocation으로 호출하면 Spring AOP 프록시(트랜잭션 어드바이스)를 건너뛰므로
  * 의도적으로 빈을 분리했다.
  */
 @Service
@@ -28,9 +27,8 @@ class PointWalletEarningExpirationService(
     private val expirationAllocator: PointExpirationAllocator = PointExpirationAllocator()
 
     /**
-     * 만료 배치/관리자 트리거의 지갑 단위 처리 단위. memberId를 모르는 상태(walletId만 앎)에서 지갑을 잠근다.
+     * 만료 배치/관리자 트리거의 지갑 단위 처리 단위. memberId를 모르는 상태(walletId만 앎)에서 지갑을 처리한다.
      */
-    @DistributedLock(key = "'point-earning-lock:' + #walletId + ':expire'")
     @Transactional
     fun expireWalletEarnings(
         walletId: String,
