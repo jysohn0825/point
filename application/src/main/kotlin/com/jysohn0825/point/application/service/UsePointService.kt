@@ -47,7 +47,7 @@ class UsePointService(
         val usedEarningIds: Set<String> = lines.map { it.earningId }.toSet()
         val touchedEarnings: List<PointEarning> = redeemable.filter { it.id in usedEarningIds }
 
-        wallet.decrease(PointAmount(dto.amount))
+        wallet.decrease(PointAmount(lines.sumOf { it.amount }))
         val usage: PointUsage =
             PointUsage.Companion.use(
                 id = keyGenerator.next(USAGE_KEY_NAME).toString(),
@@ -87,7 +87,7 @@ class UsePointService(
             )
 
         // 취소로 복원되는 금액은 RESTORED/RE_EARNED 여부와 무관하게 지갑 잔액을 동일하게 증가시킨다.
-        wallet.earn(PointAmount(cancelAmount))
+        wallet.earn(allocation.totalRestoredAmount)
         usage.cancel(allocation.requestedLines)
 
         walletRepository.save(wallet = wallet, memberId = dto.memberId)
