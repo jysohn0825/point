@@ -1,5 +1,6 @@
 package com.jysohn0825.point.presentation.controller.dto.response
 
+import com.jysohn0825.point.application.service.dto.PointPolicyResultDto
 import com.jysohn0825.point.domain.entity.PointPolicy
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
@@ -16,12 +17,14 @@ data class PointPolicyResponse(
     val defaultExpirationDays: Long,
 ) {
     companion object {
-        fun of(pointPolicy: PointPolicy): PointPolicyResponse =
-            PointPolicyResponse(
+        fun of(pointPolicyResult: PointPolicyResultDto): PointPolicyResponse {
+            val pointPolicy: PointPolicy = pointPolicyResult.pointPolicy
+            return PointPolicyResponse(
                 policyId = pointPolicy.id,
                 maxEarnPerTransaction = pointPolicy.maxEarnPerTransaction.value,
                 maxHoldingAmount = pointPolicy.maxHoldingAmount.value,
                 defaultExpirationDays = pointPolicy.defaultExpirationPeriod.days,
             )
+        }
     }
 }

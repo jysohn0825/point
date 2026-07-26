@@ -1,5 +1,6 @@
 package com.jysohn0825.point.presentation.controller.dto.response
 
+import com.jysohn0825.point.application.service.dto.PointWalletResultDto
 import com.jysohn0825.point.domain.entity.PointWallet
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
@@ -17,14 +18,16 @@ data class PointWalletResponse(
 ) {
     companion object {
         fun of(
-            pointWallet: PointWallet,
+            pointWalletResult: PointWalletResultDto,
             memberId: String,
-        ): PointWalletResponse =
-            PointWalletResponse(
+        ): PointWalletResponse {
+            val pointWallet: PointWallet = pointWalletResult.pointWallet
+            return PointWalletResponse(
                 walletId = pointWallet.id,
                 memberId = memberId,
                 balance = pointWallet.balance.amount,
                 holdingLimit = pointWallet.holdingLimit.value,
             )
+        }
     }
 }

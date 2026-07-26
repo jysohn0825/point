@@ -1,5 +1,6 @@
 package com.jysohn0825.point.presentation.controller.dto.response
 
+import com.jysohn0825.point.application.service.dto.EarningUsageTraceResultDto
 import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
@@ -12,8 +13,9 @@ data class EarningUsageTraceResponse(
     val amount: BigDecimal,
 ) {
     companion object {
-        fun of(earningUsageTraces: List<EarningUsageTrace>): List<EarningUsageTraceResponse> =
-            earningUsageTraces.map { earningUsageTrace ->
+        fun of(earningUsageTraceResults: List<EarningUsageTraceResultDto>): List<EarningUsageTraceResponse> =
+            earningUsageTraceResults.map { earningUsageTraceResult ->
+                val earningUsageTrace: EarningUsageTrace = earningUsageTraceResult.earningUsageTrace
                 EarningUsageTraceResponse(
                     orderNumber = earningUsageTrace.orderNumber.value,
                     amount = earningUsageTrace.amount,

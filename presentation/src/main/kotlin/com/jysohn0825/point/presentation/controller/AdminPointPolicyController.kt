@@ -26,5 +26,5 @@ class AdminPointPolicyController(
     @PostMapping
     fun upsert(
         @Valid @RequestBody request: UpsertPointPolicyRequest,
-    ): PointPolicyResponse = PointPolicyResponse.of(pointPolicy = policyService.createOrUpdate(request.to()))
+    ): PointPolicyResponse = PointPolicyResponse.of(pointPolicyResult = policyService.createOrUpdate(request.to()))
 }

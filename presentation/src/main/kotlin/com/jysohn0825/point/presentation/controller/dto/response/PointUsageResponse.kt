@@ -1,5 +1,6 @@
 package com.jysohn0825.point.presentation.controller.dto.response
 
+import com.jysohn0825.point.application.service.dto.PointUsageResultDto
 import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.vo.UsageStatus
 import io.swagger.v3.oas.annotations.media.Schema
@@ -30,15 +31,19 @@ data class PointUsageResponse(
 
     companion object {
         fun of(
-            pointUsages: List<PointUsage>,
+            pointUsageResults: List<PointUsageResultDto>,
             memberId: String,
-        ): List<PointUsageResponse> = pointUsages.map { pointUsage -> of(pointUsage, memberId) }
+        ): List<PointUsageResponse> =
+            pointUsageResults.map { pointUsageResult ->
+                of(pointUsageResult = pointUsageResult, memberId = memberId)
+            }
 
         fun of(
-            pointUsage: PointUsage,
+            pointUsageResult: PointUsageResultDto,
             memberId: String,
-        ): PointUsageResponse =
-            PointUsageResponse(
+        ): PointUsageResponse {
+            val pointUsage: PointUsage = pointUsageResult.pointUsage
+            return PointUsageResponse(
                 usageId = pointUsage.id,
                 memberId = memberId,
                 orderNumber = pointUsage.orderNumber.value,
@@ -46,5 +51,6 @@ data class PointUsageResponse(
                 lines = pointUsage.lines.map { UsageLineResponse(earningId = it.earningId, amount = it.amount) },
                 status = pointUsage.status,
             )
+        }
     }
 }

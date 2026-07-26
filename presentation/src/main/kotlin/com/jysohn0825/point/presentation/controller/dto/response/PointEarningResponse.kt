@@ -1,5 +1,6 @@
 package com.jysohn0825.point.presentation.controller.dto.response
 
+import com.jysohn0825.point.application.service.dto.PointEarningResultDto
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
@@ -30,15 +31,17 @@ data class PointEarningResponse(
 ) {
     companion object {
         fun of(
-            pointEarnings: List<PointEarning>,
+            pointEarningResults: List<PointEarningResultDto>,
             memberId: String,
-        ): List<PointEarningResponse> = pointEarnings.map { pointEarning -> of(pointEarning = pointEarning, memberId = memberId) }
+        ): List<PointEarningResponse> =
+            pointEarningResults.map { pointEarningResult -> of(pointEarningResult = pointEarningResult, memberId = memberId) }
 
         fun of(
-            pointEarning: PointEarning,
+            pointEarningResult: PointEarningResultDto,
             memberId: String,
-        ): PointEarningResponse =
-            PointEarningResponse(
+        ): PointEarningResponse {
+            val pointEarning: PointEarning = pointEarningResult.pointEarning
+            return PointEarningResponse(
                 earningId = pointEarning.id,
                 memberId = memberId,
                 amount = pointEarning.amount.value,
@@ -49,5 +52,6 @@ data class PointEarningResponse(
                 expirationDate = pointEarning.expirationDate.value,
                 status = pointEarning.status,
             )
+        }
     }
 }

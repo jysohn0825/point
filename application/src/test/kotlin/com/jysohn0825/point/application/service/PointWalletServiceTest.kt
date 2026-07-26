@@ -62,7 +62,7 @@ class PointWalletServiceTest :
             val sut: PointWalletService = PointWalletService(walletRepository, policyRepository)
 
             When("지갑을 조회하면") {
-                val wallet: PointWallet = sut.getWallet("member-1")
+                val wallet: PointWallet = sut.getWallet("member-1").pointWallet
 
                 Then("잔액이 그대로 반환된다") {
                     wallet.balance.amount shouldBe BigDecimal(1_400)
@@ -84,7 +84,7 @@ class PointWalletServiceTest :
             }
 
             When("지갑을 생성하면") {
-                val wallet: PointWallet = sut.createWallet("member-new")
+                val wallet: PointWallet = sut.createWallet("member-new").pointWallet
 
                 Then("현재 정책의 보유한도로 잔액 0인 지갑이 생성된다") {
                     wallet.balance.amount shouldBe BigDecimal.ZERO

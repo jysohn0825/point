@@ -2,6 +2,7 @@ package com.jysohn0825.point.application.service
 
 import com.jysohn0825.point.application.service.dto.CancelUsagePointDto
 import com.jysohn0825.point.application.service.dto.CancelUsagePointResultDto
+import com.jysohn0825.point.application.service.dto.PointUsageResultDto
 import com.jysohn0825.point.application.service.dto.UsePointDto
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
@@ -38,7 +39,7 @@ class UsePointService(
 
     @DistributedLock(key = "'point-usage-lock:' + #dto.memberId + #dto.orderNumber")
     @Transactional
-    fun use(dto: UsePointDto): PointUsage {
+    fun use(dto: UsePointDto): PointUsageResultDto {
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
         val redeemable: List<PointEarning> = earningRepository.findRedeemableByWalletId(wallet.id)
 
@@ -58,7 +59,7 @@ class UsePointService(
         earningRepository.updateStatusAll(earnings = touchedEarnings, walletId = wallet.id)
         usageRepository.save(usage = usage, walletId = wallet.id)
 
-        return usage
+        return PointUsageResultDto(pointUsage = usage)
     }
 
     @DistributedLock(key = "'point-usage-lock:' + #dto.memberId + #dto.usageId")
@@ -115,18 +116,18 @@ class UsePointService(
      * 조회 API용 — 회원 기준 전체 사용건 목록(최신순).
      */
     @Transactional(readOnly = true)
-    fun getUsages(memberId: String): List<PointUsage> {
+    fun getUsages(memberId: String): List<PointUsageResultDto> {
         val wallet: PointWallet =
             walletRepository.findByMemberId(memberId)
                 ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
-        return usageRepository.findAllByWalletId(wallet.id)
+        return usageRepository.findAllByWalletId(wallet.id).map { usage -> PointUsageResultDto(pointUsage = usage) }
     }
 
     /**
      * 조회 API용 — 사용건 상세(취소 이력 포함).
      */
     @Transactional(readOnly = true)
-    fun getUsage(usageId: String): PointUsage = usageRepository.findById(usageId)
+    fun getUsage(usageId: String): PointUsageResultDto = PointUsageResultDto(pointUsage = usageRepository.findById(usageId))
 
     companion object {
         private const val USAGE_KEY_NAME: String = "point-usage"

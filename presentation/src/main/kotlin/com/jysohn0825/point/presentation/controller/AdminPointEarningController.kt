@@ -33,7 +33,7 @@ class AdminPointEarningController(
         @Valid @RequestBody request: ManualGrantPointRequest,
     ): PointEarningResponse =
         PointEarningResponse.of(
-            pointEarning = earnPointService.earn(request.to(memberId)),
+            pointEarningResult = earnPointService.earn(request.to(memberId)),
             memberId = memberId,
         )
 
@@ -47,7 +47,7 @@ class AdminPointEarningController(
         @Parameter(description = "회원 식별자") @PathVariable memberId: String,
     ): List<PointEarningResponse> =
         PointEarningResponse.of(
-            pointEarnings = expirationService.expireMemberEarningsNow(memberId),
+            pointEarningResults = expirationService.expireMemberEarningsNow(memberId),
             memberId = memberId,
         )
 }

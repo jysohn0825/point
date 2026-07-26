@@ -1,5 +1,6 @@
 package com.jysohn0825.point.application.service
 
+import com.jysohn0825.point.application.service.dto.PointPolicyResultDto
 import com.jysohn0825.point.application.service.dto.UpsertPointPolicyDto
 import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.pointPolicy
@@ -38,7 +39,7 @@ class PointPolicyServiceTest :
 
             When("관리자가 새 정책을 등록하면") {
                 val appliedAt: LocalDateTime = LocalDateTime.now()
-                val result: PointPolicy =
+                val resultDto: PointPolicyResultDto =
                     sut.createOrUpdate(
                         dto =
                             UpsertPointPolicyDto(
@@ -49,6 +50,7 @@ class PointPolicyServiceTest :
                                 createdByAdminId = "admin-01",
                             ),
                     )
+                val result: PointPolicy = resultDto.pointPolicy
 
                 Then("등록한 값대로 정책이 생성되어 반환된다") {
                     result.maxEarnPerTransaction.value shouldBe BigDecimal(50_000)

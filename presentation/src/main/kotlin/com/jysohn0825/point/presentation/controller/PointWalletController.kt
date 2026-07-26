@@ -25,7 +25,7 @@ class PointWalletController(
         @Parameter(description = "회원 식별자") @PathVariable memberId: String,
     ): PointWalletResponse =
         PointWalletResponse.of(
-            pointWallet = walletService.createWallet(memberId),
+            pointWalletResult = walletService.createWallet(memberId),
             memberId = memberId,
         )
 
@@ -36,7 +36,7 @@ class PointWalletController(
         @Parameter(description = "회원 식별자") @PathVariable memberId: String,
     ): PointWalletResponse =
         PointWalletResponse.of(
-            pointWallet = walletService.getWallet(memberId),
+            pointWalletResult = walletService.getWallet(memberId),
             memberId = memberId,
         )
 }

@@ -1,5 +1,6 @@
 package com.jysohn0825.point.presentation.controller.dto.response
 
+import com.jysohn0825.point.application.service.dto.PointUsageResultDto
 import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.vo.RestorationType
 import com.jysohn0825.point.domain.vo.UsageStatus
@@ -49,10 +50,11 @@ data class PointUsageDetailResponse(
 
     companion object {
         fun of(
-            pointUsage: PointUsage,
+            pointUsageResult: PointUsageResultDto,
             memberId: String,
-        ): PointUsageDetailResponse =
-            PointUsageDetailResponse(
+        ): PointUsageDetailResponse {
+            val pointUsage: PointUsage = pointUsageResult.pointUsage
+            return PointUsageDetailResponse(
                 usageId = pointUsage.id,
                 memberId = memberId,
                 orderNumber = pointUsage.orderNumber.value,
@@ -70,5 +72,6 @@ data class PointUsageDetailResponse(
                     },
                 status = pointUsage.status,
             )
+        }
     }
 }

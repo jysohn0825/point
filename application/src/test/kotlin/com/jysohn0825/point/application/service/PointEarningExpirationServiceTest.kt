@@ -1,5 +1,6 @@
 package com.jysohn0825.point.application.service
 
+import com.jysohn0825.point.application.service.dto.PointEarningResultDto
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointEarning
@@ -259,7 +260,7 @@ class PointEarningExpirationServiceTest :
                 service(walletRepository = walletRepository, earningRepository = earningRepository)
 
             When("expireMemberEarningsNow를 호출하면") {
-                val result: List<PointEarning> = expirationService.expireMemberEarningsNow("member-1")
+                val result: List<PointEarningResultDto> = expirationService.expireMemberEarningsNow("member-1")
 
                 Then("아무 것도 처리하지 않는다") {
                     result.shouldBeEmpty()
@@ -284,7 +285,7 @@ class PointEarningExpirationServiceTest :
                 service(walletRepository = walletRepository, earningRepository = earningRepository)
 
             When("expireMemberEarningsNow를 호출하면") {
-                val result: List<PointEarning> = expirationService.expireMemberEarningsNow("member-1")
+                val result: List<PointEarningResultDto> = expirationService.expireMemberEarningsNow("member-1")
 
                 Then("해당 회원의 만료 대상 적립건이 즉시 처리된다") {
                     result.size shouldBe 1

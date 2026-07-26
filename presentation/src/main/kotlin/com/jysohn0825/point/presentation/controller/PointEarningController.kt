@@ -33,7 +33,7 @@ class PointEarningController(
         @Valid @RequestBody request: EarnPointRequest,
     ): PointEarningResponse =
         PointEarningResponse.of(
-            pointEarning = earnPointService.earn(request.to(memberId)),
+            pointEarningResult = earnPointService.earn(request.to(memberId)),
             memberId = memberId,
         )
 
@@ -45,7 +45,7 @@ class PointEarningController(
         @Parameter(description = "취소할 적립 건 식별자") @PathVariable earningId: String,
     ): PointEarningResponse =
         PointEarningResponse.of(
-            pointEarning = earnPointService.cancelEarning(memberId = memberId, earningId = earningId),
+            pointEarningResult = earnPointService.cancelEarning(memberId = memberId, earningId = earningId),
             memberId = memberId,
         )
 
@@ -56,7 +56,7 @@ class PointEarningController(
         @Parameter(description = "회원 식별자") @PathVariable memberId: String,
     ): List<PointEarningResponse> =
         PointEarningResponse.of(
-            pointEarnings = earnPointService.getEarnings(memberId),
+            pointEarningResults = earnPointService.getEarnings(memberId),
             memberId = memberId,
         )
 
@@ -68,7 +68,7 @@ class PointEarningController(
         @Parameter(description = "조회할 적립 건 식별자") @PathVariable earningId: String,
     ): PointEarningResponse =
         PointEarningResponse.of(
-            pointEarning = earnPointService.getEarning(earningId),
+            pointEarningResult = earnPointService.getEarning(earningId),
             memberId = memberId,
         )
 
@@ -81,5 +81,5 @@ class PointEarningController(
     fun getUsageTraces(
         @Parameter(description = "회원 식별자") @PathVariable memberId: String,
         @Parameter(description = "조회할 적립 건 식별자") @PathVariable earningId: String,
-    ): List<EarningUsageTraceResponse> = EarningUsageTraceResponse.of(earningUsageTraces = earnPointService.getUsageTraces(earningId))
+    ): List<EarningUsageTraceResponse> = EarningUsageTraceResponse.of(earningUsageTraceResults = earnPointService.getUsageTraces(earningId))
 }

@@ -1,6 +1,8 @@
 package com.jysohn0825.point.application.service
 
 import com.jysohn0825.point.application.service.dto.EarnPointDto
+import com.jysohn0825.point.application.service.dto.EarningUsageTraceResultDto
+import com.jysohn0825.point.application.service.dto.PointEarningResultDto
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointWallet
@@ -9,7 +11,6 @@ import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointUsageRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
-import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import com.jysohn0825.point.domain.vo.GrantedBy
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.support.key.DistributedKeyGenerator
@@ -34,10 +35,11 @@ class EarnPointService(
         key = "'point-earning-lock:' + #dto.memberId + ':' + #dto.earnType + ':' + #dto.sourceReferenceId",
     )
     @Transactional
-    fun earn(dto: EarnPointDto): PointEarning {
+    fun earn(dto: EarnPointDto): PointEarningResultDto {
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
+        val earning: PointEarning = findExistingEarning(wallet = wallet, dto = dto) ?: createEarning(wallet = wallet, dto = dto)
 
-        return findExistingEarning(wallet = wallet, dto = dto) ?: createEarning(wallet = wallet, dto = dto)
+        return PointEarningResultDto(pointEarning = earning)
     }
 
     private fun findExistingEarning(
@@ -85,7 +87,7 @@ class EarnPointService(
     fun cancelEarning(
         memberId: String,
         earningId: String,
-    ): PointEarning {
+    ): PointEarningResultDto {
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(memberId)
         val earning: PointEarning = earningRepository.findById(earningId)
 
@@ -95,29 +97,30 @@ class EarnPointService(
         walletRepository.save(wallet = wallet, memberId = memberId)
         earningRepository.updateStatus(earning = earning, walletId = wallet.id)
 
-        return earning
+        return PointEarningResultDto(pointEarning = earning)
     }
 
     /**
      * 조회 API용 — 회원 기준 전체 적립건 목록(상태 무관, 최신순).
      */
     @Transactional(readOnly = true)
-    fun getEarnings(memberId: String): List<PointEarning> {
+    fun getEarnings(memberId: String): List<PointEarningResultDto> {
         val wallet: PointWallet =
             walletRepository.findByMemberId(memberId)
                 ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
-        return earningRepository.findAllByWalletId(wallet.id)
+        return earningRepository.findAllByWalletId(wallet.id).map { earning -> PointEarningResultDto(pointEarning = earning) }
     }
 
     /**
      * 조회 API용 — 적립건 상세. cancelEarning()과 동일하게 지갑 소유권 교차검증은 하지 않는다(기존 관례).
      */
     @Transactional(readOnly = true)
-    fun getEarning(earningId: String): PointEarning = earningRepository.findById(earningId)
+    fun getEarning(earningId: String): PointEarningResultDto = PointEarningResultDto(pointEarning = earningRepository.findById(earningId))
 
     /**
      * 조회 API용 — 이 적립건이 어느 주문에서 얼마나 사용됐는지 1원 단위로 역추적한다.
      */
     @Transactional(readOnly = true)
-    fun getUsageTraces(earningId: String): List<EarningUsageTrace> = usageRepository.findLinesByEarningId(earningId)
+    fun getUsageTraces(earningId: String): List<EarningUsageTraceResultDto> =
+        usageRepository.findLinesByEarningId(earningId).map { trace -> EarningUsageTraceResultDto(earningUsageTrace = trace) }
 }

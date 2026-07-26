@@ -2,6 +2,7 @@ package com.jysohn0825.point.application.service
 
 import com.jysohn0825.point.application.service.dto.CancelUsagePointDto
 import com.jysohn0825.point.application.service.dto.CancelUsagePointResultDto
+import com.jysohn0825.point.application.service.dto.PointUsageResultDto
 import com.jysohn0825.point.application.service.dto.UsePointDto
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointPolicy
@@ -207,9 +208,10 @@ class UsePointServiceTest :
 
             When("일반 적립건보다 먼저 만료되지 않더라도 수기지급건을 사용하면") {
                 val usage: PointUsage =
-                    usePointService.use(
-                        UsePointDto(memberId = "member-1", orderNumber = "ORDER-1", amount = BigDecimal(500)),
-                    )
+                    usePointService
+                        .use(
+                            UsePointDto(memberId = "member-1", orderNumber = "ORDER-1", amount = BigDecimal(500)),
+                        ).pointUsage
 
                 Then("수기지급 적립건이 먼저 차감된다") {
                     usage.lines.size shouldBe 1
@@ -365,21 +367,22 @@ class UsePointServiceTest :
             val earningRepository: FakeUseEarningRepository = FakeUseEarningRepository(listOf(earning))
             val usePointService: UsePointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
             val usage: PointUsage =
-                usePointService.use(
-                    UsePointDto(memberId = "member-1", orderNumber = "ORDER-9", amount = BigDecimal(300)),
-                )
+                usePointService
+                    .use(
+                        UsePointDto(memberId = "member-1", orderNumber = "ORDER-9", amount = BigDecimal(300)),
+                    ).pointUsage
 
             When("사용건 목록을 조회하면") {
-                val usages: List<PointUsage> = usePointService.getUsages("member-1")
+                val usages: List<PointUsageResultDto> = usePointService.getUsages("member-1")
 
                 Then("사용건이 반환된다") {
                     usages.size shouldBe 1
-                    usages[0].id shouldBe usage.id
+                    usages[0].pointUsage.id shouldBe usage.id
                 }
             }
 
             When("사용건 상세를 조회하면") {
-                val found: PointUsage = usePointService.getUsage(usage.id)
+                val found: PointUsage = usePointService.getUsage(usage.id).pointUsage
 
                 Then("동일한 사용건이 반환된다") {
                     found.id shouldBe usage.id

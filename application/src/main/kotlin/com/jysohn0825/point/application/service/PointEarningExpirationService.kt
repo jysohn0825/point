@@ -1,5 +1,6 @@
 package com.jysohn0825.point.application.service
 
+import com.jysohn0825.point.application.service.dto.PointEarningResultDto
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.repository.PointEarningRepository
@@ -57,7 +58,7 @@ class PointEarningExpirationService(
     fun expireMemberEarningsNow(
         memberId: String,
         now: LocalDateTime = LocalDateTime.now(),
-    ): List<PointEarning> {
+    ): List<PointEarningResultDto> {
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(memberId)
         val dueEarnings: List<PointEarning> = earningRepository.findExpiringByWalletId(walletId = wallet.id, now = now)
         if (dueEarnings.isEmpty()) return emptyList()
@@ -66,7 +67,7 @@ class PointEarningExpirationService(
 
         walletRepository.save(wallet = wallet, memberId = memberId)
         earningRepository.updateStatusAll(earnings = dueEarnings, walletId = wallet.id)
-        return dueEarnings
+        return dueEarnings.map { earning -> PointEarningResultDto(pointEarning = earning) }
     }
 
     private fun applyExpiration(

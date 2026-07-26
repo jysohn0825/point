@@ -30,7 +30,7 @@ class PointUsageController(
     fun use(
         @Parameter(description = "회원 식별자") @PathVariable memberId: String,
         @Valid @RequestBody request: UsePointRequest,
-    ): PointUsageResponse = PointUsageResponse.of(pointUsage = usePointService.use(request.to(memberId)), memberId)
+    ): PointUsageResponse = PointUsageResponse.of(pointUsageResult = usePointService.use(request.to(memberId)), memberId = memberId)
 
     @Operation(
         summary = "포인트 사용취소",
@@ -54,7 +54,7 @@ class PointUsageController(
     @GetMapping
     fun getUsages(
         @Parameter(description = "회원 식별자") @PathVariable memberId: String,
-    ): List<PointUsageResponse> = PointUsageResponse.of(usePointService.getUsages(memberId), memberId = memberId)
+    ): List<PointUsageResponse> = PointUsageResponse.of(pointUsageResults = usePointService.getUsages(memberId), memberId = memberId)
 
     @Operation(summary = "포인트 사용건 상세 조회", description = "사용 건 하나의 상세 정보를 취소 이력과 함께 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
@@ -62,5 +62,5 @@ class PointUsageController(
     fun getUsage(
         @Parameter(description = "회원 식별자") @PathVariable memberId: String,
         @Parameter(description = "조회할 사용 건 식별자") @PathVariable usageId: String,
-    ): PointUsageDetailResponse = PointUsageDetailResponse.of(pointUsage = usePointService.getUsage(usageId), memberId = memberId)
+    ): PointUsageDetailResponse = PointUsageDetailResponse.of(pointUsageResult = usePointService.getUsage(usageId), memberId = memberId)
 }
