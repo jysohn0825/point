@@ -31,6 +31,6 @@ class PointPolicyService(
 
         policyRepository.save(policy = policy, appliedAt = dto.appliedAt, createdByAdminId = dto.createdByAdminId)
 
-        return PointPolicyResultDto(pointPolicy = policy)
+        return PointPolicyResultDto.of(pointPolicy = policy)
     }
 }

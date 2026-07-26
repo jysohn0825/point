@@ -67,7 +67,7 @@ class PointEarningExpirationService(
 
         walletRepository.save(wallet = wallet, memberId = memberId)
         earningRepository.updateStatusAll(earnings = dueEarnings, walletId = wallet.id)
-        return dueEarnings.map { earning -> PointEarningResultDto(pointEarning = earning) }
+        return PointEarningResultDto.of(dueEarnings)
     }
 
     private fun applyExpiration(

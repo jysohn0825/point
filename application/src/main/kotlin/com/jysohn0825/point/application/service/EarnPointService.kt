@@ -39,7 +39,7 @@ class EarnPointService(
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
         val earning: PointEarning = findExistingEarning(wallet = wallet, dto = dto) ?: createEarning(wallet = wallet, dto = dto)
 
-        return PointEarningResultDto(pointEarning = earning)
+        return PointEarningResultDto.of(pointEarning = earning)
     }
 
     private fun findExistingEarning(
@@ -97,7 +97,7 @@ class EarnPointService(
         walletRepository.save(wallet = wallet, memberId = memberId)
         earningRepository.updateStatus(earning = earning, walletId = wallet.id)
 
-        return PointEarningResultDto(pointEarning = earning)
+        return PointEarningResultDto.of(pointEarning = earning)
     }
 
     /**
@@ -108,19 +108,20 @@ class EarnPointService(
         val wallet: PointWallet =
             walletRepository.findByMemberId(memberId)
                 ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
-        return earningRepository.findAllByWalletId(wallet.id).map { earning -> PointEarningResultDto(pointEarning = earning) }
+        return PointEarningResultDto.of(earningRepository.findAllByWalletId(wallet.id))
     }
 
     /**
      * 조회 API용 — 적립건 상세. cancelEarning()과 동일하게 지갑 소유권 교차검증은 하지 않는다(기존 관례).
      */
     @Transactional(readOnly = true)
-    fun getEarning(earningId: String): PointEarningResultDto = PointEarningResultDto(pointEarning = earningRepository.findById(earningId))
+    fun getEarning(earningId: String): PointEarningResultDto =
+        PointEarningResultDto.of(pointEarning = earningRepository.findById(earningId))
 
     /**
      * 조회 API용 — 이 적립건이 어느 주문에서 얼마나 사용됐는지 1원 단위로 역추적한다.
      */
     @Transactional(readOnly = true)
     fun getUsageTraces(earningId: String): List<EarningUsageTraceResultDto> =
-        usageRepository.findLinesByEarningId(earningId).map { trace -> EarningUsageTraceResultDto(earningUsageTrace = trace) }
+        EarningUsageTraceResultDto.of(usageRepository.findLinesByEarningId(earningId))
 }

@@ -34,7 +34,7 @@ class PointWalletService(
 
         walletRepository.save(wallet = wallet, memberId = memberId)
 
-        return PointWalletResultDto(pointWallet = wallet)
+        return PointWalletResultDto.of(pointWallet = wallet)
     }
 
     @Transactional(readOnly = true)
@@ -42,6 +42,6 @@ class PointWalletService(
         val wallet: PointWallet =
             walletRepository.findByMemberId(memberId)
                 ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
-        return PointWalletResultDto(pointWallet = wallet)
+        return PointWalletResultDto.of(pointWallet = wallet)
     }
 }
