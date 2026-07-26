@@ -43,6 +43,8 @@ class RedissonCacheExecutorContainerTest {
         val key: String = "test-cache-getOrPut-key"
         val loadCount: AtomicInteger = AtomicInteger(0)
 
+        executor.evict(key = key)
+
         val loader = {
             loadCount.incrementAndGet()
             "loaded-value"
