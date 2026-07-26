@@ -11,6 +11,7 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.util.UUID
 
 class PointEarningTest :
@@ -239,6 +240,51 @@ class PointEarningTest :
 
                 Then("EXPIRED 상태가 된다") {
                     earning.status shouldBe EarningStatus.EXPIRED
+                }
+            }
+        }
+
+        Given("잔여액이 남은 ACTIVE 적립건이 있을 때") {
+            When("강제 즉시 만료를 처리하면") {
+                val now: LocalDateTime = LocalDateTime.now()
+                val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+
+                val voidedAmount: BigDecimal = earning.expireImmediately(now = now)
+
+                Then("잔여액이 소멸되고 EXPIRED 상태가 되며, 소멸액이 반환된다") {
+                    voidedAmount shouldBe BigDecimal(1_000)
+                    earning.remainingAmount.value shouldBe BigDecimal.ZERO
+                    earning.status shouldBe EarningStatus.EXPIRED
+                    earning.expirationDate.value shouldBe now
+                }
+            }
+        }
+
+        Given("전액 사용되어 EXHAUSTED 상태인 적립건이 있을 때") {
+            When("강제 즉시 만료를 처리하면") {
+                val now: LocalDateTime = LocalDateTime.now()
+                val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                earning.use(BigDecimal(1_000))
+
+                val voidedAmount: BigDecimal = earning.expireImmediately(now = now)
+
+                Then("소멸할 잔여액이 없어 상태는 EXHAUSTED로 유지되지만 만료일은 앞당겨진다") {
+                    voidedAmount shouldBe BigDecimal.ZERO
+                    earning.status shouldBe EarningStatus.EXHAUSTED
+                    earning.expirationDate.value shouldBe now
+                }
+            }
+        }
+
+        Given("이미 취소되었거나 만료된 적립건이 있을 때") {
+            When("강제 즉시 만료를 시도하면") {
+                val canceled: PointEarning = pointEarning()
+                canceled.cancelEarning()
+
+                Then("예외가 발생한다") {
+                    shouldThrow<PointDomainException> {
+                        canceled.expireImmediately()
+                    }
                 }
             }
         }

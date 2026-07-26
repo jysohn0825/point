@@ -10,6 +10,7 @@ import com.jysohn0825.point.domain.entity.pointPolicy
 import com.jysohn0825.point.domain.entity.pointWallet
 import com.jysohn0825.point.domain.event.PointsEarned
 import com.jysohn0825.point.domain.event.PointsEarningCancelled
+import com.jysohn0825.point.domain.event.PointsExpired
 import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.FakePointEarningRepository
 import com.jysohn0825.point.domain.repository.FakePointPolicyRepository
@@ -221,6 +222,82 @@ class EarnPointServiceTest :
                     shouldThrow<PointDomainException> {
                         earnPointService.cancelEarning(memberId = "member-1", earningId = earning.id)
                     }
+                }
+            }
+        }
+
+        Given("잔여액이 남은 적립건이 있을 때") {
+            val wallet: PointWallet = pointWallet()
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            val eventPublisher: FakeEarnEventPublisher = FakeEarnEventPublisher()
+            val earnPointService: EarnPointService =
+                service(walletRepository = walletRepository, earningRepository = earningRepository, eventPublisher = eventPublisher)
+            val earning: PointEarning =
+                earnPointService
+                    .earn(
+                        EarnPointDto(
+                            memberId = "member-1",
+                            amount = BigDecimal(1_000),
+                            earnType = EarnType.SYSTEM,
+                            sourceReferenceId = "ORDER-8",
+                        ),
+                    ).pointEarning
+
+            When("관리자가 강제 즉시 만료를 실행하면") {
+                eventPublisher.publishedEvents.clear()
+                val expired: PointEarning =
+                    earnPointService.forceExpireEarning(memberId = "member-1", earningId = earning.id).pointEarning
+
+                Then("잔여액이 소멸되고 지갑 잔액이 차감된다") {
+                    expired.status shouldBe EarningStatus.EXPIRED
+                    expired.remainingAmount.value shouldBe BigDecimal.ZERO
+                    wallet.balance.amount shouldBe BigDecimal.ZERO
+                }
+
+                Then("PointsExpired 이벤트가 발행된다") {
+                    eventPublisher.publishedEvents.size shouldBe 1
+                    val event: PointsExpired = eventPublisher.publishedEvents[0] as PointsExpired
+                    event.walletId shouldBe wallet.id
+                    event.amount shouldBe BigDecimal(-1_000)
+                    event.balanceAfter shouldBe BigDecimal.ZERO
+                    event.earningId shouldBe earning.id
+                }
+            }
+        }
+
+        Given("이미 전액 사용된 적립건이 있을 때") {
+            val wallet: PointWallet = pointWallet()
+            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
+            walletRepository.seed(memberId = "member-1", wallet = wallet)
+            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
+            val eventPublisher: FakeEarnEventPublisher = FakeEarnEventPublisher()
+            val earnPointService: EarnPointService =
+                service(walletRepository = walletRepository, earningRepository = earningRepository, eventPublisher = eventPublisher)
+            val earning: PointEarning =
+                earnPointService
+                    .earn(
+                        EarnPointDto(
+                            memberId = "member-1",
+                            amount = BigDecimal(1_000),
+                            earnType = EarnType.SYSTEM,
+                            sourceReferenceId = "ORDER-9",
+                        ),
+                    ).pointEarning
+            earning.use(BigDecimal(1_000))
+
+            When("관리자가 강제 즉시 만료를 실행하면") {
+                eventPublisher.publishedEvents.clear()
+                val result: PointEarning = earnPointService.forceExpireEarning(memberId = "member-1", earningId = earning.id).pointEarning
+
+                Then("소멸할 잔여액이 없어 상태는 EXHAUSTED로 유지되고 지갑 잔액도 변하지 않는다") {
+                    result.status shouldBe EarningStatus.EXHAUSTED
+                    wallet.balance.amount shouldBe BigDecimal(1_000)
+                }
+
+                Then("지갑 변동이 없으므로 이벤트가 발행되지 않는다") {
+                    eventPublisher.publishedEvents.size shouldBe 0
                 }
             }
         }

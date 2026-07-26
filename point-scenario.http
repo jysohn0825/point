@@ -1,0 +1,127 @@
+### Point API 시나리오 테스트 (README "기능 요구 사항" 예시 4번)
+### 적립(A) -> 적립(B) -> 사용(C, 1200) -> A 만료 -> 부분 사용취소(D, 1100) -> 잔여 취소
+###
+### 사용법 (IntelliJ HTTP Client 기준):
+###   1) docker compose up -d 로 MySQL/Redis를 띄운다.
+###   2) ./gradlew :presentation:bootRun 으로 앱을 띄운다 (기본 포트 8080).
+###   3) 이 파일을 위에서부터 순서대로 하나씩 실행한다. "실행 ▶" 버튼을 눌러도 되고
+###      전체를 한 번에 실행해도 된다(7번 만료 단계도 이제 API 호출이라 수동 개입이 필요 없다).
+###
+### memberId/orderNumber는 매 실행마다 새 값을 쓰도록 {{$uuid}}로 랜덤 생성한다.
+### orderNumber는 스키마상 전역 유니크(uk_usage_order)라 "A1234"를 그대로 재사용하면
+### 이미 다른 회원이 쓴 값과 충돌해 멱등성 로직이 기존 사용건을 그대로 반환해버린다
+### (실제로 이 파일을 만들 때 한 번 겪은 문제라 접미사를 붙여 회피한다).
+
+@baseUrl = http://localhost:8080/api/v1
+@memberId = member-1
+@orderNumber = order-1
+
+
+### 0. (최초 1회) 포인트 정책 등록 — 이미 정책이 등록되어 있다면 생략 가능
+POST {{baseUrl}}/admin/point-policies
+Content-Type: application/json
+
+{
+  "maxEarnPerTransaction": 100000,
+  "maxHoldingAmount": 1000000,
+  "defaultExpirationDays": 365,
+  "adminId": "admin-01"
+}
+
+
+### 1. 포인트 지갑 생성
+POST {{baseUrl}}/members/{{memberId}}/point-wallet
+
+
+### 2. 1000원 적립 (pointKey A) — 총 잔액 0 -> 1000원
+# @name earnA
+POST {{baseUrl}}/members/{{memberId}}/point-earnings
+Content-Type: application/json
+
+{
+  "amount": 1000,
+  "sourceReferenceId": "EARN-A"
+}
+
+> {%
+    client.global.set("earningIdA", response.body.earningId);
+%}
+
+
+### 3. 500원 적립 (pointKey B) — 총 잔액 1000 -> 1500원
+# @name earnB
+POST {{baseUrl}}/members/{{memberId}}/point-earnings
+Content-Type: application/json
+
+{
+  "amount": 500,
+  "sourceReferenceId": "EARN-B"
+}
+
+> {%
+    client.global.set("earningIdB", response.body.earningId);
+%}
+
+
+### 4. 지갑 조회 — 총 잔액 1500원 확인
+GET {{baseUrl}}/members/{{memberId}}/point-wallet
+
+
+### 5. 주문번호 {{orderNumber}} 에서 1200원 사용 (pointKey C) — 총 잔액 1500 -> 300원
+### 응답 lines에 [A, 1000], [B, 200] 두 줄이 잡혀야 한다 (A 전액 소진, B는 300 남음).
+# @name useC
+POST {{baseUrl}}/members/{{memberId}}/point-usages
+Content-Type: application/json
+
+{
+  "orderNumber": "{{orderNumber}}",
+  "amount": 1200
+}
+
+> {%
+    client.global.set("usageIdC", response.body.usageId);
+%}
+
+
+### 6. 지갑 조회 — 총 잔액 300원 확인
+GET {{baseUrl}}/members/{{memberId}}/point-wallet
+
+
+### 7. A의 적립이 만료된다 (관리자 강제 만료 API)
+###
+### 기존 만료 배치/즉시처리 API(POST .../point-earnings/expirations)는 "잔여액>0·이미 만료일 경과"인
+### 건만 대상으로 하므로, 5번에서 이미 전액 소진(EXHAUSTED)된 A는 걸리지 않는다. 그래서 관리자가
+### 적립건 하나를 지정해 자연 만료일과 무관하게 강제로 만료 처리하는 API를 새로 추가했다 — 잔여액이
+### 있으면 소멸시키고, 이미 소진된 A처럼 잔여액이 없으면 만료일만 지금으로 앞당긴다(이후 8번의
+### 사용취소가 PointCancellationAllocator.isExpiredAt()으로 이를 판단해 RE_EARNED로 재적립한다).
+POST {{baseUrl}}/admin/members/{{memberId}}/point-earnings/{{earningIdA}}/expiration
+
+
+### 8. C의 사용금액 1200원 중 1100원을 부분 사용취소 (pointKey D) — 총 잔액 300 -> 1400원
+### A는 이미 만료되어 복원되지 않고, 1000원이 신규 적립(pointKey E, RE_EARNED)으로 대체된다.
+### B는 만료되지 않아 사용가능 잔액이 300 -> 400원으로 복원(RESTORED)된다.
+POST {{baseUrl}}/members/{{memberId}}/point-usages/{{usageIdC}}/cancellations
+Content-Type: application/json
+
+{
+  "amount": 1100
+}
+
+
+### 9. 지갑 조회 — 총 잔액 1400원 확인
+GET {{baseUrl}}/members/{{memberId}}/point-wallet
+
+
+### 10. C에 남은 100원을 마저 부분취소 — 총 잔액 1400 -> 1500원 (B가 400 -> 500으로 완전 복원)
+POST {{baseUrl}}/members/{{memberId}}/point-usages/{{usageIdC}}/cancellations
+Content-Type: application/json
+
+{}
+
+
+### 11. 지갑 조회 — 총 잔액 1500원 확인 (사용 전 금액으로 완전 복귀)
+GET {{baseUrl}}/members/{{memberId}}/point-wallet
+
+
+### 12. C 상세 조회 — status가 FULLY_CANCELED, cancellationLines에 RE_EARNED/RESTORED가 함께 보여야 한다
+GET {{baseUrl}}/members/{{memberId}}/point-usages/point-usages/{{usageIdC}}

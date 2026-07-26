@@ -94,4 +94,36 @@ class AdminPointEarningControllerTest {
                 jsonPath("$.length()") { value(0) }
             }
     }
+
+    @Test
+    fun `잔여액이 남은 적립건을 강제 만료 처리하면 EXPIRED와 함께 지갑 잔액이 차감된다`() {
+        val wallet = pointWallet(id = "wallet-admin-4", balance = balance(BigDecimal(1_000)))
+        walletRepository.seed("member-admin-4", wallet)
+        val earning = pointEarning(id = "earning-admin-4", amount = pointAmount(BigDecimal(1_000)))
+        earningRepository.save(earning = earning, walletId = wallet.id, policyId = "policy-1")
+
+        mockMvc
+            .post("/api/v1/admin/members/member-admin-4/point-earnings/earning-admin-4/expiration")
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.status") { value("EXPIRED") }
+                jsonPath("$.remainingAmount") { value(0) }
+            }
+    }
+
+    @Test
+    fun `이미 전액 사용된 적립건을 강제 만료 처리하면 EXHAUSTED 상태를 유지한다`() {
+        val wallet = pointWallet(id = "wallet-admin-5", balance = balance(BigDecimal(0)))
+        walletRepository.seed("member-admin-5", wallet)
+        val earning = pointEarning(id = "earning-admin-5", amount = pointAmount(BigDecimal(1_000)))
+        earning.use(BigDecimal(1_000))
+        earningRepository.save(earning = earning, walletId = wallet.id, policyId = "policy-1")
+
+        mockMvc
+            .post("/api/v1/admin/members/member-admin-5/point-earnings/earning-admin-5/expiration")
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.status") { value("EXHAUSTED") }
+            }
+    }
 }

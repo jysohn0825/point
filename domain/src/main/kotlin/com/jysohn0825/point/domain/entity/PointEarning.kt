@@ -20,10 +20,13 @@ class PointEarning private constructor(
     val sourceReferenceId: String,
     val grantedBy: GrantedBy?,
     val earnedAt: LocalDateTime,
-    val expirationDate: ExpirationDate,
+    expirationDate: ExpirationDate,
     remainingAmount: RemainingAmount,
     status: EarningStatus,
 ) {
+    var expirationDate: ExpirationDate = expirationDate
+        private set
+
     var remainingAmount: RemainingAmount = remainingAmount
         private set
 
@@ -59,6 +62,25 @@ class PointEarning private constructor(
     fun expire() {
         checkDomain(status.isActive()) { "만료 처리 가능한 상태가 아닙니다: $status" }
         status = EarningStatus.EXPIRED
+    }
+
+    /**
+     * 관리자가 자연 만료일과 무관하게 이 적립건을 지금 즉시 만료 처리하도록 강제한다.
+     * 잔여 포인트가 있으면(ACTIVE) 소멸시켜 EXPIRED로 전이하고 소멸액을 반환한다.
+     * 이미 전액 사용된 적립건(EXHAUSTED)은 소멸시킬 잔액이 없어 상태는 그대로 두고
+     * 만료일만 지금으로 앞당긴다 — 이후 사용취소 시 isExpiredAt() 판정에 반영되어야 하기 때문이다.
+     */
+    fun expireImmediately(now: LocalDateTime = LocalDateTime.now()): BigDecimal {
+        checkDomain(status == EarningStatus.ACTIVE || status == EarningStatus.EXHAUSTED) {
+            "만료 처리 가능한 상태가 아닙니다: $status"
+        }
+        expirationDate = ExpirationDate(now)
+        if (status != EarningStatus.ACTIVE) return BigDecimal.ZERO
+
+        val voidedAmount: BigDecimal = remainingAmount.value
+        remainingAmount = RemainingAmount(BigDecimal.ZERO)
+        status = EarningStatus.EXPIRED
+        return voidedAmount
     }
 
     override fun equals(other: Any?): Boolean {

@@ -8,6 +8,7 @@ import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.event.PointsEarned
 import com.jysohn0825.point.domain.event.PointsEarningCancelled
+import com.jysohn0825.point.domain.event.PointsExpired
 import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
@@ -21,6 +22,7 @@ import com.jysohn0825.point.support.lock.DistributedLock
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 
 @Service
 class EarnPointService(
@@ -112,6 +114,41 @@ class EarnPointService(
                 earningId = earning.id,
             ),
         )
+
+        return PointEarningResultDto.of(pointEarning = earning)
+    }
+
+    /**
+     * 관리자가 특정 적립건을 자연 만료일과 무관하게 즉시 만료 처리한다.
+     * 만료 배치/즉시 처리 API(expireMemberEarningsNow)는 "잔여액>0·이미 만료일 경과"인 건만 대상으로
+     * 하므로, 이미 전액 사용된 적립건은 걸리지 않는다. 이 API는 그런 경우에도 관리자가 임의로
+     * 만료일을 지금으로 앞당겨(잔여액이 있으면 소멸까지) 강제할 수 있게 한다.
+     */
+    @DistributedLock(key = "'point-earning-lock:' + #memberId + ':expire:' + #earningId")
+    @Transactional
+    fun forceExpireEarning(
+        memberId: String,
+        earningId: String,
+    ): PointEarningResultDto {
+        val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(memberId)
+        val earning: PointEarning = earningRepository.findById(earningId)
+
+        val voidedAmount: BigDecimal = earning.expireImmediately()
+        if (voidedAmount.signum() > 0) {
+            wallet.decrease(PointAmount(voidedAmount))
+            walletRepository.save(wallet = wallet, memberId = memberId)
+        }
+        earningRepository.updateStatus(earning = earning, walletId = wallet.id)
+        if (voidedAmount.signum() > 0) {
+            eventPublisher.publishEvent(
+                PointsExpired(
+                    walletId = wallet.id,
+                    amount = voidedAmount.negate(),
+                    balanceAfter = wallet.balance.amount,
+                    earningId = earning.id,
+                ),
+            )
+        }
 
         return PointEarningResultDto.of(pointEarning = earning)
     }
