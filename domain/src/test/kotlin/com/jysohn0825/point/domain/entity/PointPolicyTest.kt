@@ -1,9 +1,6 @@
 package com.jysohn0825.point.domain.entity
 
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.vo.ExpirationPeriod
-import com.jysohn0825.point.domain.vo.MaxEarnPerTransaction
-import com.jysohn0825.point.domain.vo.MaxHoldingAmount
 import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.maxHoldingAmount
@@ -25,40 +22,6 @@ class PointPolicyTest :
                     sut.maxEarnPerTransaction shouldBe maxEarnPerTransaction()
                     sut.maxHoldingAmount shouldBe maxHoldingAmount()
                     sut.defaultExpirationPeriod shouldBe expirationPeriod()
-                }
-            }
-        }
-
-        given("정책이 이미 생성되어 있을 때") {
-            `when`("일부 필드만 수정하면") {
-                val sut: PointPolicy = pointPolicy()
-                val newMaxEarnPerTransaction: MaxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(80_000))
-
-                sut.update(maxEarnPerTransaction = newMaxEarnPerTransaction)
-
-                then("수정한 필드만 반영되고 나머지 필드는 유지된다") {
-                    sut.maxEarnPerTransaction shouldBe newMaxEarnPerTransaction
-                    sut.maxHoldingAmount shouldBe maxHoldingAmount()
-                    sut.defaultExpirationPeriod shouldBe expirationPeriod()
-                }
-            }
-
-            `when`("모든 필드를 수정하면") {
-                val sut: PointPolicy = pointPolicy()
-                val newMaxEarnPerTransaction: MaxEarnPerTransaction = maxEarnPerTransaction(value = BigDecimal(70_000))
-                val newMaxHoldingAmount: MaxHoldingAmount = maxHoldingAmount(value = BigDecimal(2_000_000))
-                val newDefaultExpirationPeriod: ExpirationPeriod = expirationPeriod(days = 730L)
-
-                sut.update(
-                    maxEarnPerTransaction = newMaxEarnPerTransaction,
-                    maxHoldingAmount = newMaxHoldingAmount,
-                    defaultExpirationPeriod = newDefaultExpirationPeriod,
-                )
-
-                then("모든 필드가 갱신된다") {
-                    sut.maxEarnPerTransaction shouldBe newMaxEarnPerTransaction
-                    sut.maxHoldingAmount shouldBe newMaxHoldingAmount
-                    sut.defaultExpirationPeriod shouldBe newDefaultExpirationPeriod
                 }
             }
         }

@@ -12,29 +12,16 @@ class PointPolicy(
     maxHoldingAmount: MaxHoldingAmount,
     defaultExpirationPeriod: ExpirationPeriod,
 ) {
-    var maxEarnPerTransaction: MaxEarnPerTransaction = maxEarnPerTransaction
-        private set
+    val maxEarnPerTransaction: MaxEarnPerTransaction = maxEarnPerTransaction
 
-    var maxHoldingAmount: MaxHoldingAmount = maxHoldingAmount
-        private set
+    val maxHoldingAmount: MaxHoldingAmount = maxHoldingAmount
 
-    var defaultExpirationPeriod: ExpirationPeriod = defaultExpirationPeriod
-        private set
+    val defaultExpirationPeriod: ExpirationPeriod = defaultExpirationPeriod
 
     fun validateEarnAmount(amount: BigDecimal) {
         requireDomain(amount <= maxEarnPerTransaction.value) {
             "1회 적립 한도(${maxEarnPerTransaction.value})를 초과했습니다: $amount"
         }
-    }
-
-    fun update(
-        maxEarnPerTransaction: MaxEarnPerTransaction = this.maxEarnPerTransaction,
-        maxHoldingAmount: MaxHoldingAmount = this.maxHoldingAmount,
-        defaultExpirationPeriod: ExpirationPeriod = this.defaultExpirationPeriod,
-    ) {
-        this.maxEarnPerTransaction = maxEarnPerTransaction
-        this.maxHoldingAmount = maxHoldingAmount
-        this.defaultExpirationPeriod = defaultExpirationPeriod
     }
 
     override fun equals(other: Any?): Boolean {
