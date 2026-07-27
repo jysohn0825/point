@@ -30,7 +30,8 @@ Spring Boot 진입점(`PointApiApplication`).
 
 ## 테스트 작성 규칙
 
-- Spring 컨텍스트를 띄우는 테스트(`@SpringBootTest` 기반 e2e)는 Kotest와의 통합이 세팅되어 있지 않으므로 JUnit5 `@Test`로 작성한다(`infrastructure`의 `*ContainerTest`와 동일한 관례). 그 외 순수 Kotlin 단위 테스트는 Kotest `BehaviorSpec`(Given/When/Then)을 쓴다. 시나리오는 한글로 작성.
+- `@SpringBootTest` 기반 e2e 테스트를 포함해 전 테스트를 Kotest `BehaviorSpec`(Given/When/Then)으로 작성한다. 시나리오는 한글로 작성. Spring 빈 주입은 목 프레임워크가 아니라 `kotest-extensions-spring`(`SpringExtension`/`SpringAutowireConstructorExtension`, `presentation/src/test/.../support/ProjectConfig.kt`에 등록)을 통해 스펙 클래스의 **생성자**로 받는다(`@Autowired` 필드 주입이 아님).
+- Given/When 블록의 최상위 코드는 스펙 생성 시점에 즉시(eager) 실행되고, `Then` 블록만 실제 테스트 실행 시점에 지연 평가된다(Jest의 describe/it과 동일한 모델). `domain`의 `FakeXxxRepository` 빈들은 Spring 싱글턴이라 모든 스펙 클래스가 같은 인스턴스를 공유하므로, `seed`/`save` 등 리포지토리에 상태를 남기는 준비 코드는 반드시 `Then` 블록 안(단언 직전)에 둔다. Given/When에 준비 코드를 두면 `beforeEach`의 리셋보다 먼저 실행되어 테스트 실행 시점에는 이미 지워진 상태가 된다.
 - 시나리오 기반 e2e 테스트로 작성한다: 실제 컨트롤러 + 실제 application 서비스를 그대로 띄우고, `domain`의 repository 포트와 `DistributedLockExecutor`만 fake 구현체로 대체한 뒤 MockMvc로 HTTP 요청·응답(상태 코드, JSON, `GlobalExceptionHandler` 처리 결과)을 검증한다. 서비스 계층을 Mock 프레임워크로 목킹하지 않는다(다른 모듈과 동일하게 fake 우선). repository 포트의 fake는 이 모듈에서 새로 만들지 않고 `domain`의 `testFixtures`에 있는 `FakeXxxRepository`를 `PresentationTestConfig`의 `@Bean`으로 등록해 재사용한다([domain.md](./domain.md) 참고). `DistributedLockExecutor`/`DistributedKeyGenerator`처럼 `domain` 인터페이스가 아닌 fake만 `presentation/support`에 둔다.
 - `infrastructure`는 컴파일 의존이 아니지만(`runtimeOnly`) 실행 시 클래스패스에는 그대로 존재하고, Spring Boot의 JPA 자동설정은 컴포넌트 스캔 범위가 아니라 클래스패스 존재 여부로 동작하므로 `scanBasePackages`를 좁히는 것만으로는 실제 DB(H2) 연결을 막을 수 없다. e2e 테스트용 부트 클래스에서 `DataSourceAutoConfiguration`/`HibernateJpaAutoConfiguration`/`JpaRepositoriesAutoConfiguration`을 명시적으로 `exclude`해야 한다. 캐시/분산락/분산채번은 인메모리 구현체라 별도 외부 연결이 없으므로 자동설정 제외 대상이 아니다.
 - 테스트 커버리지는 80% 이상을 유지한다.
