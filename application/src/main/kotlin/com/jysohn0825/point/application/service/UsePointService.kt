@@ -59,7 +59,7 @@ class UsePointService(
 
         wallet.decrease(PointAmount(lines.sumOf { it.amount }))
         val usage: PointUsage =
-            PointUsage.Companion.use(
+            PointUsage.use(
                 id = keyGenerator.next(USAGE_KEY_NAME).toString(),
                 orderNumber = OrderNumber(dto.orderNumber),
                 lines = lines,
@@ -80,7 +80,7 @@ class UsePointService(
         return PointUsageResultDto.of(pointUsage = usage)
     }
 
-    @DistributedLock(key = "'point-usage-lock:' + #dto.memberId + #dto.usageId")
+    @DistributedLock(key = "'point-usage-lock:' + #dto.memberId + ':' + #dto.usageId")
     @Transactional
     fun cancelUsage(dto: CancelUsagePointDto): CancelUsagePointResultDto {
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
