@@ -3,7 +3,6 @@ package com.jysohn0825.point.infrastructure.persistence.adapter
 import com.jysohn0825.point.domain.entity.PointWalletHistory
 import com.jysohn0825.point.domain.entity.pointWalletHistory
 import com.jysohn0825.point.domain.vo.HistoryType
-import com.jysohn0825.point.infrastructure.config.MySqlContainerConfig
 import com.jysohn0825.point.infrastructure.persistence.entity.PointEarningEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointPolicyEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointWalletEntity
@@ -13,7 +12,6 @@ import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
 import java.math.BigDecimal
@@ -21,9 +19,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(MySqlContainerConfig::class, PointWalletHistoryPersistenceAdapter::class)
-class PointWalletHistoryPersistenceAdapterContainerTest {
+@Import(PointWalletHistoryPersistenceAdapter::class)
+class PointWalletHistoryPersistenceAdapterTest {
     @Autowired
     private lateinit var entityManager: EntityManager
 

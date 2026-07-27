@@ -27,7 +27,7 @@ paths:
 ## 네이밍 규칙
 
 - 포트: `XxxExecutor`(락/캐시처럼 "실행을 위임"하는 성격), `XxxGenerator`(채번처럼 "값을 생성"하는 성격)로 구분한다.
-- 구현체는 이 모듈에 두지 않으므로 네이밍 규칙은 [infrastructure.md](./infrastructure.md)를 따른다(`RedissonXxx` 접두어).
+- 구현체는 이 모듈에 두지 않으므로 네이밍 규칙은 [infrastructure.md](./infrastructure.md)를 따른다(현재는 `InMemoryXxx` 접두어).
 
 ## 테스트 작성 규칙
 

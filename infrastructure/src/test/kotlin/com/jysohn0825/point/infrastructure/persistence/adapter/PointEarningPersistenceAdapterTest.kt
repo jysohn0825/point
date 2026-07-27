@@ -7,7 +7,6 @@ import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.pointAmount
-import com.jysohn0825.point.infrastructure.config.MySqlContainerConfig
 import com.jysohn0825.point.infrastructure.persistence.entity.PointEarningEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointPolicyEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointWalletEntity
@@ -18,7 +17,6 @@ import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
 import java.math.BigDecimal
@@ -26,9 +24,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(MySqlContainerConfig::class, PointEarningPersistenceAdapter::class)
-class PointEarningPersistenceAdapterContainerTest {
+@Import(PointEarningPersistenceAdapter::class)
+class PointEarningPersistenceAdapterTest {
     @Autowired
     private lateinit var entityManager: EntityManager
 

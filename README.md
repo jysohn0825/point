@@ -17,64 +17,33 @@
 |------|---------------------------------------|
 | 언어 | Kotlin 1.9.25 |
 | 프레임워크 | Spring Boot 3.5.7                     |
-| DB | MySQL 8.0 (Docker Compose)             |
-| 캐시 / 분산 락 | Redis 7 (Docker Compose)         |
+| DB | H2 (파일 기반 임베디드)             |
+| 캐시 / 분산 락 | 인메모리 구현체 (단일 인스턴스 가정)         |
 | 빌드 도구 | Gradle (Kotlin DSL)                   |
 
 ---
 
 ## 개선 및 고려 사항
 
+- 캐시/분산 락/분산 채번은 `support` 모듈의 포트(`CacheExecutor`/`DistributedLockExecutor`/`DistributedKeyGenerator`)로 추상화되어 있다. 지금은 Docker 없이 단일 인스턴스로 동작하도록 `infrastructure`에 인메모리 구현체(`InMemoryCacheExecutor`/`InMemoryDistributedLockExecutor`/`InMemoryDistributedKeyGenerator`)를 붙여뒀지만, 인스턴스를 여러 대로 확장할 경우 이 구현체만 Redis(Redisson) 기반 구현체로 교체하면 된다.
+
 ---
 
 ## 빌드 및 실행 방법
 
-MySQL, Redis 등 로컬 환경 차이로 인한 이슈를 피하기 위해, 로컬 빌드/실행은 **반드시 Docker Compose로 인프라(MySQL, Redis)를 띄운 뒤** 진행합니다.
-
-### 0. 사전 준비
-
-- **(필수) Docker / Docker Compose 설치** ([Docker Desktop](https://www.docker.com/products/docker-desktop/) 등). 로컬 실행(`bootRun`)과 테스트(`test`) 모두 Docker 없이는 동작하지 않습니다.
-- 실행(`./gradlew :presentation:bootRun`)과 테스트(`./gradlew test`) 모두 아래 1번의 `docker compose up -d`로 MySQL/Redis를 먼저 띄운 뒤 진행해야 합니다. Redis는 bootRun/test가 동일하게 `localhost:6379`(compose가 띄운 컨테이너)를 사용합니다.
-- MySQL은 테스트에서 Testcontainers가 별도 컨테이너를 자동으로 띄워 쓰므로, MySQL 관련 테스트 자체는 Docker 데몬만 있으면 동작합니다(다만 위 Redis 요구사항 때문에 compose는 어차피 떠 있어야 합니다).
-- Docker Desktop 대신 [Colima](https://github.com/abiosoft/colima)를 쓰는 경우, Testcontainers가 소켓을 못 찾을 수 있어 아래 환경변수가 추가로 필요합니다.
-
-      export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock
-      export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
-
-### 1. 인프라 실행 (MySQL + Redis)
-
-    docker compose up -d
-
-- MySQL: `localhost:3306` (DB `point` / 계정 `point` / 비밀번호 `point`)
-- Redis: `localhost:6379`
-- MySQL 컨테이너는 최초 실행 시 `infrastructure/src/test/resources/schema.sql`을 이용해 스키마를 자동 생성합니다.
-- 접속 정보를 바꾸고 싶다면 리포지토리 루트에 `.env` 파일을 만들어 `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`, `REDIS_PORT` 등을 오버라이드할 수 있습니다. (`docker-compose.yml` 참고)
-
-인프라 상태 확인 / 종료:
-
-    # 상태 확인
-    docker compose ps
-
-    # 로그 확인
-    docker compose logs -f mysql redis
-
-    # 종료 (데이터 유지)
-    docker compose down
-
-    # 종료 + 데이터 삭제
-    docker compose down -v
-
-### 2. 빌드 / 테스트 / 실행
+DB는 H2(파일 기반), 캐시/분산 락/분산 채번은 인메모리 구현체를 사용하므로 **Docker 없이** 바로 빌드/테스트/실행할 수 있습니다.
 
     # 빌드
     ./gradlew build
 
-    # 테스트 (1번의 docker compose가 먼저 떠 있어야 함 — Redis는 compose 컨테이너를 그대로 사용,
-    # MySQL은 Testcontainers가 별도로 자동 기동)
+    # 테스트
     ./gradlew test
 
-    # 로컬 실행 (presentation 모듈, 1번의 docker compose가 먼저 실행되어 있어야 함)
+    # 로컬 실행 (presentation 모듈)
     ./gradlew :presentation:bootRun
+
+- H2 데이터 파일은 기본적으로 `./data/point.mv.db`에 생성됩니다. 경로를 바꾸고 싶다면 `DB_FILE_PATH` 환경변수를 오버라이드하세요.
+- 스키마는 Hibernate 자동 생성이 아니라 `infrastructure/src/main/resources/schema.sql`로 직접 관리합니다(운영 환경의 마이그레이션 관리 방식을 그대로 반영).
 
 ---
 

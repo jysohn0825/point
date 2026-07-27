@@ -15,13 +15,11 @@ dependencies {
     implementation(project(":support"))
 
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation(libs.redisson.spring.boot.starter)
+    implementation("com.github.ben-manes.caffeine:caffeine")
     implementation(libs.kotlin.reflect)
 
-    runtimeOnly("com.mysql:mysql-connector-j")
+    runtimeOnly("com.h2database:h2")
 
     testImplementation(testFixtures(project(":domain")))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.boot:spring-boot-testcontainers")
-    testImplementation("org.testcontainers:mysql:1.21.4")
 }

@@ -6,23 +6,20 @@ import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.maxHoldingAmount
-import com.jysohn0825.point.infrastructure.config.MySqlContainerConfig
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(MySqlContainerConfig::class, PointPolicyPersistenceAdapter::class, FakeCacheExecutor::class)
-class PointPolicyPersistenceAdapterContainerTest {
+@Import(PointPolicyPersistenceAdapter::class, FakeCacheExecutor::class)
+class PointPolicyPersistenceAdapterTest {
     @Autowired
     private lateinit var entityManager: EntityManager
 

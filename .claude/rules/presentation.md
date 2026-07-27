@@ -9,7 +9,7 @@ Spring Boot 진입점(`PointApiApplication`).
 
 ## 필수 규칙
 
-- 의존 방향: `domain`/`application`/`support`는 `implementation`, `infrastructure`는 `runtimeOnly`. `infrastructure` 클래스를 직접 import하지 않는다. `support`는 `LockAcquisitionException`을 `GlobalExceptionHandler`에서 HTTP 상태로 매핑하는 용도로만 참조한다. `org.springframework:spring-tx`는 `DataIntegrityViolationException`을 같은 용도로 매핑하기 위해 별도로 추가했다(JPA 자체는 `infrastructure`에만 있고 `runtimeOnly`).
+- 의존 방향: `domain`/`application`/`support`는 `implementation`, `infrastructure`는 `runtimeOnly`. `infrastructure` 클래스를 직접 import하지 않는다. `support`는 `LockAcquisitionException`을 `GlobalExceptionHandler`에서 HTTP 상태로 매핑하는 용도로만 참조한다. `org.springframework:spring-tx`는 `DataIntegrityViolationException`을 같은 용도로 매핑하기 위해 별도로 추가했다(JPA 자체는 `infrastructure`에만 있고 `runtimeOnly`). DB(H2)/캐시/분산락/분산채번은 모두 `infrastructure`가 구현하며, 캐시/분산락/분산채번은 현재 Docker 없이 동작하는 인메모리 구현체다.
 - 패키지 구조: `controller`(일반 API + 관리자 API 모두 포함, 관리자 컨트롤러는 별도 패키지로 빼지 않고 `Admin~Controller` 네이밍으로만 구분), `controller/dto/request`·`controller/dto/response`, `exception`(`GlobalExceptionHandler`, `ErrorResponse`), `scheduler`(`@Scheduled` 진입점), `config`(`OpenApiConfig` 등 프레젠테이션 전용 설정)
 
 ## 설계 규칙
@@ -32,5 +32,5 @@ Spring Boot 진입점(`PointApiApplication`).
 
 - Spring 컨텍스트를 띄우는 테스트(`@SpringBootTest` 기반 e2e)는 Kotest와의 통합이 세팅되어 있지 않으므로 JUnit5 `@Test`로 작성한다(`infrastructure`의 `*ContainerTest`와 동일한 관례). 그 외 순수 Kotlin 단위 테스트는 Kotest `BehaviorSpec`(Given/When/Then)을 쓴다. 시나리오는 한글로 작성.
 - 시나리오 기반 e2e 테스트로 작성한다: 실제 컨트롤러 + 실제 application 서비스를 그대로 띄우고, `domain`의 repository 포트와 `DistributedLockExecutor`만 fake 구현체로 대체한 뒤 MockMvc로 HTTP 요청·응답(상태 코드, JSON, `GlobalExceptionHandler` 처리 결과)을 검증한다. 서비스 계층을 Mock 프레임워크로 목킹하지 않는다(다른 모듈과 동일하게 fake 우선). repository 포트의 fake는 이 모듈에서 새로 만들지 않고 `domain`의 `testFixtures`에 있는 `FakeXxxRepository`를 `PresentationTestConfig`의 `@Bean`으로 등록해 재사용한다([domain.md](./domain.md) 참고). `DistributedLockExecutor`/`DistributedKeyGenerator`처럼 `domain` 인터페이스가 아닌 fake만 `presentation/support`에 둔다.
-- `infrastructure`는 컴파일 의존이 아니지만(`runtimeOnly`) 실행 시 클래스패스에는 그대로 존재하고, Spring Boot 자동설정(JPA/Redisson)은 컴포넌트 스캔 범위가 아니라 클래스패스 존재 여부로 동작하므로 `scanBasePackages`를 좁히는 것만으로는 실제 DB/Redis 연결을 막을 수 없다. e2e 테스트용 부트 클래스에서 `DataSourceAutoConfiguration`/`HibernateJpaAutoConfiguration`/`JpaRepositoriesAutoConfiguration`/`RedissonAutoConfigurationV2`를 명시적으로 `exclude`해야 한다.
+- `infrastructure`는 컴파일 의존이 아니지만(`runtimeOnly`) 실행 시 클래스패스에는 그대로 존재하고, Spring Boot의 JPA 자동설정은 컴포넌트 스캔 범위가 아니라 클래스패스 존재 여부로 동작하므로 `scanBasePackages`를 좁히는 것만으로는 실제 DB(H2) 연결을 막을 수 없다. e2e 테스트용 부트 클래스에서 `DataSourceAutoConfiguration`/`HibernateJpaAutoConfiguration`/`JpaRepositoriesAutoConfiguration`을 명시적으로 `exclude`해야 한다. 캐시/분산락/분산채번은 인메모리 구현체라 별도 외부 연결이 없으므로 자동설정 제외 대상이 아니다.
 - 테스트 커버리지는 80% 이상을 유지한다.

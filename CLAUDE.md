@@ -9,7 +9,7 @@ Gradle 멀티모듈, 의존 방향은 아래로 고정한다. 새 코드를 추�
 - `domain` — 순수 Kotlin, 프레임워크 의존성 없음. 애그리거트/값 객체/repository 포트.
 - `support` — 포인트 도메인과 무관한 기술 공통 기능(캐싱, 분산 키 채번, 동시 요청 직렬화를 위한 분산락)의 포트 + Spring AOP 구현. `domain`에 의존하지 않는다.
 - `application` — 서비스 계층. `domain`의 포트, `support`의 포트/애너테이션만 의존.
-- `infrastructure` — JPA 영속성 어댑터이자 Redisson 등 외부 인프라 연동 구현체 모듈. `domain`의 repository 인터페이스와 `support`의 포트(캐시/키 채번/분산락)를 구현.
+- `infrastructure` — JPA 영속성 어댑터이자 `support`의 포트(캐시/키 채번/분산락) 구현체 모듈. `domain`의 repository 인터페이스를 구현하며, DB는 H2(파일 기반), 캐시/키채번/분산락은 Docker 없이 동작하는 인메모리 구현체를 사용한다(다중 인스턴스로 확장할 경우 이 구현체만 Redis 등으로 교체).
 - `presentation` — Spring Boot 진입점. `domain`/`application`/`support`는 `implementation`, `infrastructure`는 `runtimeOnly`로만 참조. `support`는 `LockAcquisitionException` 등 예외를 `GlobalExceptionHandler`에서 HTTP 상태로 매핑하기 위해 참조한다.
 
 각 모듈의 세부 규칙(설계 패턴, 네이밍, 테스트 컨벤션)은 `.claude/rules/<module>.md`에 있으며, 해당 모듈 하위 파일을 열면 자동으로 로드된다.
@@ -31,7 +31,7 @@ Gradle 멀티모듈, 의존 방향은 아래로 고정한다. 새 코드를 추�
 ./gradlew :presentation:bootRun   # 로컬 실행
 ```
 
-`infrastructure` 모듈 테스트 중 컨테이너 기반 테스트(`*ContainerTest`)는 Testcontainers(MySQL) 또는 Redis 컨테이너를 사용하므로 Docker가 필요하다.
+DB는 H2(파일 기반), 캐시/분산락/분산채번은 인메모리 구현체를 쓰므로 Docker 없이 빌드/테스트/실행할 수 있다.
 
 ## 커밋 컨벤션
 
