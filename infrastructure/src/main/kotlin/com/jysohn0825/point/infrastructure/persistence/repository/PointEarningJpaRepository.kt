@@ -34,7 +34,6 @@ interface PointEarningJpaRepository : JpaRepository<PointEarningEntity, String> 
         sourceReferenceId: String,
     ): PointEarningEntity?
 
-    /** 조회 API용 — 상태 무관, 최신순. */
     fun findAllByWalletIdOrderByEarnedAtDesc(walletId: String): List<PointEarningEntity>
 
     /** 만료 배치의 순회 대상 지갑 id (ACTIVE·잔여금액>0·이미 만료). */

@@ -153,9 +153,6 @@ class EarnPointService(
         return PointEarningResultDto.of(pointEarning = earning)
     }
 
-    /**
-     * 조회 API용 — 회원 기준 전체 적립건 목록(상태 무관, 최신순).
-     */
     @Transactional(readOnly = true)
     fun getEarnings(memberId: String): List<PointEarningResultDto> {
         val wallet: PointWallet =
@@ -164,16 +161,11 @@ class EarnPointService(
         return PointEarningResultDto.of(earningRepository.findAllByWalletId(wallet.id))
     }
 
-    /**
-     * 조회 API용 — 적립건 상세. cancelEarning()과 동일하게 지갑 소유권 교차검증은 하지 않는다(기존 관례).
-     */
+    /** cancelEarning()과 동일하게 지갑 소유권 교차검증은 하지 않는다(기존 관례). */
     @Transactional(readOnly = true)
     fun getEarning(earningId: String): PointEarningResultDto =
         PointEarningResultDto.of(pointEarning = earningRepository.findById(earningId))
 
-    /**
-     * 조회 API용 — 이 적립건이 어느 주문에서 얼마나 사용됐는지 1원 단위로 역추적한다.
-     */
     @Transactional(readOnly = true)
     fun getUsageTraces(earningId: String): List<EarningUsageTraceResultDto> =
         EarningUsageTraceResultDto.of(usageRepository.findLinesByEarningId(earningId))

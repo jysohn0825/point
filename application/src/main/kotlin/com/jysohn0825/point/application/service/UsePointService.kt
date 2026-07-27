@@ -140,9 +140,6 @@ class UsePointService(
         )
     }
 
-    /**
-     * 조회 API용 — 회원 기준 전체 사용건 목록(최신순).
-     */
     @Transactional(readOnly = true)
     fun getUsages(memberId: String): List<PointUsageResultDto> {
         val wallet: PointWallet =
@@ -151,9 +148,6 @@ class UsePointService(
         return PointUsageResultDto.of(usageRepository.findAllByWalletId(wallet.id))
     }
 
-    /**
-     * 조회 API용 — 사용건 상세(취소 이력 포함).
-     */
     @Transactional(readOnly = true)
     fun getUsage(usageId: String): PointUsageResultDto = PointUsageResultDto.of(pointUsage = usageRepository.findById(usageId))
 
