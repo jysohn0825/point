@@ -2,7 +2,6 @@ package com.jysohn0825.point.domain.entity
 
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.ExpirationPeriod
-import com.jysohn0825.point.domain.vo.GrantedBy
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.pointAmount
@@ -16,7 +15,7 @@ fun pointEarning(
     amount: PointAmount = pointAmount(),
     earnType: EarnType = EarnType.SYSTEM,
     sourceReferenceId: String = UUID.randomUUID().toString(),
-    grantedBy: GrantedBy? = null,
+    grantedBy: String? = null,
     earnedAt: LocalDateTime = POINT_EARNING_DEFAULT_EARNED_AT,
     period: ExpirationPeriod = expirationPeriod(),
 ): PointEarning =

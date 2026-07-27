@@ -87,7 +87,7 @@ data class PointUsageCancellationResponse(
                     amount = pointEarning.amount.value,
                     remainingAmount = pointEarning.remainingAmount.value,
                     earnType = pointEarning.earnType,
-                    grantedBy = pointEarning.grantedBy?.adminId,
+                    grantedBy = pointEarning.grantedBy,
                     earnedAt = pointEarning.earnedAt,
                     expirationDate = pointEarning.expirationDate.value,
                     status = pointEarning.status,

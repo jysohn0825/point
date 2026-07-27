@@ -72,6 +72,22 @@ class PointEarningTest :
                     }
                 }
             }
+
+            When("지급 관리자 식별자가 빈 문자열이면") {
+                Then("예외가 발생한다") {
+                    shouldThrow<PointDomainException> {
+                        pointEarning(earnType = EarnType.MANUAL, grantedBy = "")
+                    }
+                }
+            }
+
+            When("지급 관리자 식별자가 공백만 있으면") {
+                Then("예외가 발생한다") {
+                    shouldThrow<PointDomainException> {
+                        pointEarning(earnType = EarnType.MANUAL, grantedBy = "   ")
+                    }
+                }
+            }
         }
 
         Given("만료 여부를 판단할 때") {

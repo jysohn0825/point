@@ -34,7 +34,7 @@ class PointEarningExpirationService(
         val totalExpired: PointAmount = expirationAllocator.allocate(dueEarnings = dueEarnings)
         wallet.decrease(totalExpired)
 
-        walletRepository.updateBalance(wallet)
+        walletRepository.save(wallet = wallet, memberId = memberId)
         earningRepository.updateStatusAll(earnings = dueEarnings, walletId = wallet.id)
         publishExpirationEvents(wallet = wallet, dueEarnings = dueEarnings)
         return PointEarningResultDto.of(dueEarnings)

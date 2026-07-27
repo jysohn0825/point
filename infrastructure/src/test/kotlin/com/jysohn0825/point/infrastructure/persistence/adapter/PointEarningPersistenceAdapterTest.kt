@@ -112,7 +112,7 @@ class PointEarningPersistenceAdapterTest {
         entityManager.clear()
 
         val found: PointEarning? =
-            adapter.findByWalletIdAndEarnTypeAndSourceReferenceId(
+            adapter.findExistingEarning(
                 walletId = walletId,
                 earnType = EarnType.SYSTEM,
                 sourceReferenceId = "ORDER-IDEMPOTENT",
@@ -123,7 +123,7 @@ class PointEarningPersistenceAdapterTest {
 
     @Test
     fun `일치하는 조합이 없으면 null이 반환된다`() {
-        adapter.findByWalletIdAndEarnTypeAndSourceReferenceId(
+        adapter.findExistingEarning(
             walletId = walletId,
             earnType = EarnType.SYSTEM,
             sourceReferenceId = "no-such-source",

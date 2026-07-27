@@ -90,7 +90,7 @@ class PointEarningPersistenceAdapter(
             PointEarningMapper.of(it)
         }
 
-    override fun findByWalletIdAndEarnTypeAndSourceReferenceId(
+    override fun findExistingEarning(
         walletId: String,
         earnType: EarnType,
         sourceReferenceId: String,

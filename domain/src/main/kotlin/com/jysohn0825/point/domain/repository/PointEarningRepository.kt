@@ -35,7 +35,7 @@ interface PointEarningRepository {
     fun findById(earningId: String): PointEarning
 
     /** 동일 (지갑, 적립유형, 출처참조값) 조합의 기존 적립건이 있는지 조회한다 (적립 멱등성 체크용). */
-    fun findByWalletIdAndEarnTypeAndSourceReferenceId(
+    fun findExistingEarning(
         walletId: String,
         earnType: EarnType,
         sourceReferenceId: String,

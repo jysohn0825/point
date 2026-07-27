@@ -11,7 +11,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 
 class GlobalExceptionHandlerTest :
     BehaviorSpec({
-        val handler = GlobalExceptionHandler()
+        val handler: GlobalExceptionHandler = GlobalExceptionHandler()
 
         Given("PointDomainException이 발생했을 때") {
             When("핸들러가 처리하면") {

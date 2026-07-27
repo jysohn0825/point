@@ -41,7 +41,7 @@ class PointEarningMapperTest :
                     earning.remainingAmount.value shouldBe BigDecimal(400L)
                     earning.earnType shouldBe EarnType.MANUAL
                     earning.sourceReferenceId shouldBe "admin-01"
-                    earning.grantedBy?.adminId shouldBe "admin-01"
+                    earning.grantedBy shouldBe "admin-01"
                     earning.earnedAt shouldBe LocalDateTime.of(2026, 1, 1, 0, 0)
                     earning.expirationDate.value shouldBe LocalDateTime.of(2027, 1, 1, 0, 0)
                     earning.status shouldBe EarningStatus.ACTIVE
@@ -157,7 +157,7 @@ class PointEarningMapperTest :
                     PointEarningMapper.of(earning = earning, walletId = "wallet-1", policyId = "policy-1", existing = null)
 
                 Then("grantedByAdminId가 채워진다") {
-                    entity.grantedByAdminId shouldBe grantedBy().adminId
+                    entity.grantedByAdminId shouldBe grantedBy()
                 }
             }
         }

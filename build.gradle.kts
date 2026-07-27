@@ -53,6 +53,12 @@ subprojects {
             html.required.set(true)
             csv.required.set(false)
         }
+        // 인터페이스 파라미터 기본값 때문에 생성되는 Kotlin 합성 클래스(런타임 로직이 없음)는 커버리지 대상에서 제외한다.
+        classDirectories.setFrom(
+            classDirectories.files.map { dir ->
+                fileTree(dir) { exclude("**/*\$DefaultImpls.class") }
+            },
+        )
     }
 
     tasks.named("check") {

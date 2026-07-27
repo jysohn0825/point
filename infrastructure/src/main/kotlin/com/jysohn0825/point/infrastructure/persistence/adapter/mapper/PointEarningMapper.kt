@@ -4,7 +4,6 @@ import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.domain.vo.ExpirationDate
-import com.jysohn0825.point.domain.vo.GrantedBy
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.RemainingAmount
 import com.jysohn0825.point.infrastructure.persistence.entity.PointEarningEntity
@@ -18,7 +17,7 @@ class PointEarningMapper {
                 amount = PointAmount(entity.amount),
                 earnType = EarnType.valueOf(entity.earnType),
                 sourceReferenceId = entity.sourceReferenceId,
-                grantedBy = entity.grantedByAdminId?.let { GrantedBy(it) },
+                grantedBy = entity.grantedByAdminId,
                 earnedAt = entity.earnedAt,
                 expirationDate = ExpirationDate(entity.expiresAt),
                 remainingAmount = RemainingAmount(entity.remainingAmount),
@@ -39,7 +38,7 @@ class PointEarningMapper {
                 remainingAmount = earning.remainingAmount.value,
                 earnType = earning.earnType.name,
                 sourceReferenceId = earning.sourceReferenceId,
-                grantedByAdminId = earning.grantedBy?.adminId,
+                grantedByAdminId = earning.grantedBy,
                 earnedAt = earning.earnedAt,
                 expiresAt = earning.expirationDate.value,
                 status = earning.status.name,

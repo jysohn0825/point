@@ -107,7 +107,7 @@ class PointUsagePersistenceAdapter(
             usageJpaRepository
                 .findById(usageId)
                 .orElseThrow { PointDomainException("사용건을 찾을 수 없습니다: usageId=$usageId") }
-        return toDomain(entity = entity)
+        return assembleUsage(entity = entity)
     }
 
     override fun findLinesByEarningId(earningId: String): List<EarningUsageTrace> {
@@ -123,10 +123,14 @@ class PointUsagePersistenceAdapter(
     }
 
     override fun findAllByWalletId(walletId: String): List<PointUsage> =
-        usageJpaRepository.findAllByWalletIdOrderByUsedAtDesc(walletId).map { toDomain(entity = it) }
+        usageJpaRepository.findAllByWalletIdOrderByUsedAtDesc(walletId).map { assembleUsage(entity = it) }
 
-    /** usage 하나를 라인·취소이력까지 포함해 완전히 조회한다 (findById/findAllByWalletId 공용). 조립은 매퍼에 위임한다. */
-    private fun toDomain(entity: PointUsageEntity): PointUsage {
+    /**
+     * usage 하나를 라인·취소이력까지 포함해 완전히 조회한다 (findById/findAllByWalletId 공용).
+     * 엔티티→도메인 변환 자체는 PointUsageMapper에 위임하고, 이 함수는 연관 라인/취소이력을 모아 넘기는
+     * 조회 조립(query assembly) 역할만 한다
+     */
+    private fun assembleUsage(entity: PointUsageEntity): PointUsage {
         val lineEntities: List<PointUsageLineEntity> = lineJpaRepository.findAllByUsageId(entity.id)
         val cancellationIds: List<String> = cancellationJpaRepository.findAllByUsageId(entity.id).map { it.id }
         val cancellationLineEntities: List<PointUsageCancellationLineEntity> =

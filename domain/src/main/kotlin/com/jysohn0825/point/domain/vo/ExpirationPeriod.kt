@@ -13,9 +13,9 @@ value class ExpirationPeriod(
     }
 
     companion object {
-        const val MIN_DAYS = 1L
-        const val MAX_DAYS = 365L * 5 - 1
-        const val DEFAULT_DAYS = 365L
+        const val MIN_DAYS: Long = 1L
+        const val MAX_DAYS: Long = 365L * 5 - 1
+        const val DEFAULT_DAYS: Long = 365L
 
         val DEFAULT: ExpirationPeriod = ExpirationPeriod(DEFAULT_DAYS)
     }

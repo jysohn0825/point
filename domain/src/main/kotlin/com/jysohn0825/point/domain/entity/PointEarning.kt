@@ -6,7 +6,6 @@ import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.domain.vo.ExpirationDate
 import com.jysohn0825.point.domain.vo.ExpirationPeriod
-import com.jysohn0825.point.domain.vo.GrantedBy
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.RemainingAmount
 import java.math.BigDecimal
@@ -18,7 +17,7 @@ class PointEarning private constructor(
     val amount: PointAmount,
     val earnType: EarnType,
     val sourceReferenceId: String,
-    val grantedBy: GrantedBy?,
+    val grantedBy: String?,
     val earnedAt: LocalDateTime,
     expirationDate: ExpirationDate,
     remainingAmount: RemainingAmount,
@@ -97,15 +96,16 @@ class PointEarning private constructor(
             earnType: EarnType,
             sourceReferenceId: String,
             id: String = UUID.randomUUID().toString(),
-            grantedBy: GrantedBy? = null,
+            grantedBy: String? = null,
             earnedAt: LocalDateTime = LocalDateTime.now(),
             period: ExpirationPeriod = ExpirationPeriod.DEFAULT,
         ): PointEarning {
             requireDomain(id.isNotBlank()) { "적립 식별자는 비어있을 수 없습니다." }
             requireDomain(sourceReferenceId.isNotBlank()) { "적립 출처 참조값은 비어있을 수 없습니다." }
             requireDomain((earnType == EarnType.MANUAL) == (grantedBy != null)) {
-                "수기지급(MANUAL)인 경우에만 지급 관리자(GrantedBy)를 가질 수 있습니다."
+                "수기지급(MANUAL)인 경우에만 지급 관리자(grantedBy)를 가질 수 있습니다."
             }
+            requireDomain(grantedBy == null || grantedBy.isNotBlank()) { "지급 관리자 식별자는 비어있을 수 없습니다." }
             return PointEarning(
                 id = id,
                 amount = amount,
@@ -128,7 +128,7 @@ class PointEarning private constructor(
             amount: PointAmount,
             earnType: EarnType,
             sourceReferenceId: String,
-            grantedBy: GrantedBy?,
+            grantedBy: String?,
             earnedAt: LocalDateTime,
             expirationDate: ExpirationDate,
             remainingAmount: RemainingAmount,

@@ -2,28 +2,39 @@ package com.jysohn0825.point.domain.vo
 
 import com.jysohn0825.point.domain.exception.PointDomainException
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.FunSpec
+import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
 
 class MaxHoldingAmountTest :
-    FunSpec({
+    BehaviorSpec({
+        Given("하한값(1포인트)이 주어지면") {
+            When("MaxHoldingAmount를 생성하면") {
+                val sut: MaxHoldingAmount = MaxHoldingAmount(BigDecimal.ONE)
 
-        test("하한값(1포인트)으로 생성할 수 있다") {
-            val sut: MaxHoldingAmount = MaxHoldingAmount(BigDecimal.ONE)
-
-            sut.value shouldBe BigDecimal.ONE
-        }
-
-        test("1포인트 미만이면 예외가 발생한다") {
-            shouldThrow<PointDomainException> {
-                MaxHoldingAmount(BigDecimal.ZERO)
+                Then("정상적으로 생성된다") {
+                    sut.value shouldBe BigDecimal.ONE
+                }
             }
         }
 
-        test("픽스처는 유효한 기본값으로 생성된다") {
-            val sut: MaxHoldingAmount = maxHoldingAmount()
+        Given("1포인트 미만의 값이 주어지면") {
+            When("MaxHoldingAmount를 생성하면") {
+                Then("예외가 발생한다") {
+                    shouldThrow<PointDomainException> {
+                        MaxHoldingAmount(BigDecimal.ZERO)
+                    }
+                }
+            }
+        }
 
-            sut.value shouldBe BigDecimal(1_000_000)
+        Given("픽스처로 생성하면") {
+            When("값을 조회하면") {
+                val sut: MaxHoldingAmount = maxHoldingAmount()
+
+                Then("유효한 기본값을 갖는다") {
+                    sut.value shouldBe BigDecimal(1_000_000)
+                }
+            }
         }
     })

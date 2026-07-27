@@ -14,7 +14,6 @@ import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointUsageRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
-import com.jysohn0825.point.domain.vo.GrantedBy
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import com.jysohn0825.point.support.key.DistributedKeyGenerator.Companion.EARNING_KEY_NAME
@@ -53,7 +52,7 @@ class EarnPointService(
         wallet: PointWallet,
         dto: EarnPointDto,
     ): PointEarning? =
-        earningRepository.findByWalletIdAndEarnTypeAndSourceReferenceId(
+        earningRepository.findExistingEarning(
             walletId = wallet.id,
             earnType = dto.earnType,
             sourceReferenceId = dto.sourceReferenceId,
@@ -75,7 +74,7 @@ class EarnPointService(
                 amount = pointAmount,
                 earnType = dto.earnType,
                 sourceReferenceId = dto.sourceReferenceId,
-                grantedBy = dto.grantedByAdminId?.let(::GrantedBy),
+                grantedBy = dto.grantedByAdminId,
                 period = dto.expirationPeriod ?: policy.defaultExpirationPeriod,
             )
 

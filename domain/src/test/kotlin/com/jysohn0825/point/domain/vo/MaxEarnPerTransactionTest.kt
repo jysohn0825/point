@@ -2,40 +2,59 @@ package com.jysohn0825.point.domain.vo
 
 import com.jysohn0825.point.domain.exception.PointDomainException
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.FunSpec
+import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
 
 class MaxEarnPerTransactionTest :
-    FunSpec({
+    BehaviorSpec({
+        Given("하한값(1포인트)이 주어지면") {
+            When("MaxEarnPerTransaction을 생성하면") {
+                val sut: MaxEarnPerTransaction = MaxEarnPerTransaction(BigDecimal.ONE)
 
-        test("하한값(1포인트)으로 생성할 수 있다") {
-            val sut: MaxEarnPerTransaction = MaxEarnPerTransaction(BigDecimal.ONE)
-
-            sut.value shouldBe BigDecimal.ONE
-        }
-
-        test("상한값(10만포인트)으로 생성할 수 있다") {
-            val sut: MaxEarnPerTransaction = MaxEarnPerTransaction(BigDecimal(100_000))
-
-            sut.value shouldBe BigDecimal(100_000)
-        }
-
-        test("1포인트 미만이면 예외가 발생한다") {
-            shouldThrow<PointDomainException> {
-                MaxEarnPerTransaction(BigDecimal.ZERO)
+                Then("정상적으로 생성된다") {
+                    sut.value shouldBe BigDecimal.ONE
+                }
             }
         }
 
-        test("10만포인트를 초과하면 예외가 발생한다") {
-            shouldThrow<PointDomainException> {
-                MaxEarnPerTransaction(BigDecimal(100_001))
+        Given("상한값(10만포인트)이 주어지면") {
+            When("MaxEarnPerTransaction을 생성하면") {
+                val sut: MaxEarnPerTransaction = MaxEarnPerTransaction(BigDecimal(100_000))
+
+                Then("정상적으로 생성된다") {
+                    sut.value shouldBe BigDecimal(100_000)
+                }
             }
         }
 
-        test("픽스처는 유효한 기본값으로 생성된다") {
-            val sut: MaxEarnPerTransaction = maxEarnPerTransaction()
+        Given("1포인트 미만의 값이 주어지면") {
+            When("MaxEarnPerTransaction을 생성하면") {
+                Then("예외가 발생한다") {
+                    shouldThrow<PointDomainException> {
+                        MaxEarnPerTransaction(BigDecimal.ZERO)
+                    }
+                }
+            }
+        }
 
-            sut.value shouldBe BigDecimal(50_000)
+        Given("10만포인트를 초과하는 값이 주어지면") {
+            When("MaxEarnPerTransaction을 생성하면") {
+                Then("예외가 발생한다") {
+                    shouldThrow<PointDomainException> {
+                        MaxEarnPerTransaction(BigDecimal(100_001))
+                    }
+                }
+            }
+        }
+
+        Given("픽스처로 생성하면") {
+            When("값을 조회하면") {
+                val sut: MaxEarnPerTransaction = maxEarnPerTransaction()
+
+                Then("유효한 기본값을 갖는다") {
+                    sut.value shouldBe BigDecimal(50_000)
+                }
+            }
         }
     })

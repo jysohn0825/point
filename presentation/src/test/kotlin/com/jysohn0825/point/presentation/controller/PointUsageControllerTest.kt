@@ -145,7 +145,7 @@ class PointUsageControllerTest(
                         }
 
                     mockMvc
-                        .get("/api/v1/members/member-use-3b/point-usages/point-usages/${usage.id}")
+                        .get("/api/v1/members/member-use-3b/point-usages/${usage.id}")
                         .andExpect {
                             status { isOk() }
                             jsonPath("$.cancellationLines.length()") { value(1) }
@@ -182,7 +182,7 @@ class PointUsageControllerTest(
                     usageRepository.save(usage = usage, walletId = wallet.id)
 
                     mockMvc
-                        .get("/api/v1/members/member-use-5/point-usages/point-usages/${usage.id}")
+                        .get("/api/v1/members/member-use-5/point-usages/${usage.id}")
                         .andExpect {
                             status { isOk() }
                             jsonPath("$.usageId") { value(usage.id) }
@@ -196,7 +196,7 @@ class PointUsageControllerTest(
             When("사용건 상세를 조회하면") {
                 Then("400이 반환된다") {
                     mockMvc
-                        .get("/api/v1/members/member-use-6/point-usages/point-usages/no-such-usage")
+                        .get("/api/v1/members/member-use-6/point-usages/no-such-usage")
                         .andExpect {
                             status { isBadRequest() }
                         }
