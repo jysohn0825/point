@@ -88,7 +88,7 @@ GET {{baseUrl}}/members/{{memberId}}/point-wallet
 
 ### 7. A의 적립이 만료된다 (관리자 강제 만료 API)
 ###
-### 기존 만료 배치/즉시처리 API(POST .../point-earnings/expirations)는 "잔여액>0·이미 만료일 경과"인
+### 기존 만료 즉시처리 API(POST .../point-earnings/expirations)는 "잔여액>0·이미 만료일 경과"인
 ### 건만 대상으로 하므로, 5번에서 이미 전액 소진(EXHAUSTED)된 A는 걸리지 않는다. 이 API는 관리자가
 ### 적립건 하나를 지정해 자연 만료일과 무관하게 강제로 만료 처리한다 — 잔여액이
 ### 있으면 소멸시키고, 이미 소진된 A처럼 잔여액이 없으면 만료일만 지금으로 앞당긴다(이후 8번의

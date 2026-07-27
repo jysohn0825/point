@@ -35,65 +35,35 @@ private fun service(
     PointEarningExpirationService(
         walletRepository = walletRepository,
         earningRepository = earningRepository,
-        walletEarningExpirationService =
-            PointWalletEarningExpirationService(
-                walletRepository = walletRepository,
-                earningRepository = earningRepository,
-                eventPublisher = eventPublisher,
-            ),
+        eventPublisher = eventPublisher,
     )
 
 class PointEarningExpirationServiceTest :
     BehaviorSpec({
-        Given("만료 대상 지갑이 있을 때") {
-            val expired: PointEarning =
+        Given("이미 사용되어 EXHAUSTED 상태인 적립건만 있을 때") {
+            val exhausted: PointEarning =
                 pointEarning(
-                    id = "expired-batch-1",
+                    id = "exhausted-1",
                     amount = pointAmount(BigDecimal(1_000)),
                     earnedAt = LocalDateTime.now().minusDays(10),
                     period = expirationPeriod(1),
                 )
-            val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(1_000)))
+            exhausted.use(BigDecimal(1_000))
+            val wallet: PointWallet = pointWallet(balance = Balance.ZERO)
             val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
             walletRepository.seed(memberId = "member-1", wallet = wallet)
             val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
-            earningRepository.save(earning = expired, walletId = wallet.id, policyId = "policy-1")
+            earningRepository.save(earning = exhausted, walletId = wallet.id, policyId = "policy-1")
             val expirationService: PointEarningExpirationService =
                 service(walletRepository = walletRepository, earningRepository = earningRepository)
 
-            When("배치로 전체 만료 대상을 처리하면") {
-                val processedWalletCount: Int = expirationService.expireAllDue()
+            When("expireMemberEarningsNow를 호출하면") {
+                val result: List<PointEarningResultDto> = expirationService.expireMemberEarningsNow("member-1")
 
-                Then("만료 대상 지갑 수만큼 처리되고 적립건이 만료된다") {
-                    processedWalletCount shouldBe 1
-                    expired.status shouldBe EarningStatus.EXPIRED
+                Then("잔여금액이 없으므로 만료 대상에서 제외되고 아무 것도 변하지 않는다") {
+                    result.shouldBeEmpty()
+                    exhausted.status shouldBe EarningStatus.EXHAUSTED
                     wallet.balance.amount shouldBe BigDecimal.ZERO
-                }
-            }
-        }
-
-        Given("만료 대상 지갑이 없을 때") {
-            val active: PointEarning =
-                pointEarning(
-                    id = "active-batch-1",
-                    amount = pointAmount(BigDecimal(1_000)),
-                    earnedAt = LocalDateTime.now(),
-                    period = expirationPeriod(365),
-                )
-            val wallet: PointWallet = pointWallet(balance = Balance(BigDecimal(1_000)))
-            val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
-            walletRepository.seed(memberId = "member-1", wallet = wallet)
-            val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
-            earningRepository.save(earning = active, walletId = wallet.id, policyId = "policy-1")
-            val expirationService: PointEarningExpirationService =
-                service(walletRepository = walletRepository, earningRepository = earningRepository)
-
-            When("배치로 전체 만료 대상을 처리하면") {
-                val processedWalletCount: Int = expirationService.expireAllDue()
-
-                Then("처리된 지갑이 0건이다") {
-                    processedWalletCount shouldBe 0
-                    active.status shouldBe EarningStatus.ACTIVE
                 }
             }
         }

@@ -75,12 +75,6 @@ class FakePointEarningRepository : PointEarningRepository {
     override fun findAllByWalletId(walletId: String): List<PointEarning> =
         earningsById.values.filter { walletIdByEarningId[it.id] == walletId }.sortedByDescending { it.earnedAt }
 
-    override fun findExpiredCandidateWalletIds(now: LocalDateTime): List<String> =
-        earningsById.values
-            .filter { it.status.isActive() && it.remainingAmount.value.signum() > 0 && it.isExpiredAt(now) }
-            .mapNotNull { walletIdByEarningId[it.id] }
-            .distinct()
-
     override fun findExpiringByWalletId(
         walletId: String,
         now: LocalDateTime,

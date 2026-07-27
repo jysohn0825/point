@@ -11,7 +11,6 @@ import com.jysohn0825.point.infrastructure.persistence.entity.PointEarningEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointPolicyEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointWalletEntity
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.BeforeEach
@@ -168,18 +167,7 @@ class PointEarningPersistenceAdapterTest {
     }
 
     @Test
-    fun `아직 만료되지 않은 적립건만 있으면 만료 후보 지갑 목록이 비어있다`() {
-        val earning: PointEarning =
-            pointEarning(earnedAt = LocalDateTime.now(), period = expirationPeriod(365), sourceReferenceId = "NOT-DUE")
-        adapter.save(earning = earning, walletId = walletId, policyId = policyId)
-        entityManager.flush()
-        entityManager.clear()
-
-        adapter.findExpiredCandidateWalletIds(LocalDateTime.now()).shouldBeEmpty()
-    }
-
-    @Test
-    fun `만료일이 지난 ACTIVE 적립건이 있으면 만료 후보 지갑 목록과 만료 대상 적립건이 조회된다`() {
+    fun `만료일이 지난 ACTIVE 적립건이 있으면 만료 대상 적립건이 조회된다`() {
         val earningId: String = UUID.randomUUID().toString()
         entityManager.persist(
             PointEarningEntity(
@@ -198,7 +186,6 @@ class PointEarningPersistenceAdapterTest {
         entityManager.flush()
         entityManager.clear()
 
-        adapter.findExpiredCandidateWalletIds(LocalDateTime.now()) shouldBe listOf(walletId)
         val expiring: List<PointEarning> = adapter.findExpiringByWalletId(walletId = walletId, now = LocalDateTime.now())
         expiring.map { it.id } shouldBe listOf(earningId)
     }

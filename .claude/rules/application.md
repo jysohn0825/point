@@ -17,17 +17,16 @@ paths:
 
 - FK 값(`walletId`, `policyId`)은 서비스가 로드한 `PointWallet`/`PointPolicy` 인스턴스에서 그대로 꺼내(`wallet.id`) repository `save()` 호출에 전달한다. 별도 조회나 도메인 이벤트로 우회하지 않는다. 이 원칙은 지갑/원장(적립·사용) 저장에 한정된다 — 정합성 불변식이 없는 부가 기록(히스토리 등)은 도메인 이벤트로 분리해 기록할 수 있다. 이벤트는 항상 동기로 처리되어 발행자와 같은 트랜잭션 안에서 커밋·롤백을 공유하므로("같은 트랜잭션·같은 서비스 메서드" 원칙 자체는 유지된다), 서비스는 지갑/원장 저장을 마친 뒤 이벤트를 발행하기만 하고 구독자가 무엇을 하는지는 알지 못한다.
 - 서비스 로직이 두꺼워지거나(판단/분기 로직이 늘어나면) 그 로직이 실은 도메인 서비스로 가야 하는 건 아닌지 점검한다. 서비스는 오케스트레이션(조회 → 도메인 호출 → 저장)만 담당하고, 비즈니스 판단은 도메인에 둔다.
-- 배치/스케줄러의 전체 실행 단위(예: `expireAllDue()`)가 `@DistributedLock`/`@Transactional`이 걸린 단일 처리 메서드(예: `expireWalletEarnings()`)를 반복 호출해야 한다면, 같은 클래스에 두지 않고 단일 처리 메서드를 별도 서비스 빈으로 분리한다. 같은 클래스 안에 두면 self-invocation(자기 자신을 `this`로 호출)이 Spring AOP 프록시(락·트랜잭션 어드바이스 포함)를 건너뛰어 락이 조용히 무력화되는데, 이 문제를 `@Lazy` 자기 참조 주입 같은 우회로 해결하지 않고 빈을 나누는 쪽을 기본으로 한다 — 별도 빈으로의 호출은 항상 프록시를 거치므로 트릭이 필요 없고, 전체 실행 단위 쪽에는 `@Transactional`을 걸지 않아야 각 반복 호출이 자신만의 트랜잭션·락을 갖는다(전체 실행 단위에 `@Transactional`을 걸면 반복 호출들이 그 트랜잭션에 합류해 배치 전체가 하나의 트랜잭션으로 묶인다). 예: `PointEarningExpirationService`(오케스트레이션, `expireAllDue`/`expireMemberEarningsNow`) / `PointWalletEarningExpirationService`(지갑 단위 락+트랜잭션 처리, `expireWalletEarnings`).
 
 ## 패키지 구조
 
-- 유스케이스 서비스는 기능별로 패키지를 나누지 않고 전부 `service` 패키지에 평평하게 둔다(예: `service/EarnPointService.kt`, `service/UsePointService.kt`, `service/PointWalletService.kt`, `service/PointEarningExpirationService.kt`, `service/PointWalletEarningExpirationService.kt`).
+- 유스케이스 서비스는 기능별로 패키지를 나누지 않고 전부 `service` 패키지에 평평하게 둔다(예: `service/EarnPointService.kt`, `service/UsePointService.kt`, `service/PointWalletService.kt`, `service/PointEarningExpirationService.kt`).
 - 서비스 입출력 DTO는 `service/dto` 패키지에 둔다.
 - `@DistributedLock` 애너테이션과 `DistributedLockAspect`(AOP 구현체)는 이 모듈이 아니라 `support`의 `lock` 패키지에 있다([support.md](./support.md) 참고). 서비스에서는 `import`해서 사용만 한다.
 
 ## 네이밍 규칙
 
-- 서비스: `~Service` 접미사를 사용한다 (예: `EarnPointService`). 단건 조회든 여러 유스케이스를 함께 다루든 `~QueryService`처럼 세분화하지 않고 애그리거트 단위로 하나의 `~Service`에 모은다 (예: `PointWalletService`). 단, self-invocation 회피를 위해 분리한 지갑 단위 락+트랜잭션 처리 서비스처럼 별도 빈이 필요한 경우는 예외로 한다 (예: `PointWalletEarningExpirationService`).
+- 서비스: `~Service` 접미사를 사용한다 (예: `EarnPointService`). 단건 조회든 여러 유스케이스를 함께 다루든 `~QueryService`처럼 세분화하지 않고 애그리거트 단위로 하나의 `~Service`에 모은다 (예: `PointWalletService`).
 - DTO: `~Dto` 접미사를 사용한다 (예: `EarnPointDto`, `CancelUsagePointResultDto`). 커맨드/결과를 구분해야 할 때는 `~ResultDto`처럼 접미사를 덧붙인다.
 
 ## 테스트 작성 규칙

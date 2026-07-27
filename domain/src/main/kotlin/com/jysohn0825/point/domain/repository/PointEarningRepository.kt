@@ -50,9 +50,6 @@ interface PointEarningRepository {
     /** 조회 API용 — 상태와 무관하게 지갑의 모든 적립건을 최신순으로 반환한다. */
     fun findAllByWalletId(walletId: String): List<PointEarning>
 
-    /** ACTIVE·잔여금액>0·이미 만료(expiresAt <= now)인 적립건이 하나라도 있는 지갑 id 목록 (만료 배치의 순회 대상). */
-    fun findExpiredCandidateWalletIds(now: LocalDateTime): List<String>
-
     /** 특정 지갑에서 ACTIVE·잔여금액>0·이미 만료된 적립건만 조회한다 (findRedeemableByWalletId의 만료 버전). */
     fun findExpiringByWalletId(
         walletId: String,
