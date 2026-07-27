@@ -98,40 +98,4 @@ class PointWalletPersistenceAdapterTest {
 
         found.balance.amount shouldBe BigDecimal(3_000)
     }
-
-    @Test
-    fun `잔액을 갱신해도 기존 memberId와 개인 한도 예외가 보존된다`() {
-        policyAdapter.save(
-            policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(1_000_000))),
-            appliedAt = LocalDateTime.now().minusDays(1),
-            createdByAdminId = "admin-01",
-        )
-        val walletId: String = UUID.randomUUID().toString()
-        entityManager.persist(
-            PointWalletEntity(
-                id = walletId,
-                memberId = "member-4",
-                balance = BigDecimal(1_000),
-                holdingLimitOverride = BigDecimal(9_000_000),
-            ),
-        )
-        entityManager.flush()
-        entityManager.clear()
-
-        val toUpdate: PointWallet = adapter.findByIdForUpdate(walletId)
-        toUpdate.decrease(PointAmount(BigDecimal(1_000)))
-        adapter.updateBalance(toUpdate)
-        entityManager.flush()
-        entityManager.clear()
-
-        val found: PointWallet = adapter.findByMemberId("member-4")!!
-
-        found.balance.amount shouldBe BigDecimal.ZERO
-        found.holdingLimit.value shouldBe BigDecimal(9_000_000L)
-    }
-
-    @Test
-    fun `존재하지 않는 지갑을 잠금 조회하면 예외가 발생한다`() {
-        shouldThrow<PointDomainException> { adapter.findByIdForUpdate("no-such-wallet") }
-    }
 }

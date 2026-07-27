@@ -13,9 +13,4 @@ interface PointWalletJpaRepository : JpaRepository<PointWalletEntity, String> {
 
     /** 조회 전용 경로. 잠금을 걸지 않는다. */
     fun findByMemberId(memberId: String): PointWalletEntity?
-
-    /** 배치가 memberId 없이 walletId(PK)만 아는 상태에서 지갑을 잠글 때 사용한다. */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select w from PointWalletEntity w where w.id = :walletId")
-    fun findByIdForUpdate(walletId: String): PointWalletEntity?
 }

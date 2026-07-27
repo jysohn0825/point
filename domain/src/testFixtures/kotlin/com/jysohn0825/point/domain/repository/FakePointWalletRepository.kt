@@ -25,22 +25,11 @@ class FakePointWalletRepository : PointWalletRepository {
 
     override fun findByMemberId(memberId: String): PointWallet? = walletsByMemberId[memberId]
 
-    override fun findByIdForUpdate(walletId: String): PointWallet {
-        val memberId: String = memberIdByWalletId[walletId] ?: throw PointDomainException("포인트 지갑을 찾을 수 없습니다: walletId=$walletId")
-        return walletsByMemberId.getValue(memberId)
-    }
-
     override fun save(
         wallet: PointWallet,
         memberId: String,
     ) {
         walletsByMemberId[memberId] = wallet
         memberIdByWalletId[wallet.id] = memberId
-    }
-
-    override fun updateBalance(wallet: PointWallet) {
-        val memberId: String =
-            memberIdByWalletId[wallet.id] ?: throw PointDomainException("포인트 지갑을 찾을 수 없습니다: walletId=${wallet.id}")
-        walletsByMemberId[memberId] = wallet
     }
 }
