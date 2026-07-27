@@ -19,7 +19,7 @@ import java.util.concurrent.locks.ReentrantLock
  * 그 시점에는 이 클래스만 Redisson 등 실제 분산락 구현체로 교체하면 된다([DistributedLockExecutor] 포트로 이미 추상화됨).
  */
 @Component
-class InMemoryDistributedLockExecutor : DistributedLockExecutor {
+class MemoryDistributedLockExecutor : DistributedLockExecutor {
     private val locks: Cache<String, ReentrantLock> =
         Caffeine
             .newBuilder()

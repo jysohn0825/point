@@ -6,10 +6,10 @@ import io.kotest.matchers.shouldNotBe
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
-class InMemoryCacheExecutorTest :
+class MemoryCacheExecutorTest :
     BehaviorSpec({
         Given("값을 캐시에 저장했을 때") {
-            val executor: InMemoryCacheExecutor = InMemoryCacheExecutor()
+            val executor: MemoryCacheExecutor = MemoryCacheExecutor()
             val key: String = "test-cache-key"
             executor.put(key = key, value = "cached-value", ttl = Duration.ofMinutes(1))
 
@@ -29,7 +29,7 @@ class InMemoryCacheExecutorTest :
         }
 
         Given("캐시가 비어있을 때") {
-            val executor: InMemoryCacheExecutor = InMemoryCacheExecutor()
+            val executor: MemoryCacheExecutor = MemoryCacheExecutor()
             val key: String = "test-cache-getOrPut-key"
             val loadCount: AtomicInteger = AtomicInteger(0)
             val loader: () -> String = {
@@ -50,7 +50,7 @@ class InMemoryCacheExecutorTest :
         }
 
         Given("TTL이 짧게 설정된 값을 저장했을 때") {
-            val executor: InMemoryCacheExecutor = InMemoryCacheExecutor()
+            val executor: MemoryCacheExecutor = MemoryCacheExecutor()
             val key: String = "test-cache-ttl-key"
             executor.put(key = key, value = "expiring-value", ttl = Duration.ofMillis(200))
 

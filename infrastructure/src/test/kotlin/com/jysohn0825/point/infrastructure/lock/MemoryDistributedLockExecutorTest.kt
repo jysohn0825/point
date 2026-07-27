@@ -9,10 +9,10 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-class InMemoryDistributedLockExecutorTest :
+class MemoryDistributedLockExecutorTest :
     BehaviorSpec({
         Given("동일한 key로 여러 요청이 동시에 들어왔을 때") {
-            val executor: InMemoryDistributedLockExecutor = InMemoryDistributedLockExecutor()
+            val executor: MemoryDistributedLockExecutor = MemoryDistributedLockExecutor()
             val key: String = "test-lock-key"
             val counter: AtomicInteger = AtomicInteger(0)
             val threadCount: Int = 10
@@ -43,7 +43,7 @@ class InMemoryDistributedLockExecutorTest :
         }
 
         Given("락을 획득한 동안 예외가 발생했을 때") {
-            val executor: InMemoryDistributedLockExecutor = InMemoryDistributedLockExecutor()
+            val executor: MemoryDistributedLockExecutor = MemoryDistributedLockExecutor()
             val key: String = "test-lock-key-release-on-error"
 
             When("작업이 실패해도") {

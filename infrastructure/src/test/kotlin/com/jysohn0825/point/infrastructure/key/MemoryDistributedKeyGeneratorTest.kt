@@ -10,10 +10,10 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
-class InMemoryDistributedKeyGeneratorTest :
+class MemoryDistributedKeyGeneratorTest :
     BehaviorSpec({
         Given("동일한 name으로 반복해서 채번할 때") {
-            val generator: InMemoryDistributedKeyGenerator = InMemoryDistributedKeyGenerator()
+            val generator: MemoryDistributedKeyGenerator = MemoryDistributedKeyGenerator()
             val name: String = "test-key-sequence"
 
             When("연속으로 채번하면") {
@@ -27,7 +27,7 @@ class InMemoryDistributedKeyGeneratorTest :
         }
 
         Given("여러 스레드가 동시에 채번할 때") {
-            val generator: InMemoryDistributedKeyGenerator = InMemoryDistributedKeyGenerator()
+            val generator: MemoryDistributedKeyGenerator = MemoryDistributedKeyGenerator()
             val name: String = "test-key-concurrent"
             val threadCount: Int = 50
             val pool: ExecutorService = Executors.newFixedThreadPool(threadCount)

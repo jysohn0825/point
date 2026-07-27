@@ -15,7 +15,7 @@ import java.time.Duration
  * Redisson 등 실제 분산 캐시 구현체로 교체하면 된다([CacheExecutor] 포트로 이미 추상화됨).
  */
 @Component
-class InMemoryCacheExecutor : CacheExecutor {
+class MemoryCacheExecutor : CacheExecutor {
     private data class CacheEntry(
         val value: Any,
         val ttl: Duration,
