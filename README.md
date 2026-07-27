@@ -13,19 +13,14 @@
 
 ## 개발 환경
 
-| 항목 | 버전                                    |
-|------|---------------------------------------|
+| 항목 | 버전 |
+|------|------|
 | 언어 | Kotlin 1.9.25 |
-| 프레임워크 | Spring Boot 3.5.7                     |
-| DB | H2 (파일 기반 임베디드)             |
-| 캐시 / 분산 락 | 인메모리 구현체 (단일 인스턴스 가정)         |
-| 빌드 도구 | Gradle (Kotlin DSL)                   |
-
----
-
-## 개선 및 고려 사항
-
-- 캐시/분산 락/분산 채번은 `support` 모듈의 포트(`CacheExecutor`/`DistributedLockExecutor`/`DistributedKeyGenerator`)로 추상화되어 있다. 지금은 Docker 없이 단일 인스턴스로 동작하도록 `infrastructure`에 인메모리 구현체(`InMemoryCacheExecutor`/`InMemoryDistributedLockExecutor`/`InMemoryDistributedKeyGenerator`)를 붙여뒀지만, 인스턴스를 여러 대로 확장할 경우 이 구현체만 Redis(Redisson) 기반 구현체로 교체하면 된다.
+| 프레임워크 | Spring Boot 3.5.7 |
+| DB | H2 (파일 기반 임베디드) |
+| 캐시 / 분산 락 / 분산 채번 | 인메모리 구현체 |
+| API 문서 | springdoc-openapi (Swagger UI) |
+| 빌드 도구 | Gradle (Kotlin DSL) |
 
 ---
 
@@ -33,17 +28,18 @@
 
 DB는 H2(파일 기반), 캐시/분산 락/분산 채번은 인메모리 구현체를 사용하므로 **Docker 없이** 바로 빌드/테스트/실행할 수 있습니다.
 
-    # 빌드
-    ./gradlew build
+    ./gradlew build          # 빌드
+    ./gradlew test           # 테스트
+    ./gradlew :presentation:bootRun   # 로컬 실행 (기본 포트 8080)
 
-    # 테스트
-    ./gradlew test
+실행 후 API 상세 스펙(요청/응답, 파라미터 설명)은 Swagger UI에서 확인할 수 있습니다.
 
-    # 로컬 실행 (presentation 모듈)
-    ./gradlew :presentation:bootRun
+- http://localhost:8080/swagger-ui/index.html
 
-- H2 데이터 파일은 기본적으로 `./data/point.mv.db`에 생성됩니다. 경로를 바꾸고 싶다면 `DB_FILE_PATH` 환경변수를 오버라이드하세요.
-- 스키마는 Hibernate 자동 생성이 아니라 `infrastructure/src/main/resources/schema.sql`로 직접 관리합니다(운영 환경의 마이그레이션 관리 방식을 그대로 반영).
+## 테스트 방법
+
+1. **테스트 코드 실행**: `./gradlew test` (전 모듈 공통, Kotest `BehaviorSpec` 기반 단위/e2e 테스트)
+2. **HTTP 시나리오 순차 실행**: `./gradlew :presentation:bootRun`으로 앱을 띄운 뒤, 저장소 루트의 [`point-scenario.http`](./point-scenario.http)를 위에서부터 순서대로 실행합니다(IntelliJ HTTP Client 기준). 적립 → 사용 → 만료 → 부분/전체 사용취소로 이어지는 시나리오를 통해 잔액 계산과 취소 재적립 로직을 눈으로 확인할 수 있습니다.
 
 ---
 
@@ -71,3 +67,22 @@ DB는 H2(파일 기반), 캐시/분산 락/분산 채번은 인메모리 구현�
 
 - [x] 사용한 금액 중 전체 또는 일부를 사용취소할 수 있다.
 - [x] 사용취소 시점에 이미 만료된 포인트를 사용취소해야 한다면 그 금액만큼 신규 적립 처리한다.
+
+## 추가 개발사항
+
+기능 요구사항을 검증하려면 지갑 생성, 정책 등록, 상태 조회 같은 부가 기능이 필요해 다음 API를 함께 개발했다.
+
+- [x] **포인트 지갑 생성/조회** : 회원별 지갑을 최초 생성하고 총 잔액을 조회한다. 적립/사용 API는 지갑이 존재해야 동작하므로 시나리오 테스트의 진입점이다.
+- [x] **포인트 정책 등록/변경** : 1회 적립 한도·보유 한도·기본 만료일을 하드코딩 없이 등록/변경한다.
+- [x] **적립/사용 목록·상세 조회** : 회원의 적립/사용 건을 최신순으로 조회하고, 사용 건은 취소 이력까지 상세 조회한다.
+- [x] **적립건 사용 추적 조회** : 특정 적립건이 어느 주문에서 얼마나(1원 단위) 사용됐는지 확인한다.
+- [x] **만료 즉시 처리 / 강제 만료** : 스케줄러(만료 배치)를 기다리지 않고 만료일이 지난 적립건을 즉시 처리하거나, 특정 적립건 하나를 자연 만료일과 무관하게 강제 만료시켜 사용취소 시 재적립 로직을 테스트할 수 있게 한다.
+
+---
+
+## 개선 및 고려 사항
+
+- [x] **분산 락**
+- [x] **캐시**
+- [x] **분산 채번**
+- [x] **모듈 구조**
