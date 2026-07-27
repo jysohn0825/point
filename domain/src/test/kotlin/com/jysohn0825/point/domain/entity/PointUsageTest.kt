@@ -20,7 +20,7 @@ class PointUsageTest :
                 then("상태는 USED이고 총액은 라인 합계다") {
                     val lines: List<UsageLine> = listOf(usageLine(amount = BigDecimal(1_000)), usageLine(amount = BigDecimal(2_000)))
 
-                    val usage: PointUsage = PointUsage.use(orderNumber = orderNumber(), lines = lines)
+                    val usage: PointUsage = PointUsage.use(id = "usage-1", orderNumber = orderNumber(), lines = lines)
 
                     usage.lines shouldBe lines
                     usage.totalAmount shouldBe BigDecimal(3_000)
@@ -34,7 +34,7 @@ class PointUsageTest :
             `when`("사용 라인이 비어있으면") {
                 then("예외가 발생한다") {
                     shouldThrow<PointDomainException> {
-                        PointUsage.use(orderNumber = orderNumber(), lines = emptyList())
+                        PointUsage.use(id = "usage-1", orderNumber = orderNumber(), lines = emptyList())
                     }
                 }
             }
@@ -48,7 +48,7 @@ class PointUsageTest :
                             usageLine(earningId = earningId, amount = BigDecimal(2_000)),
                         )
 
-                    val usage: PointUsage = PointUsage.use(orderNumber = orderNumber(), lines = lines)
+                    val usage: PointUsage = PointUsage.use(id = "usage-1", orderNumber = orderNumber(), lines = lines)
 
                     usage.lines shouldBe lines
                     usage.totalAmount shouldBe BigDecimal(3_000)
@@ -60,7 +60,7 @@ class PointUsageTest :
             `when`("일부 금액만 취소하면") {
                 then("상태는 PARTIALLY_CANCELED이고 잔여액이 줄어든다") {
                     val line: UsageLine = usageLine(amount = BigDecimal(1_000))
-                    val usage: PointUsage = PointUsage.use(orderNumber = orderNumber(), lines = listOf(line))
+                    val usage: PointUsage = PointUsage.use(id = "usage-1", orderNumber = orderNumber(), lines = listOf(line))
 
                     usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(400))))
 
@@ -74,7 +74,7 @@ class PointUsageTest :
             `when`("전액을 취소하면") {
                 then("상태는 FULLY_CANCELED이고 잔여액은 0이다") {
                     val line: UsageLine = usageLine(amount = BigDecimal(1_000))
-                    val usage: PointUsage = PointUsage.use(orderNumber = orderNumber(), lines = listOf(line))
+                    val usage: PointUsage = PointUsage.use(id = "usage-1", orderNumber = orderNumber(), lines = listOf(line))
 
                     usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(1_000))))
 
@@ -87,7 +87,7 @@ class PointUsageTest :
                 then("전액 취소가 된다") {
                     val lineA: UsageLine = usageLine(amount = BigDecimal(1_000))
                     val lineB: UsageLine = usageLine(amount = BigDecimal(2_000))
-                    val usage: PointUsage = PointUsage.use(orderNumber = orderNumber(), lines = listOf(lineA, lineB))
+                    val usage: PointUsage = PointUsage.use(id = "usage-1", orderNumber = orderNumber(), lines = listOf(lineA, lineB))
 
                     usage.cancel(listOf(cancellationLine(originalLine = lineA, restoredAmount = BigDecimal(1_000))))
                     usage.status shouldBe UsageStatus.PARTIALLY_CANCELED
@@ -101,7 +101,7 @@ class PointUsageTest :
             `when`("같은 라인을 여러 번 나누어 취소하면") {
                 then("취소 금액이 누적된다") {
                     val line: UsageLine = usageLine(amount = BigDecimal(1_000))
-                    val usage: PointUsage = PointUsage.use(orderNumber = orderNumber(), lines = listOf(line))
+                    val usage: PointUsage = PointUsage.use(id = "usage-1", orderNumber = orderNumber(), lines = listOf(line))
 
                     usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(300))))
                     usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(300))))
@@ -123,7 +123,7 @@ class PointUsageTest :
             `when`("이미 전액 취소된 사용 건을 다시 취소하려 하면") {
                 then("예외가 발생한다") {
                     val line: UsageLine = usageLine(amount = BigDecimal(1_000))
-                    val usage: PointUsage = PointUsage.use(orderNumber = orderNumber(), lines = listOf(line))
+                    val usage: PointUsage = PointUsage.use(id = "usage-1", orderNumber = orderNumber(), lines = listOf(line))
                     usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(1_000))))
 
                     shouldThrow<PointDomainException> {
@@ -146,7 +146,7 @@ class PointUsageTest :
             `when`("누적 취소 요청 금액이 해당 라인의 사용 금액을 초과하면") {
                 then("예외가 발생하고 이전 취소 내역은 유지된다") {
                     val line: UsageLine = usageLine(amount = BigDecimal(1_000))
-                    val usage: PointUsage = PointUsage.use(orderNumber = orderNumber(), lines = listOf(line))
+                    val usage: PointUsage = PointUsage.use(id = "usage-1", orderNumber = orderNumber(), lines = listOf(line))
                     usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(700))))
 
                     shouldThrow<PointDomainException> {
@@ -160,7 +160,7 @@ class PointUsageTest :
             `when`("취소가 반영된 뒤 cancellationLines를 조회하면") {
                 then("내부 상태를 보호하는 방어적 복사본을 반환한다") {
                     val line: UsageLine = usageLine(amount = BigDecimal(1_000))
-                    val usage: PointUsage = PointUsage.use(orderNumber = orderNumber(), lines = listOf(line))
+                    val usage: PointUsage = PointUsage.use(id = "usage-1", orderNumber = orderNumber(), lines = listOf(line))
                     usage.cancel(listOf(cancellationLine(originalLine = line, restoredAmount = BigDecimal(100))))
 
                     val snapshot: MutableList<CancellationLine> = usage.cancellationLines.toMutableList()
@@ -182,7 +182,7 @@ class PointUsageTest :
 
             `when`("서로 다른 id를 가진 두 PointUsage를 비교하면") {
                 then("동등하지 않다") {
-                    (pointUsage() == pointUsage()) shouldBe false
+                    (pointUsage(id = "1") == pointUsage(id = "2")) shouldBe false
                 }
             }
 

@@ -10,7 +10,6 @@ import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.RemainingAmount
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.util.UUID
 
 class PointEarning private constructor(
     val id: String,
@@ -95,7 +94,7 @@ class PointEarning private constructor(
             amount: PointAmount,
             earnType: EarnType,
             sourceReferenceId: String,
-            id: String = UUID.randomUUID().toString(),
+            id: String,
             grantedBy: String? = null,
             earnedAt: LocalDateTime = LocalDateTime.now(),
             period: ExpirationPeriod = ExpirationPeriod.DEFAULT,

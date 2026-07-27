@@ -21,6 +21,7 @@ class PointWalletHistoryTest :
                         historyType = HistoryType.EARN,
                         amount = BigDecimal(1_000),
                         balanceAfter = BigDecimal(1_000),
+                        id = "wallet-history-1",
                         earningId = "earning-1",
                     )
 
@@ -41,6 +42,7 @@ class PointWalletHistoryTest :
                             historyType = HistoryType.EARN,
                             amount = BigDecimal(1_000),
                             balanceAfter = BigDecimal(1_000),
+                            id = "wallet-history-1",
                         )
                     }
                     shouldThrow<PointDomainException> {
@@ -48,6 +50,7 @@ class PointWalletHistoryTest :
                             historyType = HistoryType.USE,
                             amount = BigDecimal(-1_000),
                             balanceAfter = BigDecimal(1_000),
+                            id = "wallet-history-1",
                             earningId = "earning-1",
                             usageId = "usage-1",
                         )
@@ -64,6 +67,7 @@ class PointWalletHistoryTest :
                             historyType = HistoryType.USE,
                             amount = BigDecimal(-1_000),
                             balanceAfter = BigDecimal(-1),
+                            id = "wallet-history-1",
                             usageId = "usage-1",
                         )
                     }

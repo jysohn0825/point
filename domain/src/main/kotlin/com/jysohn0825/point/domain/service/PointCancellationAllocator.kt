@@ -23,6 +23,7 @@ class PointCancellationAllocator {
         earningsById: Map<String, PointEarning>,
         policy: PointPolicy,
         now: LocalDateTime,
+        nextEarningId: () -> String,
     ): CancellationAllocation {
         requireDomain(cancelAmount.signum() > 0) { "취소할 사용 금액이 없습니다: usageId=${usage.id}" }
         requireDomain(cancelAmount <= usage.remainingAmount) {
@@ -41,6 +42,7 @@ class PointCancellationAllocator {
             if (earning.isExpiredAt(now)) {
                 val reEarned: PointEarning =
                     PointEarning.earn(
+                        id = nextEarningId(),
                         amount = PointAmount(restoreAmount),
                         earnType = earning.earnType,
                         sourceReferenceId = "USAGE_CANCEL:${usage.id}:${earning.id}",

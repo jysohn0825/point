@@ -7,7 +7,6 @@ import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.UsageStatus
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.util.UUID
 
 class PointUsage private constructor(
     val id: String,
@@ -73,7 +72,7 @@ class PointUsage private constructor(
         fun use(
             orderNumber: OrderNumber,
             lines: List<UsageLine>,
-            id: String = UUID.randomUUID().toString(),
+            id: String,
             usedAt: LocalDateTime = LocalDateTime.now(),
         ): PointUsage {
             requireDomain(lines.isNotEmpty()) { "사용 라인은 최소 1개 이상이어야 합니다." }

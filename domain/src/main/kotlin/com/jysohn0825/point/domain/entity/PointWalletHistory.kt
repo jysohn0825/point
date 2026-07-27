@@ -10,7 +10,6 @@ import com.jysohn0825.point.domain.exception.requireDomain
 import com.jysohn0825.point.domain.vo.HistoryType
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.util.UUID
 
 class PointWalletHistory private constructor(
     val id: String,
@@ -35,7 +34,7 @@ class PointWalletHistory private constructor(
             historyType: HistoryType,
             amount: BigDecimal,
             balanceAfter: BigDecimal,
-            id: String = UUID.randomUUID().toString(),
+            id: String,
             earningId: String? = null,
             usageId: String? = null,
             cancellationId: String? = null,
@@ -60,7 +59,7 @@ class PointWalletHistory private constructor(
         /** [PointWalletHistoryEvent] 각 타입을 어떤 [HistoryType]·참조ID로 기록할지는 도메인이 전담한다. */
         fun from(
             event: PointWalletHistoryEvent,
-            id: String = UUID.randomUUID().toString(),
+            id: String,
             occurredAt: LocalDateTime = LocalDateTime.now(),
         ): PointWalletHistory =
             when (event) {

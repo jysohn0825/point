@@ -22,6 +22,7 @@ import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.support.key.DistributedKeyGenerator
+import com.jysohn0825.point.support.key.DistributedKeyGenerator.Companion.EARNING_KEY_NAME
 import com.jysohn0825.point.support.lock.DistributedLock
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
@@ -101,6 +102,7 @@ class UsePointService(
                 earningsById = earningsById,
                 policy = policy,
                 now = now,
+                nextEarningId = { keyGenerator.next(EARNING_KEY_NAME).toString() },
             )
 
         // 취소로 복원되는 금액은 RESTORED/RE_EARNED 여부와 무관하게 지갑 잔액을 동일하게 증가시킨다.

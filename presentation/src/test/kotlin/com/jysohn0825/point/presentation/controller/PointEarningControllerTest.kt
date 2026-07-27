@@ -162,6 +162,7 @@ class PointEarningControllerTest(
                     usageRepository.save(
                         usage =
                             PointUsage.use(
+                                id = "usage-1",
                                 orderNumber = OrderNumber("A1234"),
                                 lines = listOf(UsageLine(earningId = earning.id, amount = BigDecimal(300))),
                             ),

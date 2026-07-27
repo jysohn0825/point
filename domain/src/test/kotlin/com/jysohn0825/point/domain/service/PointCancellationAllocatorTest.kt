@@ -38,6 +38,7 @@ class PointCancellationAllocatorTest :
                             earningsById = mapOf("e1" to earning),
                             policy = policy,
                             now = now,
+                            nextEarningId = { error("호출되지 않아야 한다") },
                         )
 
                     allocation.reEarnings.shouldBeEmpty()
@@ -70,9 +71,11 @@ class PointCancellationAllocatorTest :
                             earningsById = mapOf("expired-1" to expiredEarning),
                             policy = policy,
                             now = now,
+                            nextEarningId = { "re-earned-1" },
                         )
 
                     allocation.reEarnings.size shouldBe 1
+                    allocation.reEarnings[0].id shouldBe "re-earned-1"
                     allocation.reEarnings[0].amount.value shouldBe BigDecimal(400)
                     allocation.requestedLines[0].restorationType shouldBe RestorationType.RE_EARNED
                     allocation.reearnedEarningIds shouldBe listOf(allocation.reEarnings[0].id)
@@ -96,6 +99,7 @@ class PointCancellationAllocatorTest :
                             earningsById = mapOf("e1" to earning),
                             policy = policy,
                             now = now,
+                            nextEarningId = { error("호출되지 않아야 한다") },
                         )
 
                     allocation.requestedLines.size shouldBe 1
@@ -118,6 +122,7 @@ class PointCancellationAllocatorTest :
                             earningsById = mapOf("e1" to earning),
                             policy = policy,
                             now = now,
+                            nextEarningId = { error("호출되지 않아야 한다") },
                         )
                     }
                 }
@@ -137,6 +142,7 @@ class PointCancellationAllocatorTest :
                             earningsById = mapOf("e1" to earning),
                             policy = policy,
                             now = now,
+                            nextEarningId = { error("호출되지 않아야 한다") },
                         )
                     }
                 }

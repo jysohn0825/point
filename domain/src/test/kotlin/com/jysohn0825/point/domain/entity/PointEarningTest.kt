@@ -20,6 +20,7 @@ class PointEarningTest :
             When("PointEarning.earn을 호출하면") {
                 val earning: PointEarning =
                     PointEarning.earn(
+                        id = "earning-1",
                         amount = pointAmount(BigDecimal(500)),
                         earnType = EarnType.SYSTEM,
                         sourceReferenceId = "ORDER-0001",
