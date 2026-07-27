@@ -12,8 +12,8 @@
 ### 이미 다른 회원이 쓴 값과 충돌해 멱등성 로직이 기존 사용건을 그대로 반환해버린다.
 
 @baseUrl = http://localhost:8080/api/v1
-@memberId = member-1
-@orderNumber = order-1
+@memberId = {{$uuid}}
+@orderNumber = {{$uuid}}
 
 
 ### 0. (최초 1회) 포인트 정책 등록 — 이미 정책이 등록되어 있다면 생략 가능
@@ -123,4 +123,4 @@ GET {{baseUrl}}/members/{{memberId}}/point-wallet
 
 
 ### 12. C 상세 조회 — status가 FULLY_CANCELED, cancellationLines에 RE_EARNED/RESTORED가 함께 보여야 한다
-GET {{baseUrl}}/members/{{memberId}}/point-usages/point-usages/{{usageIdC}}
+GET {{baseUrl}}/members/{{memberId}}/point-usages/{{usageIdC}}
