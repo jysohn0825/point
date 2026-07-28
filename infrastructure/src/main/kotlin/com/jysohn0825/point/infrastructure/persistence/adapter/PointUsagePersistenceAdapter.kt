@@ -2,6 +2,7 @@ package com.jysohn0825.point.infrastructure.persistence.adapter
 
 import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.exception.PointDomainException
+import com.jysohn0825.point.domain.exception.PointNotFoundException
 import com.jysohn0825.point.domain.repository.PointUsageRepository
 import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.EarningUsageTrace
@@ -113,7 +114,7 @@ class PointUsagePersistenceAdapter(
         val entity: PointUsageEntity =
             usageJpaRepository
                 .findById(usageId)
-                .orElseThrow { PointDomainException("사용건을 찾을 수 없습니다: usageId=$usageId") }
+                .orElseThrow { PointNotFoundException("사용건을 찾을 수 없습니다: usageId=$usageId") }
         return assembleUsage(entity = entity)
     }
 

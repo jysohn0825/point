@@ -46,7 +46,7 @@ class PointEarningControllerTest(
 
         Given("지갑이 있는 회원일 때") {
             When("포인트 적립을 요청하면") {
-                Then("200과 적립 결과가 반환된다") {
+                Then("201과 적립 결과가 반환된다") {
                     walletRepository.seed(memberId = "member-earn-1", wallet = pointWallet(id = "wallet-earn-1"))
                     val request: EarnPointRequest = EarnPointRequest(amount = BigDecimal(1_000), sourceReferenceId = "ORDER-1")
 
@@ -55,7 +55,7 @@ class PointEarningControllerTest(
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(request)
                         }.andExpect {
-                            status { isOk() }
+                            status { isCreated() }
                             jsonPath("$.memberId") { value("member-earn-1") }
                             jsonPath("$.amount") { value(1_000) }
                             jsonPath("$.earnType") { value("SYSTEM") }
@@ -140,11 +140,11 @@ class PointEarningControllerTest(
 
         Given("존재하지 않는 적립건일 때") {
             When("적립건 상세를 조회하면") {
-                Then("400이 반환된다") {
+                Then("404가 반환된다") {
                     mockMvc
                         .get("/api/v1/members/member-earn-6/point-earnings/no-such-earning")
                         .andExpect {
-                            status { isBadRequest() }
+                            status { isNotFound() }
                         }
                 }
             }

@@ -2,6 +2,7 @@ package com.jysohn0825.point.infrastructure.persistence.adapter
 
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.exception.PointDomainException
+import com.jysohn0825.point.domain.exception.PointNotFoundException
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.infrastructure.persistence.adapter.mapper.PointEarningMapper
@@ -47,6 +48,7 @@ class PointEarningPersistenceAdapter(
         jpaRepository.save(PointEarningMapper.of(earning = earning, walletId = walletId, policyId = existing.policyId, existing = existing))
     }
 
+    /** 대상 earning은 같은 트랜잭션 안에서 이미 findById로 존재를 확인한 뒤 넘어오므로, 여기서 사라졌다면 클라이언트의 잘못된 id가 아니라 내부 정합성 문제다 — [PointNotFoundException] 대신 [PointDomainException]을 던진다. */
     override fun updateStatusAll(
         earnings: List<PointEarning>,
         walletId: String,
@@ -72,7 +74,7 @@ class PointEarningPersistenceAdapter(
         PointEarningMapper.of(
             jpaRepository
                 .findById(earningId)
-                .orElseThrow { PointDomainException("적립건을 찾을 수 없습니다: earningId=$earningId") },
+                .orElseThrow { PointNotFoundException("적립건을 찾을 수 없습니다: earningId=$earningId") },
         )
 
     override fun findRedeemableByWalletId(walletId: String): List<PointEarning> =

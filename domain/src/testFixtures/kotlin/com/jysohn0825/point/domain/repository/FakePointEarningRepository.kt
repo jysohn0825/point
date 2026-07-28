@@ -1,7 +1,7 @@
 package com.jysohn0825.point.domain.repository
 
 import com.jysohn0825.point.domain.entity.PointEarning
-import com.jysohn0825.point.domain.exception.PointDomainException
+import com.jysohn0825.point.domain.exception.PointNotFoundException
 import java.time.LocalDateTime
 
 class FakePointEarningRepository : PointEarningRepository {
@@ -50,7 +50,7 @@ class FakePointEarningRepository : PointEarningRepository {
     }
 
     override fun findById(earningId: String): PointEarning =
-        earningsById[earningId] ?: throw PointDomainException("적립건을 찾을 수 없습니다: earningId=$earningId")
+        earningsById[earningId] ?: throw PointNotFoundException("적립건을 찾을 수 없습니다: earningId=$earningId")
 
     override fun findRedeemableByWalletId(walletId: String): List<PointEarning> =
         earningsById.values.filter {

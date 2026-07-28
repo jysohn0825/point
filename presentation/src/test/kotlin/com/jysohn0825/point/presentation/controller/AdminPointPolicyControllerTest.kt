@@ -37,13 +37,13 @@ class AdminPointPolicyControllerTest(
                 )
 
             When("등록을 요청하면") {
-                Then("200과 등록된 정책이 반환된다") {
+                Then("201과 등록된 정책이 반환된다") {
                     mockMvc
                         .post("/api/v1/admin/point-policies") {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(request)
                         }.andExpect {
-                            status { isOk() }
+                            status { isCreated() }
                             jsonPath("$.maxEarnPerTransaction") { value(50_000) }
                             jsonPath("$.maxHoldingAmount") { value(2_000_000) }
                             jsonPath("$.defaultExpirationDays") { value(180) }

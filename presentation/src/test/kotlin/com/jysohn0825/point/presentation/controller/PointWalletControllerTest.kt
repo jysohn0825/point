@@ -31,11 +31,11 @@ class PointWalletControllerTest(
 
         Given("지갑이 없는 회원이 지갑 생성을 요청할 때") {
             When("지갑 생성을 요청하면") {
-                Then("200과 정책의 보유한도를 가진 지갑이 반환된다") {
+                Then("201과 정책의 보유한도를 가진 지갑이 반환된다") {
                     mockMvc
                         .post("/api/v1/members/member-wallet-new/point-wallet")
                         .andExpect {
-                            status { isOk() }
+                            status { isCreated() }
                             jsonPath("$.memberId") { value("member-wallet-new") }
                             jsonPath("$.balance") { value(0) }
                             jsonPath("$.holdingLimit") { value(1_000_000) }
@@ -81,13 +81,13 @@ class PointWalletControllerTest(
 
         Given("지갑이 없는 회원의 지갑을 조회할 때") {
             When("지갑을 조회하면") {
-                Then("400과 에러 응답이 반환된다") {
+                Then("404와 에러 응답이 반환된다") {
                     mockMvc
                         .get("/api/v1/members/no-such-member/point-wallet")
                         .andExpect {
-                            status { isBadRequest() }
-                            jsonPath("$.status") { value(400) }
-                            jsonPath("$.error") { value("BAD_REQUEST") }
+                            status { isNotFound() }
+                            jsonPath("$.status") { value(404) }
+                            jsonPath("$.error") { value("NOT_FOUND") }
                         }
                 }
             }

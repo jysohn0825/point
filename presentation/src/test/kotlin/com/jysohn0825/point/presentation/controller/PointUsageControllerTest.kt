@@ -48,7 +48,7 @@ class PointUsageControllerTest(
 
         Given("사용 가능한 적립건을 보유한 회원일 때") {
             When("포인트 사용을 요청하면") {
-                Then("200과 사용 결과가 반환된다") {
+                Then("201과 사용 결과가 반환된다") {
                     val wallet: PointWallet = pointWallet(id = "wallet-use-1", balance = balance(BigDecimal(1_000)))
                     walletRepository.seed(memberId = "member-use-1", wallet = wallet)
                     val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
@@ -60,7 +60,7 @@ class PointUsageControllerTest(
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(request)
                         }.andExpect {
-                            status { isOk() }
+                            status { isCreated() }
                             jsonPath("$.memberId") { value("member-use-1") }
                             jsonPath("$.orderNumber") { value("ORDER-USE-1") }
                             jsonPath("$.totalAmount") { value(300) }
@@ -107,7 +107,7 @@ class PointUsageControllerTest(
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(request)
                         }.andExpect {
-                            status { isOk() }
+                            status { isCreated() }
                             jsonPath("$.usageId") { value(usage.id) }
                             jsonPath("$.cancelledAmount") { value(300) }
                         }
@@ -141,7 +141,7 @@ class PointUsageControllerTest(
                                     CancelUsagePointRequest(requestId = "cancel-req-use-3b", amount = null),
                                 )
                         }.andExpect {
-                            status { isOk() }
+                            status { isCreated() }
                             jsonPath("$.reEarnings.length()") { value(1) }
                             jsonPath("$.reEarnings[0].amount") { value(400) }
                             jsonPath("$.cancellationLines[0].restorationType") { value("RE_EARNED") }
@@ -197,11 +197,11 @@ class PointUsageControllerTest(
 
         Given("존재하지 않는 사용건일 때") {
             When("사용건 상세를 조회하면") {
-                Then("400이 반환된다") {
+                Then("404가 반환된다") {
                     mockMvc
                         .get("/api/v1/members/member-use-6/point-usages/no-such-usage")
                         .andExpect {
-                            status { isBadRequest() }
+                            status { isNotFound() }
                         }
                 }
             }

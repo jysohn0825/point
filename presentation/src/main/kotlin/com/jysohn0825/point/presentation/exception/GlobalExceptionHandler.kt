@@ -1,6 +1,7 @@
 package com.jysohn0825.point.presentation.exception
 
 import com.jysohn0825.point.domain.exception.PointDomainException
+import com.jysohn0825.point.domain.exception.PointNotFoundException
 import com.jysohn0825.point.support.lock.LockAcquisitionException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -15,6 +16,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class GlobalExceptionHandler {
     private val log: Logger = LoggerFactory.getLogger(javaClass)
+
+    @ExceptionHandler(PointNotFoundException::class)
+    fun handlePointNotFoundException(e: PointNotFoundException): ResponseEntity<ErrorResponse> {
+        log.warn("PointNotFoundException: {}", e.message)
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ErrorResponse.of(status = HttpStatus.NOT_FOUND, message = e.message))
+    }
 
     @ExceptionHandler(PointDomainException::class)
     fun handlePointDomainException(e: PointDomainException): ResponseEntity<ErrorResponse> {
@@ -59,14 +68,7 @@ class GlobalExceptionHandler {
             .body(ErrorResponse.of(status = HttpStatus.CONFLICT, message = "이미 처리되었거나 중복된 요청입니다."))
     }
 
-    @ExceptionHandler(IllegalArgumentException::class)
-    fun handleIllegalArgumentException(e: IllegalArgumentException): ResponseEntity<ErrorResponse> {
-        log.warn("IllegalArgumentException: {}", e.message)
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(ErrorResponse.of(status = HttpStatus.BAD_REQUEST, message = e.message))
-    }
-
+    /** `IllegalArgumentException`은 이 앱에서 클라이언트 입력이 아니라 내부 불변식 위반·손상된 데이터를 뜻하므로(도메인 검증은 [PointDomainException] 경로를 탐), 400으로 위장하지 않고 그 외 예외와 함께 500으로 처리한다. */
     @ExceptionHandler(Exception::class)
     fun handleException(e: Exception): ResponseEntity<ErrorResponse> {
         log.error("Unhandled exception", e)

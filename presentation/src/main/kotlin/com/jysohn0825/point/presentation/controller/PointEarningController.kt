@@ -9,11 +9,13 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "Point Earning", description = "포인트 적립/적립취소 API")
@@ -26,7 +28,8 @@ class PointEarningController(
         summary = "포인트 적립",
         description = "회원에게 포인트를 적립한다. sourceReferenceId는 재요청 시 중복 적립을 막는 멱등성 키다.",
     )
-    @ApiResponse(responseCode = "200", description = "적립 성공")
+    @ApiResponse(responseCode = "201", description = "적립 성공")
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     fun earn(
         @Parameter(description = "회원 식별자") @PathVariable memberId: String,

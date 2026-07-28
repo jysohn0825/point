@@ -4,6 +4,7 @@ import com.jysohn0825.point.application.service.dto.PointWalletResultDto
 import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.exception.PointDomainException
+import com.jysohn0825.point.domain.exception.PointNotFoundException
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
 import com.jysohn0825.point.domain.vo.HoldingLimit
@@ -39,7 +40,7 @@ class PointWalletService(
     fun getWallet(memberId: String): PointWalletResultDto {
         val wallet: PointWallet =
             walletRepository.findByMemberId(memberId)
-                ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
+                ?: throw PointNotFoundException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
         return PointWalletResultDto.of(pointWallet = wallet)
     }
 

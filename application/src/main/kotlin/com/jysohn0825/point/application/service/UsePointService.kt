@@ -10,7 +10,7 @@ import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.event.PointsUsageCancelled
 import com.jysohn0825.point.domain.event.PointsUsed
-import com.jysohn0825.point.domain.exception.PointDomainException
+import com.jysohn0825.point.domain.exception.PointNotFoundException
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointUsageRepository
@@ -155,7 +155,7 @@ class UsePointService(
     fun getUsages(memberId: String): List<PointUsageResultDto> {
         val wallet: PointWallet =
             walletRepository.findByMemberId(memberId)
-                ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
+                ?: throw PointNotFoundException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
         return PointUsageResultDto.of(usageRepository.findAllByWalletId(wallet.id))
     }
 

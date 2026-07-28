@@ -1,6 +1,7 @@
 package com.jysohn0825.point.presentation.exception
 
 import com.jysohn0825.point.domain.exception.PointDomainException
+import com.jysohn0825.point.domain.exception.PointNotFoundException
 import com.jysohn0825.point.support.lock.LockAcquisitionException
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -26,12 +27,27 @@ class GlobalExceptionHandlerTest :
             }
         }
 
-        Given("IllegalArgumentException이 발생했을 때") {
+        Given("PointNotFoundException이 발생했을 때") {
             When("핸들러가 처리하면") {
-                val response: ResponseEntity<ErrorResponse> = handler.handleIllegalArgumentException(IllegalArgumentException("잘못된 값입니다."))
+                val response: ResponseEntity<ErrorResponse> =
+                    handler.handlePointNotFoundException(PointNotFoundException("적립건을 찾을 수 없습니다: earningId=e1"))
 
-                Then("400과 에러 메시지가 담긴 응답이 반환된다") {
-                    response.statusCode shouldBe HttpStatus.BAD_REQUEST
+                Then("404와 에러 메시지가 담긴 응답이 반환된다") {
+                    response.statusCode shouldBe HttpStatus.NOT_FOUND
+                    response.body?.status shouldBe 404
+                    response.body?.error shouldBe "NOT_FOUND"
+                    response.body?.message shouldBe "적립건을 찾을 수 없습니다: earningId=e1"
+                }
+            }
+        }
+
+        Given("IllegalArgumentException처럼 예상치 못한 서버 내부 오류가 발생했을 때") {
+            When("핸들러가 처리하면") {
+                val response: ResponseEntity<ErrorResponse> = handler.handleException(IllegalArgumentException("잘못된 값입니다."))
+
+                Then("400이 아닌 500과 에러 메시지가 담긴 응답이 반환된다") {
+                    response.statusCode shouldBe HttpStatus.INTERNAL_SERVER_ERROR
+                    response.body?.status shouldBe 500
                     response.body?.message shouldBe "잘못된 값입니다."
                 }
             }

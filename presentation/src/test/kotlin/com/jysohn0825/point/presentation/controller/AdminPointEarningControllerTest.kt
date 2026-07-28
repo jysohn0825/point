@@ -40,7 +40,7 @@ class AdminPointEarningControllerTest(
 
         Given("지갑이 있는 회원에게 관리자가 포인트를 수기 지급할 때") {
             When("수기 지급을 요청하면") {
-                Then("200과 지급 결과가 반환된다") {
+                Then("201과 지급 결과가 반환된다") {
                     walletRepository.seed(memberId = "member-admin-1", wallet = pointWallet(id = "wallet-admin-1"))
                     val request: ManualGrantPointRequest =
                         ManualGrantPointRequest(amount = BigDecimal(2_000), adminId = "admin-01", expirationDays = 30)
@@ -50,7 +50,7 @@ class AdminPointEarningControllerTest(
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(request)
                         }.andExpect {
-                            status { isOk() }
+                            status { isCreated() }
                             jsonPath("$.amount") { value(2_000) }
                             jsonPath("$.earnType") { value("MANUAL") }
                             jsonPath("$.grantedBy") { value("admin-01") }

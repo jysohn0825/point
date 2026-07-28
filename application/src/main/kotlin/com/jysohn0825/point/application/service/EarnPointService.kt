@@ -9,7 +9,7 @@ import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.event.PointsEarned
 import com.jysohn0825.point.domain.event.PointsEarningCancelled
 import com.jysohn0825.point.domain.event.PointsExpired
-import com.jysohn0825.point.domain.exception.PointDomainException
+import com.jysohn0825.point.domain.exception.PointNotFoundException
 import com.jysohn0825.point.domain.repository.PointEarningRepository
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointUsageRepository
@@ -146,7 +146,7 @@ class EarnPointService(
     fun getEarnings(memberId: String): List<PointEarningResultDto> {
         val wallet: PointWallet =
             walletRepository.findByMemberId(memberId)
-                ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
+                ?: throw PointNotFoundException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
         return PointEarningResultDto.of(earningRepository.findAllByWalletId(wallet.id))
     }
 

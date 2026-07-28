@@ -11,11 +11,13 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "Point Usage", description = "포인트 사용/사용취소 API")
@@ -25,7 +27,8 @@ class PointUsageController(
     private val usePointService: UsePointService,
 ) {
     @Operation(summary = "포인트 사용", description = "주문번호와 함께 포인트를 사용한다. 수기지급 포인트가 우선, 만료일이 짧은 순으로 차감된다.")
-    @ApiResponse(responseCode = "200", description = "사용 성공")
+    @ApiResponse(responseCode = "201", description = "사용 성공")
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     fun use(
         @Parameter(description = "회원 식별자") @PathVariable memberId: String,
@@ -36,7 +39,8 @@ class PointUsageController(
         summary = "포인트 사용취소",
         description = "사용한 금액의 전체 또는 일부를 취소한다. 이미 만료된 적립 건으로 복원해야 하는 경우 신규 적립으로 대체된다.",
     )
-    @ApiResponse(responseCode = "200", description = "사용취소 성공")
+    @ApiResponse(responseCode = "201", description = "사용취소 성공")
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/{usageId}/cancellations")
     fun cancel(
         @Parameter(description = "회원 식별자") @PathVariable memberId: String,

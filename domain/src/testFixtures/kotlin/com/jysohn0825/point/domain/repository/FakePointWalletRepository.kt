@@ -1,7 +1,7 @@
 package com.jysohn0825.point.domain.repository
 
 import com.jysohn0825.point.domain.entity.PointWallet
-import com.jysohn0825.point.domain.exception.PointDomainException
+import com.jysohn0825.point.domain.exception.PointNotFoundException
 
 class FakePointWalletRepository : PointWalletRepository {
     private val walletsByMemberId: MutableMap<String, PointWallet> = mutableMapOf()
@@ -21,7 +21,7 @@ class FakePointWalletRepository : PointWalletRepository {
     }
 
     override fun findByMemberIdForUpdate(memberId: String): PointWallet =
-        walletsByMemberId[memberId] ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
+        walletsByMemberId[memberId] ?: throw PointNotFoundException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
 
     override fun findByMemberId(memberId: String): PointWallet? = walletsByMemberId[memberId]
 
