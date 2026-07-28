@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 
 class PointCancellationAllocatorTest :
     BehaviorSpec({
-        val sut: PointCancellationAllocator = PointCancellationAllocator()
+        val sut: PointCancellationAllocator = DefaultPointCancellationAllocator()
         val policy: PointPolicy = pointPolicy()
         val now: LocalDateTime = LocalDateTime.now()
 

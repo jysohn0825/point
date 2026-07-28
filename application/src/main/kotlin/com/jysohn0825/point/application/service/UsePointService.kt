@@ -38,10 +38,9 @@ class UsePointService(
     private val policyRepository: PointPolicyRepository,
     private val keyGenerator: DistributedKeyGenerator,
     private val eventPublisher: ApplicationEventPublisher,
+    private val redemptionAllocator: PointRedemptionAllocator,
+    private val cancellationAllocator: PointCancellationAllocator,
 ) {
-    private val redemptionAllocator: PointRedemptionAllocator = PointRedemptionAllocator()
-    private val cancellationAllocator: PointCancellationAllocator = PointCancellationAllocator()
-
     /**
      * 동일 orderNumber 요청이 진짜 동시(in-flight)에 들어오면 락 획득에 실패해 409로 응답한다.
      * 이미 끝난 요청의 재시도(락은 곧바로 잡힘)는 애플리케이션에서 걸러내지 않고 그대로 실행되며,

@@ -17,6 +17,10 @@ import com.jysohn0825.point.domain.repository.FakePointEarningRepository
 import com.jysohn0825.point.domain.repository.FakePointPolicyRepository
 import com.jysohn0825.point.domain.repository.FakePointUsageRepository
 import com.jysohn0825.point.domain.repository.FakePointWalletRepository
+import com.jysohn0825.point.domain.service.DefaultPointCancellationAllocator
+import com.jysohn0825.point.domain.service.DefaultPointRedemptionAllocator
+import com.jysohn0825.point.domain.service.PointCancellationAllocator
+import com.jysohn0825.point.domain.service.PointRedemptionAllocator
 import com.jysohn0825.point.domain.vo.Balance
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.RestorationType
@@ -56,6 +60,8 @@ private fun service(
     policyRepository: FakePointPolicyRepository = FakePointPolicyRepository(),
     keyGenerator: DistributedKeyGenerator = FakeUseKeyGenerator(),
     eventPublisher: ApplicationEventPublisher = FakeUseEventPublisher(),
+    redemptionAllocator: PointRedemptionAllocator = DefaultPointRedemptionAllocator(),
+    cancellationAllocator: PointCancellationAllocator = DefaultPointCancellationAllocator(),
 ): UsePointService =
     UsePointService(
         walletRepository = walletRepository,
@@ -64,6 +70,8 @@ private fun service(
         policyRepository = policyRepository,
         keyGenerator = keyGenerator,
         eventPublisher = eventPublisher,
+        redemptionAllocator = redemptionAllocator,
+        cancellationAllocator = cancellationAllocator,
     )
 
 class UsePointServiceTest :

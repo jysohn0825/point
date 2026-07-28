@@ -16,7 +16,7 @@ import java.time.LocalDateTime
 
 class PointRedemptionAllocatorTest :
     BehaviorSpec({
-        val sut: PointRedemptionAllocator = PointRedemptionAllocator()
+        val sut: PointRedemptionAllocator = DefaultPointRedemptionAllocator()
 
         given("수기지급 적립건과 일반 적립건이 함께 있을 때") {
             val manualEarning: PointEarning =
