@@ -10,9 +10,14 @@
 ### memberId/orderNumber는 매 실행마다 새 값을 쓰도록 {{$uuid}}로 랜덤 생성한다.
 ### orderNumber는 스키마상 전역 유니크(uk_usage_order)라 "A1234"를 그대로 재사용하면
 ### 이미 다른 회원이 쓴 값과 충돌해 DataIntegrityViolationException으로 커밋에 실패하고 409가 반환된다.
+###
+### 주의: IntelliJ HTTP Client는 `@memberId = {{$uuid}}`처럼 파일 변수에 동적 변수를 대입해도
+### 그 값을 한 번만 계산해 캐싱하지 않고, {{memberId}}가 참조될 때마다 매번 새로 uuid를 생성한다.
+### 그래서 memberId는 파일 변수로 두지 않고, 1번 요청에서 {{$uuid}}를 인라인으로 한 번만 써서 지갑을
+### 만든 뒤 응답의 memberId를 client.global.set으로 고정해 이후 요청은 전역 변수 {{memberId}}를
+### 참조하도록 한다 (orderNumber는 5번에서 한 번만 쓰이므로 파일 변수로 둬도 문제없다).
 
 @baseUrl = http://localhost:8080/api/v1
-@memberId = {{$uuid}}
 @orderNumber = {{$uuid}}
 
 
@@ -29,7 +34,12 @@ Content-Type: application/json
 
 
 ### 1. 포인트 지갑 생성
-POST {{baseUrl}}/members/{{memberId}}/point-wallet
+# @name createWallet
+POST {{baseUrl}}/members/{{$uuid}}/point-wallet
+
+> {%
+    client.global.set("memberId", response.body.memberId);
+%}
 
 
 ### 2. 1000원 적립 (pointKey A) — 총 잔액 0 -> 1000원
