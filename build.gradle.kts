@@ -1,3 +1,4 @@
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 plugins {
@@ -61,7 +62,23 @@ subprojects {
         )
     }
 
-    tasks.named("check") {
+    tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
         dependsOn(tasks.named("jacocoTestReport"))
+        classDirectories.setFrom(
+            classDirectories.files.map { dir ->
+                fileTree(dir) { exclude("**/*\$DefaultImpls.class") }
+            },
+        )
+        violationRules {
+            rule {
+                limit {
+                    minimum = "0.80".toBigDecimal()
+                }
+            }
+        }
+    }
+
+    tasks.named("check") {
+        dependsOn(tasks.named("jacocoTestReport"), tasks.named("jacocoTestCoverageVerification"))
     }
 }
