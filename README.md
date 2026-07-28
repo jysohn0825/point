@@ -7,9 +7,9 @@
 | # | 항목 | 필수/옵션 | 위치 | 상태 |
 |---|------|-----------|------|------|
 | 1 | 무료 포인트 시스템 API 개발 | 필수 | GitHub 저장소 | ✅ |
-| 2 | ERD (PDF/이미지) | 필수 | `resource/` | ✅ |
-| 3 | AWS 아키텍처 구성도 (PDF/이미지) | 옵션 | `resource/` | ✅ |
-| 4 | 빌드 방법 및 과제 설명 | 필수 | `README.md` | ✅ (본 문서) |
+| 2 | ERD (PDF/이미지) | 필수 | [`resource/erd.pdf`](./resource/erd.pdf) | ✅ |
+| 3 | AWS 아키텍처 구성도 (PDF/이미지) | 옵션 | [`resource/aws-architecture.pdf`](./resource/aws-architecture.pdf) | ✅ |
+| 4 | 빌드 방법 및 과제 설명 | 필수 | [본 문서 내 "빌드 및 실행 방법"](#빌드-및-실행-방법) | ✅ |
 
 ## 개발 환경
 
