@@ -11,10 +11,9 @@ import com.jysohn0825.point.infrastructure.persistence.entity.PointEarningEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointPolicyEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointWalletEntity
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import jakarta.persistence.EntityManager
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
@@ -24,169 +23,195 @@ import java.util.UUID
 
 @DataJpaTest
 @Import(PointEarningPersistenceAdapter::class)
-class PointEarningPersistenceAdapterTest {
-    @Autowired
-    private lateinit var entityManager: EntityManager
+class PointEarningPersistenceAdapterTest(
+    @Autowired private val entityManager: EntityManager,
+    @Autowired private val adapter: PointEarningPersistenceAdapter,
+) : BehaviorSpec({
+        val walletId: String = UUID.randomUUID().toString()
+        val policyId: String = UUID.randomUUID().toString()
 
-    @Autowired
-    private lateinit var adapter: PointEarningPersistenceAdapter
-
-    private val walletId: String = UUID.randomUUID().toString()
-    private val policyId: String = UUID.randomUUID().toString()
-
-    @BeforeEach
-    fun setUp() {
-        entityManager.persist(PointWalletEntity(id = walletId, memberId = UUID.randomUUID().toString(), balance = BigDecimal.ZERO))
-        entityManager.persist(
-            PointPolicyEntity(
-                id = policyId,
-                policyVersion = 1,
-                maxEarnPerTransaction = BigDecimal(50_000),
-                maxHoldingAmount = BigDecimal(1_000_000),
-                defaultExpirationDays = 365,
-                appliedAt = LocalDateTime.now().minusDays(1),
-                createdByAdminId = "admin-01",
-            ),
-        )
-        entityManager.flush()
-    }
-
-    @Test
-    fun `적립건을 저장하고 조회하면 저장한 값 그대로 복원된다`() {
-        val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)), sourceReferenceId = "ORDER-1")
-
-        adapter.save(earning = earning, walletId = walletId, policyId = policyId)
-        entityManager.flush()
-        entityManager.clear()
-
-        val found: PointEarning = adapter.findById(earning.id)
-
-        found.amount.value shouldBe BigDecimal(1_000)
-        found.sourceReferenceId shouldBe "ORDER-1"
-    }
-
-    @Test
-    fun `존재하지 않는 적립건을 조회하면 예외가 발생한다`() {
-        shouldThrow<PointDomainException> { adapter.findById("no-such-earning") }
-    }
-
-    @Test
-    fun `여러 적립건을 saveAll로 한 번에 저장할 수 있다`() {
-        val earnings: List<PointEarning> = listOf(pointEarning(sourceReferenceId = "A"), pointEarning(sourceReferenceId = "B"))
-
-        adapter.saveAll(earnings = earnings, walletId = walletId, policyId = policyId)
-        entityManager.flush()
-        entityManager.clear()
-
-        adapter.findAllByIds(earnings.map { it.id }).size shouldBe 2
-    }
-
-    @Test
-    fun `적립건 취소로 상태가 바뀌면 updateStatus로 반영된다`() {
-        val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
-        adapter.save(earning = earning, walletId = walletId, policyId = policyId)
-        entityManager.flush()
-        entityManager.clear()
-
-        earning.cancelEarning()
-        adapter.updateStatus(earning = earning, walletId = walletId)
-        entityManager.flush()
-        entityManager.clear()
-
-        val found: PointEarning = adapter.findById(earning.id)
-        found.status shouldBe EarningStatus.CANCELED
-    }
-
-    @Test
-    fun `updateStatusAll 호출 시 존재하지 않는 적립건이 섞여있으면 예외가 발생한다`() {
-        val notPersisted: PointEarning = pointEarning()
-
-        shouldThrow<PointDomainException> { adapter.updateStatusAll(earnings = listOf(notPersisted), walletId = walletId) }
-    }
-
-    @Test
-    fun `동일한 지갑·유형·출처참조값 조합의 적립건을 조회할 수 있다`() {
-        val earning: PointEarning = pointEarning(earnType = EarnType.SYSTEM, sourceReferenceId = "ORDER-IDEMPOTENT")
-        adapter.save(earning = earning, walletId = walletId, policyId = policyId)
-        entityManager.flush()
-        entityManager.clear()
-
-        val found: PointEarning? =
-            adapter.findExistingEarning(
-                walletId = walletId,
-                earnType = EarnType.SYSTEM,
-                sourceReferenceId = "ORDER-IDEMPOTENT",
+        beforeEach {
+            entityManager.persist(PointWalletEntity(id = walletId, memberId = UUID.randomUUID().toString(), balance = BigDecimal.ZERO))
+            entityManager.persist(
+                PointPolicyEntity(
+                    id = policyId,
+                    policyVersion = 1,
+                    maxEarnPerTransaction = BigDecimal(50_000),
+                    maxHoldingAmount = BigDecimal(1_000_000),
+                    defaultExpirationDays = 365,
+                    appliedAt = LocalDateTime.now().minusDays(1),
+                    createdByAdminId = "admin-01",
+                ),
             )
+            entityManager.flush()
+        }
 
-        found?.id shouldBe earning.id
-    }
+        Given("적립건을 저장할 때") {
+            When("저장 후 조회하면") {
+                Then("저장한 값 그대로 복원된다") {
+                    val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)), sourceReferenceId = "ORDER-1")
 
-    @Test
-    fun `일치하는 조합이 없으면 null이 반환된다`() {
-        adapter.findExistingEarning(
-            walletId = walletId,
-            earnType = EarnType.SYSTEM,
-            sourceReferenceId = "no-such-source",
-        ) shouldBe null
-    }
+                    adapter.save(earning = earning, walletId = walletId, policyId = policyId)
+                    entityManager.flush()
+                    entityManager.clear()
 
-    @Test
-    fun `사용 가능한 적립건만 findRedeemableByWalletId로 조회된다`() {
-        val redeemable: PointEarning = pointEarning(sourceReferenceId = "REDEEMABLE", period = expirationPeriod(365))
-        adapter.save(earning = redeemable, walletId = walletId, policyId = policyId)
-        entityManager.persist(
-            PointEarningEntity(
-                id = UUID.randomUUID().toString(),
-                walletId = walletId,
-                policyId = policyId,
-                amount = BigDecimal(500),
-                remainingAmount = BigDecimal.ZERO,
-                earnType = EarnType.SYSTEM.name,
-                sourceReferenceId = "EXHAUSTED",
-                earnedAt = LocalDateTime.now(),
-                expiresAt = LocalDateTime.now().plusDays(365),
-                status = EarningStatus.EXHAUSTED.name,
-            ),
-        )
-        entityManager.flush()
-        entityManager.clear()
+                    val found: PointEarning = adapter.findById(earning.id)
 
-        val result: List<PointEarning> = adapter.findRedeemableByWalletId(walletId)
+                    found.amount.value shouldBe BigDecimal(1_000)
+                    found.sourceReferenceId shouldBe "ORDER-1"
+                }
+            }
+        }
 
-        result.map { it.id } shouldBe listOf(redeemable.id)
-    }
+        Given("존재하지 않는 적립건일 때") {
+            When("id로 조회하면") {
+                Then("예외가 발생한다") {
+                    shouldThrow<PointDomainException> { adapter.findById("no-such-earning") }
+                }
+            }
+        }
 
-    @Test
-    fun `지갑의 모든 적립건을 상태 무관하게 조회할 수 있다`() {
-        adapter.save(earning = pointEarning(sourceReferenceId = "A"), walletId = walletId, policyId = policyId)
-        adapter.save(earning = pointEarning(sourceReferenceId = "B"), walletId = walletId, policyId = policyId)
-        entityManager.flush()
-        entityManager.clear()
+        Given("여러 적립건을 저장할 때") {
+            When("saveAll로 한 번에 저장하면") {
+                Then("모두 저장된다") {
+                    val earnings: List<PointEarning> = listOf(pointEarning(sourceReferenceId = "A"), pointEarning(sourceReferenceId = "B"))
 
-        adapter.findAllByWalletId(walletId).size shouldBe 2
-    }
+                    adapter.saveAll(earnings = earnings, walletId = walletId, policyId = policyId)
+                    entityManager.flush()
+                    entityManager.clear()
 
-    @Test
-    fun `만료일이 지난 ACTIVE 적립건이 있으면 만료 대상 적립건이 조회된다`() {
-        val earningId: String = UUID.randomUUID().toString()
-        entityManager.persist(
-            PointEarningEntity(
-                id = earningId,
-                walletId = walletId,
-                policyId = policyId,
-                amount = BigDecimal(1_000),
-                remainingAmount = BigDecimal(1_000),
-                earnType = EarnType.SYSTEM.name,
-                sourceReferenceId = "EXPIRED-1",
-                earnedAt = LocalDateTime.now().minusDays(10),
-                expiresAt = LocalDateTime.now().minusDays(1),
-                status = EarningStatus.ACTIVE.name,
-            ),
-        )
-        entityManager.flush()
-        entityManager.clear()
+                    adapter.findAllByIds(earnings.map { it.id }).size shouldBe 2
+                }
+            }
+        }
 
-        val expiring: List<PointEarning> = adapter.findExpiringByWalletId(walletId = walletId, now = LocalDateTime.now())
-        expiring.map { it.id } shouldBe listOf(earningId)
-    }
-}
+        Given("적립건이 취소되었을 때") {
+            When("updateStatus로 반영하면") {
+                Then("상태가 갱신된다") {
+                    val earning: PointEarning = pointEarning(amount = pointAmount(BigDecimal(1_000)))
+                    adapter.save(earning = earning, walletId = walletId, policyId = policyId)
+                    entityManager.flush()
+                    entityManager.clear()
+
+                    earning.cancelEarning()
+                    adapter.updateStatus(earning = earning, walletId = walletId)
+                    entityManager.flush()
+                    entityManager.clear()
+
+                    val found: PointEarning = adapter.findById(earning.id)
+                    found.status shouldBe EarningStatus.CANCELED
+                }
+            }
+        }
+
+        Given("updateStatusAll 호출 대상에 존재하지 않는 적립건이 섞여있을 때") {
+            When("updateStatusAll을 호출하면") {
+                Then("예외가 발생한다") {
+                    val notPersisted: PointEarning = pointEarning()
+
+                    shouldThrow<PointDomainException> { adapter.updateStatusAll(earnings = listOf(notPersisted), walletId = walletId) }
+                }
+            }
+        }
+
+        Given("동일한 지갑·유형·출처참조값 조합의 적립건이 저장되어 있을 때") {
+            When("해당 조합으로 조회하면") {
+                Then("적립건이 조회된다") {
+                    val earning: PointEarning = pointEarning(earnType = EarnType.SYSTEM, sourceReferenceId = "ORDER-IDEMPOTENT")
+                    adapter.save(earning = earning, walletId = walletId, policyId = policyId)
+                    entityManager.flush()
+                    entityManager.clear()
+
+                    val found: PointEarning? =
+                        adapter.findExistingEarning(
+                            walletId = walletId,
+                            earnType = EarnType.SYSTEM,
+                            sourceReferenceId = "ORDER-IDEMPOTENT",
+                        )
+
+                    found?.id shouldBe earning.id
+                }
+            }
+        }
+
+        Given("일치하는 조합이 없을 때") {
+            When("findExistingEarning으로 조회하면") {
+                Then("null이 반환된다") {
+                    adapter.findExistingEarning(
+                        walletId = walletId,
+                        earnType = EarnType.SYSTEM,
+                        sourceReferenceId = "no-such-source",
+                    ) shouldBe null
+                }
+            }
+        }
+
+        Given("사용 가능한 적립건과 소진된 적립건이 함께 있을 때") {
+            When("findRedeemableByWalletId로 조회하면") {
+                Then("사용 가능한 적립건만 조회된다") {
+                    val redeemable: PointEarning = pointEarning(sourceReferenceId = "REDEEMABLE", period = expirationPeriod(365))
+                    adapter.save(earning = redeemable, walletId = walletId, policyId = policyId)
+                    entityManager.persist(
+                        PointEarningEntity(
+                            id = UUID.randomUUID().toString(),
+                            walletId = walletId,
+                            policyId = policyId,
+                            amount = BigDecimal(500),
+                            remainingAmount = BigDecimal.ZERO,
+                            earnType = EarnType.SYSTEM.name,
+                            sourceReferenceId = "EXHAUSTED",
+                            earnedAt = LocalDateTime.now(),
+                            expiresAt = LocalDateTime.now().plusDays(365),
+                            status = EarningStatus.EXHAUSTED.name,
+                        ),
+                    )
+                    entityManager.flush()
+                    entityManager.clear()
+
+                    val result: List<PointEarning> = adapter.findRedeemableByWalletId(walletId)
+
+                    result.map { it.id } shouldBe listOf(redeemable.id)
+                }
+            }
+        }
+
+        Given("지갑에 여러 적립건이 있을 때") {
+            When("findAllByWalletId로 조회하면") {
+                Then("상태 무관하게 모두 조회된다") {
+                    adapter.save(earning = pointEarning(sourceReferenceId = "A"), walletId = walletId, policyId = policyId)
+                    adapter.save(earning = pointEarning(sourceReferenceId = "B"), walletId = walletId, policyId = policyId)
+                    entityManager.flush()
+                    entityManager.clear()
+
+                    adapter.findAllByWalletId(walletId).size shouldBe 2
+                }
+            }
+        }
+
+        Given("만료일이 지난 ACTIVE 적립건이 있을 때") {
+            When("findExpiringByWalletId로 조회하면") {
+                Then("만료 대상 적립건이 조회된다") {
+                    val earningId: String = UUID.randomUUID().toString()
+                    entityManager.persist(
+                        PointEarningEntity(
+                            id = earningId,
+                            walletId = walletId,
+                            policyId = policyId,
+                            amount = BigDecimal(1_000),
+                            remainingAmount = BigDecimal(1_000),
+                            earnType = EarnType.SYSTEM.name,
+                            sourceReferenceId = "EXPIRED-1",
+                            earnedAt = LocalDateTime.now().minusDays(10),
+                            expiresAt = LocalDateTime.now().minusDays(1),
+                            status = EarningStatus.ACTIVE.name,
+                        ),
+                    )
+                    entityManager.flush()
+                    entityManager.clear()
+
+                    val expiring: List<PointEarning> = adapter.findExpiringByWalletId(walletId = walletId, now = LocalDateTime.now())
+                    expiring.map { it.id } shouldBe listOf(earningId)
+                }
+            }
+        }
+    })

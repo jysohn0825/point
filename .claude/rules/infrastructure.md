@@ -30,6 +30,6 @@ Docker 없이 단일 인스턴스로 돌아가야 한다는 전제로, DB는 H2(
 - Kotest `BehaviorSpec`(Given/When/Then), 시나리오는 한글로 작성.
 - `XxxMapper`는 Spring/DB에 의존하지 않는 순수 함수이므로 `BehaviorSpec` 단위 테스트로 커버한다(가장 저비용으로 커버리지를 확보할 수 있는 지점).
 - `lock`/`cache`/`key`의 `MemoryXxx` 구현체는 외부 인프라 의존이 없으므로 `BehaviorSpec` 단위 테스트로 동시성/TTL/멱등성 등의 동작을 직접 검증한다.
-- `persistence/adapter`, `persistence/entity`의 JPA 연동 테스트는 `@DataJpaTest`로 내장 H2에 붙여 검증한다(Docker 불필요). Spring 컨텍스트를 띄우는 테스트라 Kotest 통합이 세팅되어 있지 않으므로 JUnit5 `@Test`로 작성한다(다른 모듈의 `BehaviorSpec` 원칙에 대한 예외 — [presentation.md](./presentation.md)의 e2e 테스트와 동일한 사유).
+- `persistence/adapter`, `persistence/entity`의 JPA 연동 테스트는 `@DataJpaTest`로 내장 H2에 붙여 검증한다(Docker 불필요). Spring 빈 주입은 목 프레임워크가 아니라 `kotest-extensions-spring`(`SpringExtension`/`SpringAutowireConstructorExtension`, `infrastructure/src/test/.../support/ProjectConfig.kt`에 등록)을 통해 스펙 클래스의 **생성자**로 받는다(`@Autowired` 필드 주입이 아님) — [presentation.md](./presentation.md)의 e2e 테스트와 동일한 방식.
 - `testFixtures(project(":domain"))`을 `testImplementation`으로 참조하고, `domain`의 엔티티/인터페이스는 그 테스트 픽스처와 fake 구현체를 그대로 사용한다.
 - 테스트 커버리지는 80% 이상을 유지한다.

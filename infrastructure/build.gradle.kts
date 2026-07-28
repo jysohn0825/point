@@ -22,4 +22,5 @@ dependencies {
 
     testImplementation(testFixtures(project(":domain")))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("io.kotest.extensions:kotest-extensions-spring:1.3.0")
 }
