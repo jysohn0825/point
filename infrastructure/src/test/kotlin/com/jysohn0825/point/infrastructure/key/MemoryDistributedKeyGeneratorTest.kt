@@ -2,6 +2,7 @@ package com.jysohn0825.point.infrastructure.key
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
@@ -21,7 +22,35 @@ class MemoryDistributedKeyGeneratorTest :
                 val second: Long = generator.next(name = name)
 
                 Then("단조 증가하는 서로 다른 키가 반환된다") {
-                    second shouldBe first + 1
+                    second shouldBeGreaterThan first
+                }
+            }
+        }
+
+        Given("서로 다른 name으로 채번할 때") {
+            val generator: MemoryDistributedKeyGenerator = MemoryDistributedKeyGenerator()
+
+            When("연속으로 채번하면") {
+                val first: Long = generator.next(name = "test-key-a")
+                val second: Long = generator.next(name = "test-key-b")
+
+                Then("name과 무관하게 전역적으로 단조 증가하는 키가 반환된다") {
+                    second shouldBeGreaterThan first
+                }
+            }
+        }
+
+        Given("짧은 시간 안에 대량으로 반복 채번할 때") {
+            val generator: MemoryDistributedKeyGenerator = MemoryDistributedKeyGenerator()
+            val name: String = "test-key-burst"
+            val issueCount: Int = 10000
+
+            When("연속으로 채번하면") {
+                val issued: List<Long> = (1..issueCount).map { generator.next(name = name) }
+
+                Then("중복 없이 단조 증가하는 키가 발급된다") {
+                    issued.toSet() shouldHaveSize issueCount
+                    issued shouldBe issued.sorted()
                 }
             }
         }
