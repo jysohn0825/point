@@ -14,7 +14,6 @@ import java.time.LocalDateTime
     name = "point_policy",
     uniqueConstraints = [
         UniqueConstraint(name = "uk_policy_version", columnNames = ["policy_version"]),
-        UniqueConstraint(name = "uk_policy_applied_at", columnNames = ["applied_at"]),
     ],
 )
 @Comment("포인트 정책 (버전별 이력)")

@@ -4,7 +4,6 @@ import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.vo.Balance
 import com.jysohn0825.point.domain.vo.HoldingLimit
 import com.jysohn0825.point.infrastructure.persistence.entity.PointWalletEntity
-import java.math.BigDecimal
 
 class PointWalletMapper {
     companion object {
@@ -21,13 +20,11 @@ class PointWalletMapper {
         fun of(
             wallet: PointWallet,
             memberId: String,
-            holdingLimitOverride: BigDecimal?,
         ): PointWalletEntity =
             PointWalletEntity(
                 id = wallet.id,
                 memberId = memberId,
                 balance = wallet.balance.amount,
-                holdingLimitOverride = holdingLimitOverride,
             )
     }
 }

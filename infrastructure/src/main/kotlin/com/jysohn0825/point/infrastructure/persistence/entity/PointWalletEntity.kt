@@ -28,9 +28,6 @@ class PointWalletEntity(
     @Column(name = "balance", nullable = false, precision = 19, scale = 0)
     @Comment("총 잔액")
     val balance: BigDecimal = BigDecimal.ZERO,
-    @Column(name = "holding_limit_override", precision = 19, scale = 0)
-    @Comment("개인 한도 예외. NULL이면 정책값 적용")
-    val holdingLimitOverride: BigDecimal? = null,
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     @Comment("생성 일시")
     val createdAt: LocalDateTime = LocalDateTime.now(),

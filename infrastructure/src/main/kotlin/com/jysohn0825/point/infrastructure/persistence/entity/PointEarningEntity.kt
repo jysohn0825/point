@@ -15,7 +15,6 @@ import java.time.LocalDateTime
     name = "point_earning",
     indexes = [
         Index(name = "idx_earning_fifo", columnList = "wallet_id, status, expires_at"),
-        Index(name = "idx_earning_expire", columnList = "status, expires_at"),
         Index(name = "idx_earning_policy", columnList = "policy_id"),
         Index(name = "idx_earning_wallet", columnList = "wallet_id, earned_at"),
     ],

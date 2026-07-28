@@ -9,8 +9,7 @@ CREATE TABLE IF NOT EXISTS point_policy (
     created_at                TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    CONSTRAINT uk_policy_version    UNIQUE (policy_version),
-    CONSTRAINT uk_policy_applied_at UNIQUE (applied_at)
+    CONSTRAINT uk_policy_version UNIQUE (policy_version)
 );
 
 COMMENT ON TABLE point_policy IS '포인트 정책 (버전별 이력)';
@@ -19,7 +18,6 @@ CREATE TABLE IF NOT EXISTS point_wallet (
     id                      CHAR(36)       NOT NULL                COMMENT '지갑 ID',
     member_id               CHAR(36)       NOT NULL                COMMENT '회원 ID',
     balance                 DECIMAL(19,0)  NOT NULL DEFAULT 0      COMMENT '총 잔액',
-    holding_limit_override  DECIMAL(19,0)  NULL                    COMMENT '개인 한도 예외. NULL이면 정책값 적용',
     created_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -53,7 +51,6 @@ CREATE TABLE IF NOT EXISTS point_earning (
 COMMENT ON TABLE point_earning IS '포인트 적립건';
 
 CREATE INDEX IF NOT EXISTS idx_earning_fifo   ON point_earning (wallet_id, status, expires_at);
-CREATE INDEX IF NOT EXISTS idx_earning_expire ON point_earning (status, expires_at);
 CREATE INDEX IF NOT EXISTS idx_earning_policy ON point_earning (policy_id);
 CREATE INDEX IF NOT EXISTS idx_earning_wallet ON point_earning (wallet_id, earned_at);
 

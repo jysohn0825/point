@@ -36,7 +36,7 @@ class PointWalletPersistenceAdapterTest {
     }
 
     @Test
-    fun `개인 한도 예외가 없는 지갑은 정책의 보유한도가 적용된다`() {
+    fun `지갑을 조회하면 정책의 보유한도가 적용된다`() {
         policyAdapter.save(
             policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(2_000_000))),
             appliedAt = LocalDateTime.now().minusDays(1),
@@ -53,35 +53,12 @@ class PointWalletPersistenceAdapterTest {
     }
 
     @Test
-    fun `개인 한도 예외가 있는 지갑은 정책 대신 예외값이 적용된다`() {
-        policyAdapter.save(
-            policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(1_000_000))),
-            appliedAt = LocalDateTime.now().minusDays(1),
-            createdByAdminId = "admin-01",
-        )
-        entityManager.persist(
-            PointWalletEntity(
-                id = UUID.randomUUID().toString(),
-                memberId = "member-2",
-                balance = BigDecimal.ZERO,
-                holdingLimitOverride = BigDecimal(5_000_000),
-            ),
-        )
-        entityManager.flush()
-        entityManager.clear()
-
-        val found: PointWallet = adapter.findByMemberId("member-2")!!
-
-        found.holdingLimit.value shouldBe BigDecimal(5_000_000L)
-    }
-
-    @Test
     fun `존재하지 않는 회원을 findByMemberId로 조회하면 null이 반환된다`() {
         adapter.findByMemberId("unknown") shouldBe null
     }
 
     @Test
-    fun `신규 지갑을 저장하면 개인 한도 예외 없이 저장된다`() {
+    fun `신규 지갑을 저장하면 잔액이 저장된다`() {
         policyAdapter.save(
             policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(1_000_000))),
             appliedAt = LocalDateTime.now().minusDays(1),
