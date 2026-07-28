@@ -53,15 +53,6 @@ class FakePointEarningRepository : PointEarningRepository {
     override fun findById(earningId: String): PointEarning =
         earningsById[earningId] ?: throw PointDomainException("적립건을 찾을 수 없습니다: earningId=$earningId")
 
-    override fun findExistingEarning(
-        walletId: String,
-        earnType: EarnType,
-        sourceReferenceId: String,
-    ): PointEarning? =
-        earningsById.values.firstOrNull {
-            walletIdByEarningId[it.id] == walletId && it.earnType == earnType && it.sourceReferenceId == sourceReferenceId
-        }
-
     override fun findRedeemableByWalletId(walletId: String): List<PointEarning> =
         earningsById.values.filter {
             walletIdByEarningId[it.id] == walletId &&

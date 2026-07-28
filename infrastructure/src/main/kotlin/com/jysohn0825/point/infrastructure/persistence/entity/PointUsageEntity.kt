@@ -29,7 +29,7 @@ class PointUsageEntity(
     @Column(name = "wallet_id", nullable = false, length = 36)
     @Comment("지갑 ID")
     val walletId: String,
-    @Column(name = "order_number", nullable = false, length = 30)
+    @Column(name = "order_number", nullable = false, length = 36)
     @Comment("주문번호")
     val orderNumber: String,
     @Column(name = "total_amount", nullable = false, precision = 19, scale = 0)

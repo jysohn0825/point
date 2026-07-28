@@ -90,15 +90,6 @@ class PointEarningPersistenceAdapter(
             PointEarningMapper.of(it)
         }
 
-    override fun findExistingEarning(
-        walletId: String,
-        earnType: EarnType,
-        sourceReferenceId: String,
-    ): PointEarning? =
-        jpaRepository
-            .findByWalletIdAndEarnTypeAndSourceReferenceId(walletId, earnType.name, sourceReferenceId)
-            ?.let { PointEarningMapper.of(it) }
-
     override fun findAllByWalletId(walletId: String): List<PointEarning> =
         jpaRepository.findAllByWalletIdOrderByEarnedAtDesc(walletId).map { PointEarningMapper.of(it) }
 

@@ -10,7 +10,7 @@ Spring Boot 진입점(`PointApiApplication`).
 ## 필수 규칙
 
 - 의존 방향: `domain`/`application`/`support`는 `implementation`, `infrastructure`는 `runtimeOnly`. `infrastructure` 클래스를 직접 import하지 않는다. `support`는 `LockAcquisitionException`을 `GlobalExceptionHandler`에서 HTTP 상태로 매핑하는 용도로만 참조한다. `org.springframework:spring-tx`는 `DataIntegrityViolationException`을 같은 용도로 매핑하기 위해 별도로 추가했다(JPA 자체는 `infrastructure`에만 있고 `runtimeOnly`). DB(H2)/캐시/분산락/분산채번은 모두 `infrastructure`가 구현하며, 캐시/분산락/분산채번은 현재 Docker 없이 동작하는 인메모리 구현체다.
-- 패키지 구조: `controller`(일반 API + 관리자 API 모두 포함, 관리자 컨트롤러는 별도 패키지로 빼지 않고 `Admin~Controller` 네이밍으로만 구분), `controller/dto/request`·`controller/dto/response`, `exception`(`GlobalExceptionHandler`, `ErrorResponse`), `scheduler`(`@Scheduled` 진입점), `config`(`OpenApiConfig` 등 프레젠테이션 전용 설정)
+- 패키지 구조: `controller`(일반 API + 관리자 API 모두 포함, 관리자 컨트롤러는 별도 패키지로 빼지 않고 `Admin~Controller` 네이밍으로만 구분), `controller/dto/request`·`controller/dto/response`, `exception`(`GlobalExceptionHandler`, `ErrorResponse`)
 
 ## 설계 규칙
 

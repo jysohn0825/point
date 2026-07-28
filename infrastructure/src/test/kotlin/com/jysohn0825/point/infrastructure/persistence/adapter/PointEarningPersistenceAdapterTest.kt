@@ -115,38 +115,6 @@ class PointEarningPersistenceAdapterTest(
             }
         }
 
-        Given("동일한 지갑·유형·출처참조값 조합의 적립건이 저장되어 있을 때") {
-            When("해당 조합으로 조회하면") {
-                Then("적립건이 조회된다") {
-                    val earning: PointEarning = pointEarning(earnType = EarnType.SYSTEM, sourceReferenceId = "ORDER-IDEMPOTENT")
-                    adapter.save(earning = earning, walletId = walletId, policyId = policyId)
-                    entityManager.flush()
-                    entityManager.clear()
-
-                    val found: PointEarning? =
-                        adapter.findExistingEarning(
-                            walletId = walletId,
-                            earnType = EarnType.SYSTEM,
-                            sourceReferenceId = "ORDER-IDEMPOTENT",
-                        )
-
-                    found?.id shouldBe earning.id
-                }
-            }
-        }
-
-        Given("일치하는 조합이 없을 때") {
-            When("findExistingEarning으로 조회하면") {
-                Then("null이 반환된다") {
-                    adapter.findExistingEarning(
-                        walletId = walletId,
-                        earnType = EarnType.SYSTEM,
-                        sourceReferenceId = "no-such-source",
-                    ) shouldBe null
-                }
-            }
-        }
-
         Given("사용 가능한 적립건과 소진된 적립건이 함께 있을 때") {
             When("findRedeemableByWalletId로 조회하면") {
                 Then("사용 가능한 적립건만 조회된다") {

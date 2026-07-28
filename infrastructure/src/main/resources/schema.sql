@@ -57,7 +57,7 @@ CREATE INDEX IF NOT EXISTS idx_earning_wallet ON point_earning (wallet_id, earne
 CREATE TABLE IF NOT EXISTS point_usage (
     id               CHAR(36)       NOT NULL                COMMENT '사용 ID',
     wallet_id        CHAR(36)       NOT NULL                COMMENT '지갑 ID',
-    order_number     VARCHAR(30)    NOT NULL                COMMENT '주문번호',
+    order_number     VARCHAR(36)    NOT NULL                COMMENT '주문번호',
     total_amount     DECIMAL(19,0)  NOT NULL                COMMENT '사용 총액 (라인 합계)',
     canceled_amount  DECIMAL(19,0)  NOT NULL DEFAULT 0      COMMENT '취소 누계',
     status           VARCHAR(20)    NOT NULL                COMMENT 'USED / PARTIALLY_CANCELED / FULLY_CANCELED',
