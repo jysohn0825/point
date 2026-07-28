@@ -2,7 +2,6 @@ package com.jysohn0825.point.domain.repository
 
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.vo.EarnType
 import java.time.LocalDateTime
 
 class FakePointEarningRepository : PointEarningRepository {

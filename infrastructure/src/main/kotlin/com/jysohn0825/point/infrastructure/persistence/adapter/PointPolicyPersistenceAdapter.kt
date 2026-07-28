@@ -7,6 +7,7 @@ import com.jysohn0825.point.infrastructure.persistence.adapter.mapper.PointPolic
 import com.jysohn0825.point.infrastructure.persistence.entity.PointPolicyEntity
 import com.jysohn0825.point.infrastructure.persistence.repository.PointPolicyJpaRepository
 import com.jysohn0825.point.support.cache.CacheExecutor
+import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import org.springframework.stereotype.Repository
 import java.time.Duration
 import java.time.LocalDate
@@ -15,6 +16,7 @@ import java.time.LocalDate
 class PointPolicyPersistenceAdapter(
     private val jpaRepository: PointPolicyJpaRepository,
     private val cacheExecutor: CacheExecutor,
+    private val keyGenerator: DistributedKeyGenerator,
 ) : PointPolicyRepository {
     override fun getCurrent(): PointPolicy =
         cacheExecutor.getOrPut(key = currentCacheKey(), ttl = CACHE_TTL) {
@@ -36,6 +38,7 @@ class PointPolicyPersistenceAdapter(
         val nextVersion: Int = (jpaRepository.findTopByOrderByPolicyVersionDesc()?.policyVersion ?: 0) + 1
         jpaRepository.save(
             PointPolicyMapper.of(
+                id = keyGenerator.next(POLICY_ROW_KEY_NAME).toString(),
                 policy = policy,
                 policyVersion = nextVersion,
                 appliedAt = appliedAt,
@@ -49,6 +52,7 @@ class PointPolicyPersistenceAdapter(
 
     companion object {
         private const val CACHE_KEY_PREFIX: String = "point-policy:current:"
+        private const val POLICY_ROW_KEY_NAME: String = "point-policy-row"
         private val CACHE_TTL: Duration = Duration.ofDays(1)
     }
 }

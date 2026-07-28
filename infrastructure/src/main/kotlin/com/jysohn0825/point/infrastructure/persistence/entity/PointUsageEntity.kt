@@ -23,10 +23,10 @@ import java.time.LocalDateTime
 @Comment("포인트 사용건")
 class PointUsageEntity(
     @Id
-    @Column(name = "id", length = 36)
+    @Column(name = "id", length = 19)
     @Comment("사용 ID")
     val id: String,
-    @Column(name = "wallet_id", nullable = false, length = 36)
+    @Column(name = "wallet_id", nullable = false, length = 19)
     @Comment("지갑 ID")
     val walletId: String,
     @Column(name = "order_number", nullable = false, length = 36)

@@ -8,6 +8,7 @@ import com.jysohn0825.point.domain.entity.pointWallet
 import com.jysohn0825.point.domain.event.PointsExpired
 import com.jysohn0825.point.domain.repository.FakePointEarningRepository
 import com.jysohn0825.point.domain.repository.FakePointWalletRepository
+import com.jysohn0825.point.domain.service.DefaultPointExpirationAllocator
 import com.jysohn0825.point.domain.vo.Balance
 import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.domain.vo.expirationPeriod
@@ -36,6 +37,7 @@ private fun service(
         walletRepository = walletRepository,
         earningRepository = earningRepository,
         eventPublisher = eventPublisher,
+        expirationAllocator = DefaultPointExpirationAllocator(),
     )
 
 class PointEarningExpirationServiceTest :

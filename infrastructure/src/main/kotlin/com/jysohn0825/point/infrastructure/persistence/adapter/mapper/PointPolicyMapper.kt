@@ -6,7 +6,6 @@ import com.jysohn0825.point.domain.vo.MaxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.MaxHoldingAmount
 import com.jysohn0825.point.infrastructure.persistence.entity.PointPolicyEntity
 import java.time.LocalDate
-import java.util.UUID
 
 class PointPolicyMapper {
     companion object {
@@ -19,13 +18,14 @@ class PointPolicyMapper {
             )
 
         fun of(
+            id: String,
             policy: PointPolicy,
             policyVersion: Int,
             appliedAt: LocalDate,
             createdByAdminId: String,
         ): PointPolicyEntity =
             PointPolicyEntity(
-                id = UUID.randomUUID().toString(),
+                id = id,
                 policyVersion = policyVersion,
                 maxEarnPerTransaction = policy.maxEarnPerTransaction.value,
                 maxHoldingAmount = policy.maxHoldingAmount.value,

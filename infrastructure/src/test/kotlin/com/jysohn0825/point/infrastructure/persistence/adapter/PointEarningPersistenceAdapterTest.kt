@@ -21,6 +21,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.random.Random
 
 @DataJpaTest
 @Import(PointEarningPersistenceAdapter::class)
@@ -28,11 +29,18 @@ class PointEarningPersistenceAdapterTest(
     @Autowired private val entityManager: EntityManager,
     @Autowired private val adapter: PointEarningPersistenceAdapter,
 ) : BehaviorSpec({
-        val walletId: String = UUID.randomUUID().toString()
-        val policyId: String = UUID.randomUUID().toString()
+        val walletId: String = Random.nextLong(0, Long.MAX_VALUE).toString()
+        val policyId: String = Random.nextLong(0, Long.MAX_VALUE).toString()
 
         beforeEach {
-            entityManager.persist(PointWalletEntity(id = walletId, memberId = UUID.randomUUID().toString(), balance = BigDecimal.ZERO))
+            entityManager.persist(
+                PointWalletEntity(
+                    id = walletId,
+                    memberId = UUID.randomUUID().toString(),
+                    balance = BigDecimal.ZERO,
+                    holdingLimit = BigDecimal(1_000_000),
+                ),
+            )
             entityManager.persist(
                 PointPolicyEntity(
                     id = policyId,
@@ -122,7 +130,7 @@ class PointEarningPersistenceAdapterTest(
                     adapter.save(earning = redeemable, walletId = walletId, policyId = policyId)
                     entityManager.persist(
                         PointEarningEntity(
-                            id = UUID.randomUUID().toString(),
+                            id = Random.nextLong(0, Long.MAX_VALUE).toString(),
                             walletId = walletId,
                             policyId = policyId,
                             amount = BigDecimal(500),
@@ -160,7 +168,7 @@ class PointEarningPersistenceAdapterTest(
         Given("만료일이 지난 ACTIVE 적립건이 있을 때") {
             When("findExpiringByWalletId로 조회하면") {
                 Then("만료 대상 적립건이 조회된다") {
-                    val earningId: String = UUID.randomUUID().toString()
+                    val earningId: String = Random.nextLong(0, Long.MAX_VALUE).toString()
                     entityManager.persist(
                         PointEarningEntity(
                             id = earningId,

@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 @Comment("포인트 정책 (버전별 이력)")
 class PointPolicyEntity(
     @Id
-    @Column(name = "id", length = 36)
+    @Column(name = "id", length = 19)
     @Comment("정책 ID")
     val id: String,
     @Column(name = "policy_version", nullable = false)

@@ -11,7 +11,7 @@ import java.math.BigDecimal
 
 class PointExpirationAllocatorTest :
     BehaviorSpec({
-        val sut: PointExpirationAllocator = PointExpirationAllocator()
+        val sut: PointExpirationAllocator = DefaultPointExpirationAllocator()
 
         given("만료 대상 적립건이 여러 건일 때") {
             val first: PointEarning = pointEarning(id = "e1", amount = pointAmount(BigDecimal(1_000)))

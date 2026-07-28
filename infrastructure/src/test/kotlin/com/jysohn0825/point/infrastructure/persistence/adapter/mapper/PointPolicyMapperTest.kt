@@ -8,7 +8,6 @@ import com.jysohn0825.point.domain.vo.maxHoldingAmount
 import com.jysohn0825.point.infrastructure.persistence.entity.PointPolicyEntity
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldNotBeBlank
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -49,14 +48,15 @@ class PointPolicyMapperTest :
             When("엔티티로 변환하면") {
                 val entity: PointPolicyEntity =
                     PointPolicyMapper.of(
+                        id = "policy-row-1",
                         policy = policy,
                         policyVersion = 4,
                         appliedAt = LocalDate.of(2026, 6, 1),
                         createdByAdminId = "admin-02",
                     )
 
-                Then("새 row 식별자가 채번되고 나머지 필드가 매핑된다") {
-                    entity.id.shouldNotBeBlank()
+                Then("전달받은 row 식별자와 나머지 필드가 매핑된다") {
+                    entity.id shouldBe "policy-row-1"
                     entity.policyVersion shouldBe 4
                     entity.maxEarnPerTransaction shouldBe BigDecimal(30_000)
                     entity.maxHoldingAmount shouldBe BigDecimal(500_000)

@@ -4,7 +4,6 @@ import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.pointEarning
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
-import com.jysohn0825.point.domain.vo.grantedBy
 import com.jysohn0825.point.domain.vo.pointAmount
 import com.jysohn0825.point.infrastructure.persistence.entity.PointEarningEntity
 import io.kotest.core.spec.style.BehaviorSpec
@@ -150,14 +149,19 @@ class PointEarningMapperTest :
 
         Given("수기지급 적립건을 엔티티로 변환할 때") {
             val earning: PointEarning =
-                pointEarning(id = "earning-6", amount = pointAmount(BigDecimal(1_000)), earnType = EarnType.MANUAL, grantedBy = grantedBy())
+                pointEarning(
+                    id = "earning-6",
+                    amount = pointAmount(BigDecimal(1_000)),
+                    earnType = EarnType.MANUAL,
+                    grantedBy = "admin-0001",
+                )
 
             When("엔티티로 변환하면") {
                 val entity: PointEarningEntity =
                     PointEarningMapper.of(earning = earning, walletId = "wallet-1", policyId = "policy-1", existing = null)
 
                 Then("grantedByAdminId가 채워진다") {
-                    entity.grantedByAdminId shouldBe grantedBy()
+                    entity.grantedByAdminId shouldBe "admin-0001"
                 }
             }
         }

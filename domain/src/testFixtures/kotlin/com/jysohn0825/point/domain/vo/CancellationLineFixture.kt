@@ -1,8 +1,5 @@
-package com.jysohn0825.point.domain.fixture
+package com.jysohn0825.point.domain.vo
 
-import com.jysohn0825.point.domain.vo.CancellationLine
-import com.jysohn0825.point.domain.vo.RestorationType
-import com.jysohn0825.point.domain.vo.UsageLine
 import java.math.BigDecimal
 
 fun cancellationLine(

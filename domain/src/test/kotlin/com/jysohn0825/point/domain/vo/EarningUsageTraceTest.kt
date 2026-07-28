@@ -1,8 +1,8 @@
 package com.jysohn0825.point.domain.vo
 
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.fixture.earningUsageTrace
-import com.jysohn0825.point.domain.fixture.orderNumber
+import com.jysohn0825.point.domain.vo.earningUsageTrace
+import com.jysohn0825.point.domain.vo.orderNumber
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe

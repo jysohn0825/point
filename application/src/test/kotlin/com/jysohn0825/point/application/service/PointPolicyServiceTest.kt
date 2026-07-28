@@ -6,17 +6,25 @@ import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.pointPolicy
 import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.FakePointPolicyRepository
+import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.concurrent.atomic.AtomicLong
+
+private class FakePolicyKeyGenerator : DistributedKeyGenerator {
+    private val counter: AtomicLong = AtomicLong()
+
+    override fun next(name: String): Long = counter.incrementAndGet()
+}
 
 class PointPolicyServiceTest :
     BehaviorSpec({
         Given("정책이 아직 등록되지 않았을 때") {
             val policyRepository: FakePointPolicyRepository = FakePointPolicyRepository()
-            val sut: PointPolicyService = PointPolicyService(policyRepository)
+            val sut: PointPolicyService = PointPolicyService(policyRepository, keyGenerator = FakePolicyKeyGenerator())
 
             When("관리자가 새 정책을 등록하면") {
                 val appliedAt: LocalDate = LocalDate.now()
@@ -49,7 +57,7 @@ class PointPolicyServiceTest :
 
         Given("이미 적용 중인 정책이 있을 때") {
             val policyRepository: FakePointPolicyRepository = FakePointPolicyRepository()
-            val sut: PointPolicyService = PointPolicyService(policyRepository)
+            val sut: PointPolicyService = PointPolicyService(policyRepository, keyGenerator = FakePolicyKeyGenerator())
 
             When("허용 범위를 벗어난 1회 적립 한도로 정책을 등록하면") {
                 Then("예외가 발생하고 기존 정책은 유지된다") {

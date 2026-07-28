@@ -7,14 +7,15 @@ import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.repository.PointWalletRepository
 import com.jysohn0825.point.domain.vo.HoldingLimit
+import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 class PointWalletService(
     private val walletRepository: PointWalletRepository,
     private val policyRepository: PointPolicyRepository,
+    private val keyGenerator: DistributedKeyGenerator,
 ) {
     @Transactional
     fun createWallet(memberId: String): PointWalletResultDto {
@@ -25,7 +26,7 @@ class PointWalletService(
         val policy: PointPolicy = policyRepository.getCurrent()
         val wallet: PointWallet =
             PointWallet.open(
-                id = UUID.randomUUID().toString(),
+                id = keyGenerator.next(WALLET_KEY_NAME).toString(),
                 holdingLimit = HoldingLimit(policy.maxHoldingAmount.value),
             )
 
@@ -40,5 +41,9 @@ class PointWalletService(
             walletRepository.findByMemberId(memberId)
                 ?: throw PointDomainException("회원의 포인트 지갑을 찾을 수 없습니다: memberId=$memberId")
         return PointWalletResultDto.of(pointWallet = wallet)
+    }
+
+    companion object {
+        private const val WALLET_KEY_NAME: String = "point-wallet"
     }
 }

@@ -3,7 +3,6 @@ package com.jysohn0825.point.infrastructure.persistence.adapter
 import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.repository.PointEarningRepository
-import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.infrastructure.persistence.adapter.mapper.PointEarningMapper
 import com.jysohn0825.point.infrastructure.persistence.entity.PointEarningEntity

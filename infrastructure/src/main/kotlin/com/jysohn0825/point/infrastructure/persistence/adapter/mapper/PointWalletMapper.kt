@@ -7,13 +7,10 @@ import com.jysohn0825.point.infrastructure.persistence.entity.PointWalletEntity
 
 class PointWalletMapper {
     companion object {
-        fun of(
-            entity: PointWalletEntity,
-            holdingLimit: HoldingLimit,
-        ): PointWallet =
+        fun of(entity: PointWalletEntity): PointWallet =
             PointWallet.open(
                 id = entity.id,
-                holdingLimit = holdingLimit,
+                holdingLimit = HoldingLimit(entity.holdingLimit),
                 balance = Balance(entity.balance),
             )
 
@@ -25,6 +22,7 @@ class PointWalletMapper {
                 id = wallet.id,
                 memberId = memberId,
                 balance = wallet.balance.amount,
+                holdingLimit = wallet.holdingLimit.value,
             )
     }
 }

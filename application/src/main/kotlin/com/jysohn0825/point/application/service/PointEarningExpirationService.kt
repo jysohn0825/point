@@ -18,9 +18,8 @@ class PointEarningExpirationService(
     private val walletRepository: PointWalletRepository,
     private val earningRepository: PointEarningRepository,
     private val eventPublisher: ApplicationEventPublisher,
+    private val expirationAllocator: PointExpirationAllocator,
 ) {
-    private val expirationAllocator: PointExpirationAllocator = PointExpirationAllocator()
-
     /** 관리자가 특정 회원의 만료 대상 적립건을 즉시(스케줄러를 기다리지 않고) 처리하도록 트리거한다. */
     @Transactional
     fun expireMemberEarningsNow(

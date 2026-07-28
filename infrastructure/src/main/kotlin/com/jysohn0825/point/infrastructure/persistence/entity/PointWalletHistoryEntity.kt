@@ -22,10 +22,10 @@ import java.time.LocalDateTime
 @Comment("포인트 지갑 히스토리")
 class PointWalletHistoryEntity(
     @Id
-    @Column(name = "id", length = 36)
+    @Column(name = "id", length = 19)
     @Comment("히스토리 ID")
     val id: String,
-    @Column(name = "wallet_id", nullable = false, length = 36)
+    @Column(name = "wallet_id", nullable = false, length = 19)
     @Comment("지갑 ID")
     val walletId: String,
     @Column(name = "history_type", nullable = false, length = 20)
@@ -37,13 +37,13 @@ class PointWalletHistoryEntity(
     @Column(name = "balance_after", nullable = false, precision = 19, scale = 0)
     @Comment("기록 시점 잔액")
     val balanceAfter: BigDecimal,
-    @Column(name = "earning_id", length = 36)
+    @Column(name = "earning_id", length = 19)
     @Comment("EARN / EARN_CANCEL / EXPIRE")
     val earningId: String? = null,
-    @Column(name = "usage_id", length = 36)
+    @Column(name = "usage_id", length = 19)
     @Comment("USE")
     val usageId: String? = null,
-    @Column(name = "cancellation_id", length = 36)
+    @Column(name = "cancellation_id", length = 19)
     @Comment("USE_CANCEL")
     val cancellationId: String? = null,
     @Column(name = "occurred_at", nullable = false)

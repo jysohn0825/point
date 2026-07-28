@@ -36,7 +36,7 @@ class DistributedLockAspect(
 
         return lockExecutor.executeWithLock(
             key = key,
-            waitTime = Duration.ofSeconds(distributedLock.waitTimeSeconds),
+            waitTime = Duration.ZERO,
         ) {
             joinPoint.proceed()
         }

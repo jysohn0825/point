@@ -24,13 +24,13 @@ import java.time.LocalDateTime
 @Comment("포인트 사용취소 라인")
 class PointUsageCancellationLineEntity(
     @Id
-    @Column(name = "id", length = 36)
+    @Column(name = "id", length = 19)
     @Comment("취소 라인 ID")
     val id: String,
-    @Column(name = "cancellation_id", nullable = false, length = 36)
+    @Column(name = "cancellation_id", nullable = false, length = 19)
     @Comment("사용취소 ID")
     val cancellationId: String,
-    @Column(name = "usage_line_id", nullable = false, length = 36)
+    @Column(name = "usage_line_id", nullable = false, length = 19)
     @Comment("복원 대상 원 사용 라인")
     val usageLineId: String,
     @Column(name = "restored_amount", nullable = false, precision = 19, scale = 0)
@@ -39,7 +39,7 @@ class PointUsageCancellationLineEntity(
     @Column(name = "restore_type", nullable = false, length = 15)
     @Comment("RESTORED / RE_EARNED")
     val restoreType: String,
-    @Column(name = "reearned_earning_id", length = 36)
+    @Column(name = "reearned_earning_id", length = 19)
     @Comment("RE_EARNED 시 생성된 신규 적립건")
     val reearnedEarningId: String? = null,
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)

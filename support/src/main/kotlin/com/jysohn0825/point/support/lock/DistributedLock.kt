@@ -7,15 +7,13 @@ package com.jysohn0825.point.support.lock
  * 계속 유지하도록 위임한다(예: Redisson watchdog, 또는 현재 쓰는 인메모리 구현처럼 TTL 자체가 없는 락).
  * 인스턴스가 여러 대인 환경에서는 이 계약을 지키는 실제 분산락 구현체(Redisson 등)로 교체해야 한다.
  *
- * waitTimeSeconds 기본값은 0(대기 없이 즉시 시도)이다. 이 락은 "동일 요청 진짜 동시 처리(in-flight)"를
- * 막기 위한 용도이지, 이미 끝난 요청의 재시도를 흡수하는 멱등성 처리 용도가 아니다 — 멱등성(이미 처리된
- * 요청이면 저장된 결과를 그대로 반환)은 호출부가 락 안에서 기존 데이터를 조회해 별도로 보장한다. 따라서
- * 락 획득에 실패하면 대기해서 앞선 요청이 끝나길 기다리지 않고 즉시 실패해야 진짜 동시 요청을 충돌(409)로
- * 구분할 수 있다. 대기가 필요한 다른 성격의 락이 생기면 그때 호출부에서 waitTimeSeconds를 개별 조정한다.
+ * 락 획득은 대기 없이 즉시 시도한다. 이 락은 "동일 요청 진짜 동시 처리(in-flight)"를 막기 위한 용도이지,
+ * 이미 끝난 요청의 재시도를 흡수하는 멱등성 처리 용도가 아니다 — 멱등성(이미 처리된 요청이면 저장된 결과를
+ * 그대로 반환)은 호출부가 락 안에서 기존 데이터를 조회해 별도로 보장한다. 따라서 락 획득에 실패하면
+ * 대기해서 앞선 요청이 끝나길 기다리지 않고 즉시 실패해야 진짜 동시 요청을 충돌(409)로 구분할 수 있다.
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class DistributedLock(
     val key: String,
-    val waitTimeSeconds: Long = 0,
 )

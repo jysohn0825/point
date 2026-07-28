@@ -1,13 +1,13 @@
 package com.jysohn0825.point.domain.entity
 
+import com.jysohn0825.point.domain.entity.pointUsage
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.fixture.cancellationLine
-import com.jysohn0825.point.domain.fixture.orderNumber
-import com.jysohn0825.point.domain.fixture.pointUsage
-import com.jysohn0825.point.domain.fixture.usageLine
 import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.UsageStatus
+import com.jysohn0825.point.domain.vo.cancellationLine
+import com.jysohn0825.point.domain.vo.orderNumber
+import com.jysohn0825.point.domain.vo.usageLine
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe

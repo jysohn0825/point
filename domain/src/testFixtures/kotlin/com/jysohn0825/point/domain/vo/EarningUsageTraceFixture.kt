@@ -1,7 +1,5 @@
-package com.jysohn0825.point.domain.fixture
+package com.jysohn0825.point.domain.vo
 
-import com.jysohn0825.point.domain.vo.EarningUsageTrace
-import com.jysohn0825.point.domain.vo.OrderNumber
 import java.math.BigDecimal
 
 fun earningUsageTrace(

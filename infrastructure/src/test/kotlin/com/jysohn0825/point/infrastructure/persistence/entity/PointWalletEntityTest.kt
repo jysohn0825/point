@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import java.math.BigDecimal
 import java.util.UUID
+import kotlin.random.Random
 
 @DataJpaTest
 class PointWalletEntityTest(
@@ -17,9 +18,10 @@ class PointWalletEntityTest(
                 Then("저장한 값 그대로 조회된다") {
                     val wallet: PointWalletEntity =
                         PointWalletEntity(
-                            id = UUID.randomUUID().toString(),
+                            id = Random.nextLong(0, Long.MAX_VALUE).toString(),
                             memberId = UUID.randomUUID().toString(),
                             balance = BigDecimal(1_000),
+                            holdingLimit = BigDecimal(1_000_000),
                         )
 
                     entityManager.persist(wallet)
@@ -30,6 +32,7 @@ class PointWalletEntityTest(
 
                     found.memberId shouldBe wallet.memberId
                     found.balance shouldBe BigDecimal(1_000)
+                    found.holdingLimit shouldBe BigDecimal(1_000_000)
                 }
             }
         }

@@ -1,7 +1,7 @@
 package com.jysohn0825.point.domain.vo
 
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.fixture.usageLine
+import com.jysohn0825.point.domain.vo.usageLine
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe

@@ -1,15 +1,14 @@
 package com.jysohn0825.point.infrastructure.persistence.adapter.mapper
 
 import com.jysohn0825.point.domain.entity.PointUsage
-import com.jysohn0825.point.domain.fixture.pointUsage
-import com.jysohn0825.point.domain.fixture.usageLine
+import com.jysohn0825.point.domain.entity.pointUsage
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.UsageStatus
+import com.jysohn0825.point.domain.vo.usageLine
 import com.jysohn0825.point.infrastructure.persistence.entity.PointUsageEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointUsageLineEntity
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldNotBeBlank
 import java.math.BigDecimal
 
 class PointUsageMapperTest :
@@ -35,10 +34,10 @@ class PointUsageMapperTest :
             val line: UsageLine = usageLine(earningId = "earning-1", amount = BigDecimal(300))
 
             When("사용 라인 엔티티로 변환하면") {
-                val entity: PointUsageLineEntity = PointUsageMapper.of(usageLine = line, usageId = "usage-1")
+                val entity: PointUsageLineEntity = PointUsageMapper.of(usageLine = line, usageId = "usage-1", id = "line-2")
 
-                Then("식별자가 채번되고 나머지 필드가 매핑된다") {
-                    entity.id.shouldNotBeBlank()
+                Then("전달받은 식별자와 나머지 필드가 매핑된다") {
+                    entity.id shouldBe "line-2"
                     entity.usageId shouldBe "usage-1"
                     entity.earningId shouldBe "earning-1"
                     entity.amount shouldBe BigDecimal(300)

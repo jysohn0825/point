@@ -6,6 +6,7 @@ import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.maxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.maxHoldingAmount
+import com.jysohn0825.point.infrastructure.key.MemoryDistributedKeyGenerator
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -17,7 +18,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 @DataJpaTest
-@Import(PointPolicyPersistenceAdapter::class, FakeCacheExecutor::class)
+@Import(PointPolicyPersistenceAdapter::class, FakeCacheExecutor::class, MemoryDistributedKeyGenerator::class)
 class PointPolicyPersistenceAdapterTest(
     @Autowired private val entityManager: EntityManager,
     @Autowired private val adapter: PointPolicyPersistenceAdapter,

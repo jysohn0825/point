@@ -4,7 +4,6 @@ import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.domain.vo.ExpirationPeriod
-import com.jysohn0825.point.domain.vo.grantedBy
 import com.jysohn0825.point.domain.vo.pointAmount
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -50,7 +49,7 @@ class PointEarningTest :
             When("지급 관리자와 함께 생성을 시도하면") {
                 Then("예외가 발생한다") {
                     shouldThrow<PointDomainException> {
-                        pointEarning(earnType = EarnType.SYSTEM, grantedBy = grantedBy())
+                        pointEarning(earnType = EarnType.SYSTEM, grantedBy = "admin-0001")
                     }
                 }
             }
@@ -58,11 +57,11 @@ class PointEarningTest :
 
         Given("MANUAL 적립을 생성할 때") {
             When("지급 관리자와 함께 생성하면") {
-                val earning: PointEarning = pointEarning(earnType = EarnType.MANUAL, grantedBy = grantedBy("admin-9999"))
+                val earning: PointEarning = pointEarning(earnType = EarnType.MANUAL, grantedBy = "admin-9999")
 
                 Then("지급 관리자 정보가 함께 저장된다") {
                     earning.earnType shouldBe EarnType.MANUAL
-                    earning.grantedBy shouldBe grantedBy("admin-9999")
+                    earning.grantedBy shouldBe "admin-9999"
                 }
             }
 

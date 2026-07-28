@@ -1,8 +1,9 @@
-package com.jysohn0825.point.domain.fixture
+package com.jysohn0825.point.domain.entity
 
-import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.vo.OrderNumber
 import com.jysohn0825.point.domain.vo.UsageLine
+import com.jysohn0825.point.domain.vo.orderNumber
+import com.jysohn0825.point.domain.vo.usageLine
 
 fun pointUsage(
     orderNumber: OrderNumber = orderNumber(),

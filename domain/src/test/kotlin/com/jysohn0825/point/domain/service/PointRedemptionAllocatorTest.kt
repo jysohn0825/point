@@ -6,7 +6,6 @@ import com.jysohn0825.point.domain.exception.PointDomainException
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.expirationPeriod
-import com.jysohn0825.point.domain.vo.grantedBy
 import com.jysohn0825.point.domain.vo.pointAmount
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -24,7 +23,7 @@ class PointRedemptionAllocatorTest :
                     id = "manual-1",
                     amount = pointAmount(BigDecimal(1_000)),
                     earnType = EarnType.MANUAL,
-                    grantedBy = grantedBy(),
+                    grantedBy = "admin-0001",
                     earnedAt = LocalDateTime.now().minusDays(1),
                 )
             val systemEarning: PointEarning =

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS point_policy (
-    id                        CHAR(36)       NOT NULL                COMMENT '정책 ID',
+    id                        VARCHAR(19)    NOT NULL                COMMENT '정책 ID',
     policy_version            INT            NOT NULL                COMMENT '정책 버전 (증가)',
     max_earn_per_transaction  DECIMAL(19,0)  NOT NULL                COMMENT '1회 적립 상한 (1~100,000)',
     max_holding_amount        DECIMAL(19,0)  NOT NULL                COMMENT '개인 보유한도 기본값',
@@ -15,9 +15,10 @@ CREATE TABLE IF NOT EXISTS point_policy (
 COMMENT ON TABLE point_policy IS '포인트 정책 (버전별 이력)';
 
 CREATE TABLE IF NOT EXISTS point_wallet (
-    id                      CHAR(36)       NOT NULL                COMMENT '지갑 ID',
+    id                      VARCHAR(19)    NOT NULL                COMMENT '지갑 ID',
     member_id               CHAR(36)       NOT NULL                COMMENT '회원 ID',
     balance                 DECIMAL(19,0)  NOT NULL DEFAULT 0      COMMENT '총 잔액',
+    holding_limit           DECIMAL(19,0)  NOT NULL                COMMENT '지갑 생성 시점에 적용된 보유한도 (이후 정책 변경과 무관하게 고정)',
     created_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -27,9 +28,9 @@ CREATE TABLE IF NOT EXISTS point_wallet (
 COMMENT ON TABLE point_wallet IS '포인트 지갑 (회원당 1행)';
 
 CREATE TABLE IF NOT EXISTS point_earning (
-    id                   CHAR(36)       NOT NULL                COMMENT '적립 ID',
-    wallet_id            CHAR(36)       NOT NULL                COMMENT '지갑 ID',
-    policy_id            CHAR(36)       NOT NULL                COMMENT '적립 당시 적용 정책',
+    id                   VARCHAR(19)    NOT NULL                COMMENT '적립 ID',
+    wallet_id            VARCHAR(19)    NOT NULL                COMMENT '지갑 ID',
+    policy_id            VARCHAR(19)    NOT NULL                COMMENT '적립 당시 적용 정책',
     amount               DECIMAL(19,0)  NOT NULL                COMMENT '최초 적립액 (불변)',
     remaining_amount     DECIMAL(19,0)  NOT NULL                COMMENT '잔여액',
     earn_type            VARCHAR(10)    NOT NULL                COMMENT 'SYSTEM / MANUAL',
@@ -55,8 +56,8 @@ CREATE INDEX IF NOT EXISTS idx_earning_policy ON point_earning (policy_id);
 CREATE INDEX IF NOT EXISTS idx_earning_wallet ON point_earning (wallet_id, earned_at);
 
 CREATE TABLE IF NOT EXISTS point_usage (
-    id               CHAR(36)       NOT NULL                COMMENT '사용 ID',
-    wallet_id        CHAR(36)       NOT NULL                COMMENT '지갑 ID',
+    id               VARCHAR(19)    NOT NULL                COMMENT '사용 ID',
+    wallet_id        VARCHAR(19)    NOT NULL                COMMENT '지갑 ID',
     order_number     VARCHAR(36)    NOT NULL                COMMENT '주문번호',
     total_amount     DECIMAL(19,0)  NOT NULL                COMMENT '사용 총액 (라인 합계)',
     canceled_amount  DECIMAL(19,0)  NOT NULL DEFAULT 0      COMMENT '취소 누계',
@@ -75,9 +76,9 @@ COMMENT ON TABLE point_usage IS '포인트 사용건';
 CREATE INDEX IF NOT EXISTS idx_usage_wallet ON point_usage (wallet_id, used_at);
 
 CREATE TABLE IF NOT EXISTS point_usage_line (
-    id               CHAR(36)       NOT NULL                COMMENT '사용 라인 ID',
-    usage_id         CHAR(36)       NOT NULL                COMMENT '사용 ID',
-    earning_id       CHAR(36)       NOT NULL                COMMENT '차감 대상 적립건',
+    id               VARCHAR(19)    NOT NULL                COMMENT '사용 라인 ID',
+    usage_id         VARCHAR(19)    NOT NULL                COMMENT '사용 ID',
+    earning_id       VARCHAR(19)    NOT NULL                COMMENT '차감 대상 적립건',
     amount           DECIMAL(19,0)  NOT NULL                COMMENT '이 적립건에서 차감한 금액',
     canceled_amount  DECIMAL(19,0)  NOT NULL DEFAULT 0      COMMENT '복원된 금액 누계',
     created_at       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -96,8 +97,8 @@ COMMENT ON TABLE point_usage_line IS '포인트 사용 라인';
 CREATE INDEX IF NOT EXISTS idx_usage_line_earning ON point_usage_line (earning_id);
 
 CREATE TABLE IF NOT EXISTS point_usage_cancellation (
-    id               CHAR(36)       NOT NULL                COMMENT '사용취소 ID',
-    usage_id         CHAR(36)       NOT NULL                COMMENT '원 사용건',
+    id               VARCHAR(19)    NOT NULL                COMMENT '사용취소 ID',
+    usage_id         VARCHAR(19)    NOT NULL                COMMENT '원 사용건',
     request_id       VARCHAR(64)    NOT NULL                COMMENT '클라이언트가 지정하는 취소 요청 멱등키',
     restored_amount  DECIMAL(19,0)  NOT NULL                COMMENT '복원 총액 (라인 합계)',
     canceled_at      TIMESTAMP      NOT NULL                COMMENT '취소 일시',
@@ -115,12 +116,12 @@ COMMENT ON TABLE point_usage_cancellation IS '포인트 사용취소 헤더';
 CREATE INDEX IF NOT EXISTS idx_cancellation_usage ON point_usage_cancellation (usage_id);
 
 CREATE TABLE IF NOT EXISTS point_usage_cancellation_line (
-    id                   CHAR(36)       NOT NULL                COMMENT '취소 라인 ID',
-    cancellation_id      CHAR(36)       NOT NULL                COMMENT '사용취소 ID',
-    usage_line_id        CHAR(36)       NOT NULL                COMMENT '복원 대상 원 사용 라인',
+    id                   VARCHAR(19)    NOT NULL                COMMENT '취소 라인 ID',
+    cancellation_id      VARCHAR(19)    NOT NULL                COMMENT '사용취소 ID',
+    usage_line_id        VARCHAR(19)    NOT NULL                COMMENT '복원 대상 원 사용 라인',
     restored_amount      DECIMAL(19,0)  NOT NULL                COMMENT '복원액',
     restore_type         VARCHAR(15)    NOT NULL                COMMENT 'RESTORED / RE_EARNED',
-    reearned_earning_id  CHAR(36)       NULL                    COMMENT 'RE_EARNED 시 생성된 신규 적립건',
+    reearned_earning_id  VARCHAR(19)    NULL                    COMMENT 'RE_EARNED 시 생성된 신규 적립건',
     created_at           TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at           TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -140,14 +141,14 @@ CREATE INDEX IF NOT EXISTS idx_cancellation_line_usage_line ON point_usage_cance
 CREATE INDEX IF NOT EXISTS idx_cancellation_line_reearned   ON point_usage_cancellation_line (reearned_earning_id);
 
 CREATE TABLE IF NOT EXISTS point_wallet_history (
-    id                CHAR(36)       NOT NULL                COMMENT '히스토리 ID',
-    wallet_id         CHAR(36)       NOT NULL                COMMENT '지갑 ID',
+    id                VARCHAR(19)    NOT NULL                COMMENT '히스토리 ID',
+    wallet_id         VARCHAR(19)    NOT NULL                COMMENT '지갑 ID',
     history_type      VARCHAR(20)    NOT NULL                COMMENT 'EARN / USE / EARN_CANCEL / USE_CANCEL / EXPIRE',
     amount            DECIMAL(19,0)  NOT NULL                COMMENT '증감액. 증가 +, 감소 -',
     balance_after     DECIMAL(19,0)  NOT NULL                COMMENT '기록 시점 잔액',
-    earning_id        CHAR(36)       NULL                    COMMENT 'EARN / EARN_CANCEL / EXPIRE',
-    usage_id          CHAR(36)       NULL                    COMMENT 'USE',
-    cancellation_id   CHAR(36)       NULL                    COMMENT 'USE_CANCEL',
+    earning_id        VARCHAR(19)    NULL                    COMMENT 'EARN / EARN_CANCEL / EXPIRE',
+    usage_id          VARCHAR(19)    NULL                    COMMENT 'USE',
+    cancellation_id   VARCHAR(19)    NULL                    COMMENT 'USE_CANCEL',
     occurred_at       TIMESTAMP      NOT NULL                COMMENT '발생 일시',
     created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

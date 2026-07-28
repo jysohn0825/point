@@ -17,6 +17,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.random.Random
 
 @DataJpaTest
 @Import(PointWalletHistoryPersistenceAdapter::class)
@@ -24,12 +25,19 @@ class PointWalletHistoryPersistenceAdapterTest(
     @Autowired private val entityManager: EntityManager,
     @Autowired private val adapter: PointWalletHistoryPersistenceAdapter,
 ) : BehaviorSpec({
-        val walletId: String = UUID.randomUUID().toString()
-        val policyId: String = UUID.randomUUID().toString()
-        val earningId: String = UUID.randomUUID().toString()
+        val walletId: String = Random.nextLong(0, Long.MAX_VALUE).toString()
+        val policyId: String = Random.nextLong(0, Long.MAX_VALUE).toString()
+        val earningId: String = Random.nextLong(0, Long.MAX_VALUE).toString()
 
         beforeEach {
-            entityManager.persist(PointWalletEntity(id = walletId, memberId = UUID.randomUUID().toString(), balance = BigDecimal(1_000)))
+            entityManager.persist(
+                PointWalletEntity(
+                    id = walletId,
+                    memberId = UUID.randomUUID().toString(),
+                    balance = BigDecimal(1_000),
+                    holdingLimit = BigDecimal(1_000_000),
+                ),
+            )
             entityManager.persist(
                 PointPolicyEntity(
                     id = policyId,

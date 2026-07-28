@@ -7,13 +7,14 @@ import com.jysohn0825.point.domain.repository.PointPolicyRepository
 import com.jysohn0825.point.domain.vo.ExpirationPeriod
 import com.jysohn0825.point.domain.vo.MaxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.MaxHoldingAmount
+import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 class PointPolicyService(
     private val policyRepository: PointPolicyRepository,
+    private val keyGenerator: DistributedKeyGenerator,
 ) {
     /**
      * point_policy는 버전별 이력 테이블이라 항상 새 row로 추가된다.
@@ -23,7 +24,7 @@ class PointPolicyService(
     fun createOrUpdate(dto: UpsertPointPolicyDto): PointPolicyResultDto {
         val policy: PointPolicy =
             PointPolicy(
-                id = UUID.randomUUID().toString(),
+                id = keyGenerator.next(POLICY_KEY_NAME).toString(),
                 maxEarnPerTransaction = MaxEarnPerTransaction(dto.maxEarnPerTransaction),
                 maxHoldingAmount = MaxHoldingAmount(dto.maxHoldingAmount),
                 defaultExpirationPeriod = ExpirationPeriod(dto.defaultExpirationDays),
@@ -32,5 +33,9 @@ class PointPolicyService(
         policyRepository.save(policy = policy, appliedAt = dto.appliedAt, createdByAdminId = dto.createdByAdminId)
 
         return PointPolicyResultDto.of(pointPolicy = policy)
+    }
+
+    companion object {
+        private const val POLICY_KEY_NAME: String = "point-policy"
     }
 }

@@ -8,7 +8,6 @@ import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.infrastructure.persistence.entity.PointUsageCancellationLineEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointUsageEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointUsageLineEntity
-import java.util.UUID
 
 class PointUsageMapper {
     companion object {
@@ -54,9 +53,10 @@ class PointUsageMapper {
         fun of(
             usageLine: UsageLine,
             usageId: String,
+            id: String,
         ): PointUsageLineEntity =
             PointUsageLineEntity(
-                id = UUID.randomUUID().toString(),
+                id = id,
                 usageId = usageId,
                 earningId = usageLine.earningId,
                 amount = usageLine.amount,

@@ -31,12 +31,6 @@ interface PointEarningJpaRepository : JpaRepository<PointEarningEntity, String> 
 
     fun findAllByIdIn(earningIds: List<String>): List<PointEarningEntity>
 
-    fun findByWalletIdAndEarnTypeAndSourceReferenceId(
-        walletId: String,
-        earnType: String,
-        sourceReferenceId: String,
-    ): PointEarningEntity?
-
     fun findAllByWalletIdOrderByEarnedAtDesc(walletId: String): List<PointEarningEntity>
 
     /** findRedeemableByWalletId의 만료 버전 — 만료 즉시 처리가 특정 지갑에서 처리할 대상 건. */

@@ -5,15 +5,15 @@ import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointEarning
+import com.jysohn0825.point.domain.entity.pointUsage
 import com.jysohn0825.point.domain.entity.pointWallet
-import com.jysohn0825.point.domain.fixture.pointUsage
-import com.jysohn0825.point.domain.fixture.usageLine
 import com.jysohn0825.point.domain.repository.FakePointEarningRepository
 import com.jysohn0825.point.domain.repository.FakePointUsageRepository
 import com.jysohn0825.point.domain.repository.FakePointWalletRepository
 import com.jysohn0825.point.domain.vo.balance
 import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.pointAmount
+import com.jysohn0825.point.domain.vo.usageLine
 import com.jysohn0825.point.presentation.controller.dto.request.CancelUsagePointRequest
 import com.jysohn0825.point.presentation.controller.dto.request.UsePointRequest
 import com.jysohn0825.point.presentation.support.PresentationTestApplication

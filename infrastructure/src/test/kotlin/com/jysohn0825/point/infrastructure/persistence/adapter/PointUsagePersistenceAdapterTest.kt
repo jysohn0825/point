@@ -1,14 +1,15 @@
 package com.jysohn0825.point.infrastructure.persistence.adapter
 
 import com.jysohn0825.point.domain.entity.PointUsage
+import com.jysohn0825.point.domain.entity.pointUsage
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.fixture.pointUsage
-import com.jysohn0825.point.domain.fixture.usageLine
 import com.jysohn0825.point.domain.vo.CancellationLine
 import com.jysohn0825.point.domain.vo.EarnType
 import com.jysohn0825.point.domain.vo.EarningStatus
 import com.jysohn0825.point.domain.vo.EarningUsageTrace
 import com.jysohn0825.point.domain.vo.RestorationType
+import com.jysohn0825.point.domain.vo.usageLine
+import com.jysohn0825.point.infrastructure.key.MemoryDistributedKeyGenerator
 import com.jysohn0825.point.infrastructure.persistence.entity.PointEarningEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointPolicyEntity
 import com.jysohn0825.point.infrastructure.persistence.entity.PointWalletEntity
@@ -24,20 +25,28 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.random.Random
 
 @DataJpaTest
-@Import(PointUsagePersistenceAdapter::class)
+@Import(PointUsagePersistenceAdapter::class, MemoryDistributedKeyGenerator::class)
 class PointUsagePersistenceAdapterTest(
     @Autowired private val entityManager: EntityManager,
     @Autowired private val adapter: PointUsagePersistenceAdapter,
 ) : BehaviorSpec({
-        val walletId: String = UUID.randomUUID().toString()
+        val walletId: String = Random.nextLong(0, Long.MAX_VALUE).toString()
         var earningId: String = ""
 
         beforeEach {
-            val policyId: String = UUID.randomUUID().toString()
-            earningId = UUID.randomUUID().toString()
-            entityManager.persist(PointWalletEntity(id = walletId, memberId = UUID.randomUUID().toString(), balance = BigDecimal(1_000)))
+            val policyId: String = Random.nextLong(0, Long.MAX_VALUE).toString()
+            earningId = Random.nextLong(0, Long.MAX_VALUE).toString()
+            entityManager.persist(
+                PointWalletEntity(
+                    id = walletId,
+                    memberId = UUID.randomUUID().toString(),
+                    balance = BigDecimal(1_000),
+                    holdingLimit = BigDecimal(1_000_000),
+                ),
+            )
             entityManager.persist(
                 PointPolicyEntity(
                     id = policyId,
@@ -148,7 +157,7 @@ class PointUsagePersistenceAdapterTest(
                         usage = reloaded,
                         walletId = walletId,
                         requestedLines = requestedLines,
-                        cancellationId = UUID.randomUUID().toString(),
+                        cancellationId = Random.nextLong(0, Long.MAX_VALUE).toString(),
                         requestId = UUID.randomUUID().toString(),
                         canceledAt = LocalDateTime.now(),
                     )
@@ -186,7 +195,7 @@ class PointUsagePersistenceAdapterTest(
                         usage = firstReloaded,
                         walletId = walletId,
                         requestedLines = firstLines,
-                        cancellationId = UUID.randomUUID().toString(),
+                        cancellationId = Random.nextLong(0, Long.MAX_VALUE).toString(),
                         requestId = "duplicate-request-id",
                         canceledAt = LocalDateTime.now(),
                     )
@@ -211,7 +220,7 @@ class PointUsagePersistenceAdapterTest(
                             usage = secondReloaded,
                             walletId = walletId,
                             requestedLines = secondLines,
-                            cancellationId = UUID.randomUUID().toString(),
+                            cancellationId = Random.nextLong(0, Long.MAX_VALUE).toString(),
                             requestId = "duplicate-request-id",
                             canceledAt = LocalDateTime.now(),
                         )

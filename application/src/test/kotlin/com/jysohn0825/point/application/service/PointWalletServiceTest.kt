@@ -8,10 +8,18 @@ import com.jysohn0825.point.domain.repository.FakePointPolicyRepository
 import com.jysohn0825.point.domain.repository.FakePointWalletRepository
 import com.jysohn0825.point.domain.vo.Balance
 import com.jysohn0825.point.domain.vo.maxHoldingAmount
+import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
+import java.util.concurrent.atomic.AtomicLong
+
+private class FakeWalletKeyGenerator : DistributedKeyGenerator {
+    private val counter: AtomicLong = AtomicLong()
+
+    override fun next(name: String): Long = counter.incrementAndGet()
+}
 
 class PointWalletServiceTest :
     BehaviorSpec({
@@ -19,7 +27,7 @@ class PointWalletServiceTest :
             val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
             walletRepository.seed(memberId = "member-1", wallet = pointWallet(balance = Balance(BigDecimal(1_400))))
             val policyRepository: FakePointPolicyRepository = FakePointPolicyRepository()
-            val sut: PointWalletService = PointWalletService(walletRepository, policyRepository)
+            val sut: PointWalletService = PointWalletService(walletRepository, policyRepository, keyGenerator = FakeWalletKeyGenerator())
 
             When("지갑을 조회하면") {
                 val wallet: PointWallet = sut.getWallet("member-1").pointWallet
@@ -33,7 +41,7 @@ class PointWalletServiceTest :
         Given("회원의 지갑이 존재하지 않을 때") {
             val walletRepository: FakePointWalletRepository = FakePointWalletRepository()
             val policyRepository: FakePointPolicyRepository = FakePointPolicyRepository()
-            val sut: PointWalletService = PointWalletService(walletRepository, policyRepository)
+            val sut: PointWalletService = PointWalletService(walletRepository, policyRepository, keyGenerator = FakeWalletKeyGenerator())
 
             When("지갑을 조회하면") {
                 Then("예외가 발생한다") {
@@ -62,7 +70,7 @@ class PointWalletServiceTest :
             walletRepository.seed(memberId = "member-1", wallet = pointWallet())
             val policyRepository: FakePointPolicyRepository = FakePointPolicyRepository()
             policyRepository.reset(policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(value = BigDecimal(500_000))))
-            val sut: PointWalletService = PointWalletService(walletRepository, policyRepository)
+            val sut: PointWalletService = PointWalletService(walletRepository, policyRepository, keyGenerator = FakeWalletKeyGenerator())
 
             When("지갑을 다시 생성하면") {
                 Then("예외가 발생한다") {

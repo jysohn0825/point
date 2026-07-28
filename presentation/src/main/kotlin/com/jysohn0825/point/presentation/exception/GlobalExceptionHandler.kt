@@ -1,7 +1,6 @@
 package com.jysohn0825.point.presentation.exception
 
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.presentation.exception.ErrorResponse
 import com.jysohn0825.point.support.lock.LockAcquisitionException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

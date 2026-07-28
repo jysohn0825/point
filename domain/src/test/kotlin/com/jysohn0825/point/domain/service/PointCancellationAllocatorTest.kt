@@ -5,12 +5,12 @@ import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.pointEarning
 import com.jysohn0825.point.domain.entity.pointPolicy
+import com.jysohn0825.point.domain.entity.pointUsage
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.fixture.pointUsage
-import com.jysohn0825.point.domain.fixture.usageLine
 import com.jysohn0825.point.domain.vo.RestorationType
 import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.pointAmount
+import com.jysohn0825.point.domain.vo.usageLine
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldBeEmpty

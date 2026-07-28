@@ -16,10 +16,10 @@ import com.jysohn0825.point.infrastructure.persistence.repository.PointUsageCanc
 import com.jysohn0825.point.infrastructure.persistence.repository.PointUsageCancellationLineJpaRepository
 import com.jysohn0825.point.infrastructure.persistence.repository.PointUsageJpaRepository
 import com.jysohn0825.point.infrastructure.persistence.repository.PointUsageLineJpaRepository
+import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.util.UUID
 
 @Repository
 class PointUsagePersistenceAdapter(
@@ -27,13 +27,18 @@ class PointUsagePersistenceAdapter(
     private val lineJpaRepository: PointUsageLineJpaRepository,
     private val cancellationJpaRepository: PointUsageCancellationJpaRepository,
     private val cancellationLineJpaRepository: PointUsageCancellationLineJpaRepository,
+    private val keyGenerator: DistributedKeyGenerator,
 ) : PointUsageRepository {
     override fun save(
         usage: PointUsage,
         walletId: String,
     ) {
         usageJpaRepository.save(PointUsageMapper.of(usage = usage, walletId = walletId))
-        lineJpaRepository.saveAll(usage.lines.map { PointUsageMapper.of(usageLine = it, usageId = usage.id) })
+        lineJpaRepository.saveAll(
+            usage.lines.map {
+                PointUsageMapper.of(usageLine = it, usageId = usage.id, id = keyGenerator.next(USAGE_LINE_KEY_NAME).toString())
+            },
+        )
     }
 
     override fun saveCancellation(
@@ -74,7 +79,7 @@ class PointUsagePersistenceAdapter(
                             "취소 대상 사용 라인을 찾을 수 없습니다: usageId=${usage.id}, earningId=${line.originalLine.earningId}",
                         )
                 PointUsageCancellationLineEntity(
-                    id = UUID.randomUUID().toString(),
+                    id = keyGenerator.next(CANCELLATION_LINE_KEY_NAME).toString(),
                     cancellationId = cancellationId,
                     usageLineId = usageLineEntity.id,
                     restoredAmount = line.restoredAmount,
@@ -147,5 +152,10 @@ class PointUsagePersistenceAdapter(
             lineEntities = lineEntities,
             cancellationLineEntities = cancellationLineEntities,
         )
+    }
+
+    companion object {
+        private const val USAGE_LINE_KEY_NAME: String = "point-usage-line"
+        private const val CANCELLATION_LINE_KEY_NAME: String = "point-usage-cancellation-line"
     }
 }

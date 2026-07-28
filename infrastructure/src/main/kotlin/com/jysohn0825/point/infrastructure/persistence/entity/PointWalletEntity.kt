@@ -19,7 +19,7 @@ import java.time.LocalDateTime
 @Comment("포인트 지갑 (회원당 1행)")
 class PointWalletEntity(
     @Id
-    @Column(name = "id", length = 36)
+    @Column(name = "id", length = 19)
     @Comment("지갑 ID")
     val id: String,
     @Column(name = "member_id", nullable = false, length = 36)
@@ -28,6 +28,9 @@ class PointWalletEntity(
     @Column(name = "balance", nullable = false, precision = 19, scale = 0)
     @Comment("총 잔액")
     val balance: BigDecimal = BigDecimal.ZERO,
+    @Column(name = "holding_limit", nullable = false, precision = 19, scale = 0)
+    @Comment("지갑 생성 시점에 적용된 보유한도 (이후 정책 변경과 무관하게 고정)")
+    val holdingLimit: BigDecimal,
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     @Comment("생성 일시")
     val createdAt: LocalDateTime = LocalDateTime.now(),

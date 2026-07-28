@@ -8,11 +8,11 @@ import com.jysohn0825.point.domain.entity.PointEarning
 import com.jysohn0825.point.domain.entity.PointUsage
 import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointEarning
+import com.jysohn0825.point.domain.entity.pointUsage
 import com.jysohn0825.point.domain.entity.pointWallet
 import com.jysohn0825.point.domain.event.PointsUsageCancelled
 import com.jysohn0825.point.domain.event.PointsUsed
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.fixture.pointUsage
 import com.jysohn0825.point.domain.repository.FakePointEarningRepository
 import com.jysohn0825.point.domain.repository.FakePointPolicyRepository
 import com.jysohn0825.point.domain.repository.FakePointUsageRepository
@@ -27,7 +27,6 @@ import com.jysohn0825.point.domain.vo.RestorationType
 import com.jysohn0825.point.domain.vo.UsageLine
 import com.jysohn0825.point.domain.vo.UsageStatus
 import com.jysohn0825.point.domain.vo.expirationPeriod
-import com.jysohn0825.point.domain.vo.grantedBy
 import com.jysohn0825.point.domain.vo.pointAmount
 import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import io.kotest.assertions.throwables.shouldThrow
@@ -82,7 +81,7 @@ class UsePointServiceTest :
                     id = "manual-1",
                     amount = pointAmount(BigDecimal(1_000)),
                     earnType = EarnType.MANUAL,
-                    grantedBy = grantedBy(),
+                    grantedBy = "admin-0001",
                     earnedAt = LocalDateTime.now().minusDays(1),
                 )
             val systemEarning: PointEarning =

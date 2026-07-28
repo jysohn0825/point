@@ -23,13 +23,13 @@ import java.time.LocalDateTime
 @Comment("포인트 사용 라인")
 class PointUsageLineEntity(
     @Id
-    @Column(name = "id", length = 36)
+    @Column(name = "id", length = 19)
     @Comment("사용 라인 ID")
     val id: String,
-    @Column(name = "usage_id", nullable = false, length = 36)
+    @Column(name = "usage_id", nullable = false, length = 19)
     @Comment("사용 ID")
     val usageId: String,
-    @Column(name = "earning_id", nullable = false, length = 36)
+    @Column(name = "earning_id", nullable = false, length = 19)
     @Comment("차감 대상 적립건")
     val earningId: String,
     @Column(name = "amount", nullable = false, precision = 19, scale = 0)

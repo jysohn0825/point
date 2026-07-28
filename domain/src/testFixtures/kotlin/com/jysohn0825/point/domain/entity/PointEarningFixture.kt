@@ -7,11 +7,12 @@ import com.jysohn0825.point.domain.vo.expirationPeriod
 import com.jysohn0825.point.domain.vo.pointAmount
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.random.Random
 
 val POINT_EARNING_DEFAULT_EARNED_AT: LocalDateTime = LocalDateTime.of(2026, 1, 1, 0, 0)
 
 fun pointEarning(
-    id: String = UUID.randomUUID().toString(),
+    id: String = Random.nextLong(0, Long.MAX_VALUE).toString(),
     amount: PointAmount = pointAmount(),
     earnType: EarnType = EarnType.SYSTEM,
     sourceReferenceId: String = UUID.randomUUID().toString(),
