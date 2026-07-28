@@ -8,4 +8,3 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 @EntityScan(basePackages = ["com.jysohn0825.point.infrastructure.persistence.entity"])
 @EnableJpaRepositories(basePackages = ["com.jysohn0825.point.infrastructure.persistence.repository"])
 class DatasourceConfig
-// TODO master / slave 구조 대응
