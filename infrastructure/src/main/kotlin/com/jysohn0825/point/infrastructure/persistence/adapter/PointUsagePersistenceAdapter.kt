@@ -41,6 +41,7 @@ class PointUsagePersistenceAdapter(
         walletId: String,
         requestedLines: List<CancellationLine>,
         cancellationId: String,
+        requestId: String,
         reearnedEarningIds: List<String>,
         canceledAt: LocalDateTime,
     ) {
@@ -59,6 +60,7 @@ class PointUsagePersistenceAdapter(
             PointUsageCancellationEntity(
                 id = cancellationId,
                 usageId = usage.id,
+                requestId = requestId,
                 restoredAmount = requestedLines.sumOf { it.restoredAmount },
                 canceledAt = canceledAt,
             ),

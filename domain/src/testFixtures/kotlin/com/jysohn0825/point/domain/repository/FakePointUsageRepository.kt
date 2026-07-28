@@ -16,6 +16,7 @@ class FakePointUsageRepository : PointUsageRepository {
     data class SaveCancellationCall(
         val requestedLines: List<CancellationLine>,
         val cancellationId: String,
+        val requestId: String,
         val reearnedEarningIds: List<String>,
     )
 
@@ -38,13 +39,19 @@ class FakePointUsageRepository : PointUsageRepository {
         walletId: String,
         requestedLines: List<CancellationLine>,
         cancellationId: String,
+        requestId: String,
         reearnedEarningIds: List<String>,
         canceledAt: LocalDateTime,
     ) {
         usagesById[usage.id] = usage
         walletIdByUsageId[usage.id] = walletId
         lastSaveCancellationCall =
-            SaveCancellationCall(requestedLines = requestedLines, cancellationId = cancellationId, reearnedEarningIds = reearnedEarningIds)
+            SaveCancellationCall(
+                requestedLines = requestedLines,
+                cancellationId = cancellationId,
+                requestId = requestId,
+                reearnedEarningIds = reearnedEarningIds,
+            )
     }
 
     override fun findById(usageId: String): PointUsage =

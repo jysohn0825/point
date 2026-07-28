@@ -16,6 +16,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import jakarta.persistence.EntityManager
+import org.hibernate.exception.ConstraintViolationException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
@@ -147,6 +148,7 @@ class PointUsagePersistenceAdapterTest(
                         walletId = walletId,
                         requestedLines = requestedLines,
                         cancellationId = UUID.randomUUID().toString(),
+                        requestId = UUID.randomUUID().toString(),
                         canceledAt = LocalDateTime.now(),
                     )
                     entityManager.flush()
@@ -157,6 +159,63 @@ class PointUsagePersistenceAdapterTest(
                     found.cancellationLines.size shouldBe 1
                     found.cancellationLines[0].restoredAmount shouldBe BigDecimal(300)
                     found.cancellationLines[0].restorationType shouldBe RestorationType.RESTORED
+                }
+            }
+        }
+
+        Given("이미 같은 requestId로 사용취소가 저장되어 있을 때") {
+            When("동일 requestId로 다시(=재시도) 취소를 저장하면") {
+                Then("DB 유니크 제약(uk_usage_cancellation_request) 위반으로 실패한다") {
+                    val usage: PointUsage = pointUsage(lines = listOf(usageLine(earningId = earningId, amount = BigDecimal(300))))
+                    adapter.save(usage = usage, walletId = walletId)
+                    entityManager.flush()
+                    entityManager.clear()
+
+                    val firstReloaded: PointUsage = adapter.findById(usage.id)
+                    val firstLines: List<CancellationLine> =
+                        listOf(
+                            CancellationLine(
+                                originalLine = firstReloaded.lines[0],
+                                restoredAmount = BigDecimal(100),
+                                restorationType = RestorationType.RESTORED,
+                            ),
+                        )
+                    firstReloaded.cancel(firstLines)
+                    adapter.saveCancellation(
+                        usage = firstReloaded,
+                        walletId = walletId,
+                        requestedLines = firstLines,
+                        cancellationId = UUID.randomUUID().toString(),
+                        requestId = "duplicate-request-id",
+                        canceledAt = LocalDateTime.now(),
+                    )
+                    entityManager.flush()
+                    entityManager.clear()
+
+                    // 부분취소 후 남은 200원 중 100원을 같은 requestId로 다시 취소 시도 — 도메인 상태 가드(FULLY_CANCELED
+                    // 여부)만으로는 걸러지지 않는, 재시도로 인한 중복 부분취소 시나리오를 재현한다.
+                    val secondReloaded: PointUsage = adapter.findById(usage.id)
+                    val secondLines: List<CancellationLine> =
+                        listOf(
+                            CancellationLine(
+                                originalLine = secondReloaded.lines[0],
+                                restoredAmount = BigDecimal(100),
+                                restorationType = RestorationType.RESTORED,
+                            ),
+                        )
+                    secondReloaded.cancel(secondLines)
+
+                    shouldThrow<ConstraintViolationException> {
+                        adapter.saveCancellation(
+                            usage = secondReloaded,
+                            walletId = walletId,
+                            requestedLines = secondLines,
+                            cancellationId = UUID.randomUUID().toString(),
+                            requestId = "duplicate-request-id",
+                            canceledAt = LocalDateTime.now(),
+                        )
+                        entityManager.flush()
+                    }
                 }
             }
         }

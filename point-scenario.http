@@ -103,6 +103,7 @@ POST {{baseUrl}}/members/{{memberId}}/point-usages/{{usageIdC}}/cancellations
 Content-Type: application/json
 
 {
+  "requestId": "{{$uuid}}",
   "amount": 1100
 }
 
@@ -115,7 +116,9 @@ GET {{baseUrl}}/members/{{memberId}}/point-wallet
 POST {{baseUrl}}/members/{{memberId}}/point-usages/{{usageIdC}}/cancellations
 Content-Type: application/json
 
-{}
+{
+  "requestId": "{{$uuid}}"
+}
 
 
 ### 11. 지갑 조회 — 총 잔액 1500원 확인 (사용 전 금액으로 완전 복귀)

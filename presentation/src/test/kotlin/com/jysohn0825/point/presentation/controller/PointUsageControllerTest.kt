@@ -100,7 +100,7 @@ class PointUsageControllerTest(
                     val usage: PointUsage =
                         pointUsage(lines = listOf(usageLine(earningId = earning.id, amount = BigDecimal(300))))
                     usageRepository.save(usage = usage, walletId = wallet.id)
-                    val request: CancelUsagePointRequest = CancelUsagePointRequest(amount = null)
+                    val request: CancelUsagePointRequest = CancelUsagePointRequest(requestId = "cancel-req-use-3", amount = null)
 
                     mockMvc
                         .post("/api/v1/members/member-use-3/point-usages/${usage.id}/cancellations") {
@@ -136,7 +136,10 @@ class PointUsageControllerTest(
                     mockMvc
                         .post("/api/v1/members/member-use-3b/point-usages/${usage.id}/cancellations") {
                             contentType = MediaType.APPLICATION_JSON
-                            content = objectMapper.writeValueAsString(CancelUsagePointRequest(amount = null))
+                            content =
+                                objectMapper.writeValueAsString(
+                                    CancelUsagePointRequest(requestId = "cancel-req-use-3b", amount = null),
+                                )
                         }.andExpect {
                             status { isOk() }
                             jsonPath("$.reEarnings.length()") { value(1) }

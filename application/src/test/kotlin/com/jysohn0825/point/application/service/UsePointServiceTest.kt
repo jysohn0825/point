@@ -233,7 +233,9 @@ class UsePointServiceTest :
 
             When("사용취소를 실행하면") {
                 val result: CancelUsagePointResultDto =
-                    usePointService.cancelUsage(CancelUsagePointDto(memberId = "member-1", usageId = usage.id))
+                    usePointService.cancelUsage(
+                        CancelUsagePointDto(memberId = "member-1", usageId = usage.id, requestId = "cancel-req-1"),
+                    )
 
                 Then("원 적립건이 그대로 복원되고 신규 적립은 생기지 않는다") {
                     result.reEarnings.shouldBeEmpty()
@@ -277,7 +279,9 @@ class UsePointServiceTest :
 
             When("사용취소를 실행하면") {
                 val result: CancelUsagePointResultDto =
-                    usePointService.cancelUsage(CancelUsagePointDto(memberId = "member-1", usageId = usage.id))
+                    usePointService.cancelUsage(
+                        CancelUsagePointDto(memberId = "member-1", usageId = usage.id, requestId = "cancel-req-2"),
+                    )
 
                 Then("만료된 적립건은 복원되지 않고 신규 적립으로 대체된다") {
                     result.reEarnings.size shouldBe 1
@@ -306,7 +310,12 @@ class UsePointServiceTest :
             When("일부 금액만 취소하면") {
                 val result: CancelUsagePointResultDto =
                     usePointService.cancelUsage(
-                        CancelUsagePointDto(memberId = "member-1", usageId = usage.id, amount = BigDecimal(200)),
+                        CancelUsagePointDto(
+                            memberId = "member-1",
+                            usageId = usage.id,
+                            requestId = "cancel-req-3",
+                            amount = BigDecimal(200),
+                        ),
                     )
 
                 Then("사용 건은 부분취소 상태가 되고 남은 사용 금액이 갱신된다") {

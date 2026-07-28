@@ -20,12 +20,16 @@ interface PointUsageRepository {
      * (RESTORED 라인은 신규 적립을 만들지 않으므로 이 목록에 나타나지 않는다).
      * cancellationId는 이번 취소 호출 하나(=point_usage_cancellation 헤더 1건)를 가리키는 식별자로, 호출자가
      * 미리 채번해 전달한다(취소 완료를 알리는 PointsUsageCancelled 이벤트가 이 id를 참조해야 하기 때문).
+     * requestId는 호출자(클라이언트)가 지정하는 멱등키다. 사용취소는 usageId 하나에 대해 정당하게 여러 번(부분취소)
+     * 호출될 수 있어 usageId만으로는 재시도와 정상적인 추가 부분취소를 구분할 수 없다. DB 유니크 제약
+     * (uk_usage_cancellation_request)이 requestId 중복을 막아, 이미 끝난 요청의 재시도를 커밋 실패로 걸러낸다.
      */
     fun saveCancellation(
         usage: PointUsage,
         walletId: String,
         requestedLines: List<CancellationLine>,
         cancellationId: String,
+        requestId: String,
         reearnedEarningIds: List<String> = emptyList(),
         canceledAt: LocalDateTime = LocalDateTime.now(),
     )

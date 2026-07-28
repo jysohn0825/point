@@ -98,11 +98,13 @@ CREATE INDEX IF NOT EXISTS idx_usage_line_earning ON point_usage_line (earning_i
 CREATE TABLE IF NOT EXISTS point_usage_cancellation (
     id               CHAR(36)       NOT NULL                COMMENT '사용취소 ID',
     usage_id         CHAR(36)       NOT NULL                COMMENT '원 사용건',
+    request_id       VARCHAR(64)    NOT NULL                COMMENT '클라이언트가 지정하는 취소 요청 멱등키',
     restored_amount  DECIMAL(19,0)  NOT NULL                COMMENT '복원 총액 (라인 합계)',
     canceled_at      TIMESTAMP      NOT NULL                COMMENT '취소 일시',
     created_at       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
+    CONSTRAINT uk_usage_cancellation_request UNIQUE (request_id),
 
     CONSTRAINT fk_cancellation_usage
         FOREIGN KEY (usage_id) REFERENCES point_usage (id)

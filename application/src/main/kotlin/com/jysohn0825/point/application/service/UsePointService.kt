@@ -79,7 +79,16 @@ class UsePointService(
         return PointUsageResultDto.of(pointUsage = usage)
     }
 
-    @DistributedLock(key = "'point-usage-lock:' + #dto.memberId + ':' + #dto.usageId")
+    /**
+     * 동일 requestId 요청이 진짜 동시(in-flight)에 들어오면 락 획득에 실패해 409로 응답한다.
+     * 이미 끝난 요청의 재시도(락은 곧바로 잡힘)는 애플리케이션에서 걸러내지 않고 그대로 실행되며,
+     * DB 유니크 제약(uk_usage_cancellation_request) 위반으로 커밋이 실패해 GlobalExceptionHandler가 이를 409로 응답한다.
+     * usageId가 아닌 requestId로 락을 잡는 이유: 사용취소는 usageId 하나에 정당하게 여러 번(부분취소) 걸릴 수 있어
+     * usageId 기준 락은 서로 다른 정상 요청끼리도 충돌한다. 또한 use()의 락 키(orderNumber 기준)와 이름공간이
+     * 겹치지 않도록 접두어를 분리한다 — usageId/orderNumber는 둘 다 클라이언트가 채번하는 문자열이라 우연히
+     * 같은 값이 나올 수 있기 때문이다.
+     */
+    @DistributedLock(key = "'point-usage-cancel-lock:' + #dto.memberId + ':' + #dto.requestId")
     @Transactional
     fun cancelUsage(dto: CancelUsagePointDto): CancelUsagePointResultDto {
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
@@ -122,6 +131,7 @@ class UsePointService(
             walletId = wallet.id,
             requestedLines = allocation.requestedLines,
             cancellationId = cancellationId,
+            requestId = dto.requestId,
             reearnedEarningIds = allocation.reearnedEarningIds,
             canceledAt = now,
         )

@@ -5,6 +5,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.Comment
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -12,6 +13,9 @@ import java.time.LocalDateTime
 @Entity
 @Table(
     name = "point_usage_cancellation",
+    uniqueConstraints = [
+        UniqueConstraint(name = "uk_usage_cancellation_request", columnNames = ["request_id"]),
+    ],
     indexes = [
         Index(name = "idx_cancellation_usage", columnList = "usage_id"),
     ],
@@ -25,6 +29,9 @@ class PointUsageCancellationEntity(
     @Column(name = "usage_id", nullable = false, length = 36)
     @Comment("원 사용건")
     val usageId: String,
+    @Column(name = "request_id", nullable = false, length = 64)
+    @Comment("클라이언트가 지정하는 취소 요청 멱등키")
+    val requestId: String,
     @Column(name = "restored_amount", nullable = false, precision = 19, scale = 0)
     @Comment("복원 총액 (라인 합계)")
     val restoredAmount: BigDecimal,
