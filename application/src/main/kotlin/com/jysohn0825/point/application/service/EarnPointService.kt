@@ -34,34 +34,24 @@ class EarnPointService(
 ) {
     /**
      * 동일 (memberId, earnType, sourceReferenceId) 조합의 요청이 진짜 동시(in-flight)에 들어오면
-     * 락 획득에 실패해 409로 응답한다. 이미 끝난 요청의 재시도(락은 곧바로 잡힘)는 기존 적립건을
-     * 그대로 반환해 멱등하게 처리하고 중복 적립을 막는다.
+     * 락 획득에 실패해 409로 응답한다
      */
     @DistributedLock(
         key = "'point-earning-lock:' + #dto.memberId + ':' + #dto.earnType + ':' + #dto.sourceReferenceId",
     )
     @Transactional
-    fun earn(dto: EarnPointDto): PointEarningResultDto {
+    fun systemEarn(dto: EarnPointDto): PointEarningResultDto = earn(dto)
+
+    /**
+     * 관리자 수기 지급은 멱등성을 두지 않는다(같은 관리자가 같은 회원에게 여러 번 지급할 수 있어야 함).
+     * sourceReferenceId가 요청마다 달라(ManualGrantPointRequest 참고) DB 유니크 제약과 충돌하지 않으므로
+     * 락 없이 매 요청을 그대로 새 적립건으로 만든다.
+     */
+    @Transactional
+    fun manualEarn(dto: EarnPointDto): PointEarningResultDto = earn(dto)
+
+    private fun earn(dto: EarnPointDto): PointEarningResultDto {
         val wallet: PointWallet = walletRepository.findByMemberIdForUpdate(dto.memberId)
-        val earning: PointEarning = findExistingEarning(wallet = wallet, dto = dto) ?: createEarning(wallet = wallet, dto = dto)
-
-        return PointEarningResultDto.of(pointEarning = earning)
-    }
-
-    private fun findExistingEarning(
-        wallet: PointWallet,
-        dto: EarnPointDto,
-    ): PointEarning? =
-        earningRepository.findExistingEarning(
-            walletId = wallet.id,
-            earnType = dto.earnType,
-            sourceReferenceId = dto.sourceReferenceId,
-        )
-
-    private fun createEarning(
-        wallet: PointWallet,
-        dto: EarnPointDto,
-    ): PointEarning {
         val policy: PointPolicy = policyRepository.getCurrent()
         policy.validateEarnAmount(dto.amount)
 
@@ -84,7 +74,7 @@ class EarnPointService(
             PointsEarned(walletId = wallet.id, amount = pointAmount.value, balanceAfter = wallet.balance.amount, earningId = earning.id),
         )
 
-        return earning
+        return PointEarningResultDto.of(pointEarning = earning)
     }
 
     /**

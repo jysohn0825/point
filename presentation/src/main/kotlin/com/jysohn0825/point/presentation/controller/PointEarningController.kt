@@ -33,7 +33,7 @@ class PointEarningController(
         @Valid @RequestBody request: EarnPointRequest,
     ): PointEarningResponse =
         PointEarningResponse.of(
-            pointEarningResult = earnPointService.earn(request.to(memberId)),
+            pointEarningResult = earnPointService.systemEarn(request.to(memberId)),
             memberId = memberId,
         )
 

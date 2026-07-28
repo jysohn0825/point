@@ -25,6 +25,7 @@ import com.jysohn0825.point.support.key.DistributedKeyGenerator
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.springframework.context.ApplicationEventPublisher
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicLong
@@ -73,7 +74,7 @@ class EarnPointServiceTest :
 
             When("적립을 실행하면") {
                 val result: PointEarningResultDto =
-                    earnPointService.earn(
+                    earnPointService.systemEarn(
                         EarnPointDto(
                             memberId = "member-1",
                             amount = BigDecimal(1_000),
@@ -117,19 +118,26 @@ class EarnPointServiceTest :
                     sourceReferenceId = "ORDER-1",
                 )
 
-            val firstEarning: PointEarning = earnPointService.earn(dto).pointEarning
+            val firstEarning: PointEarning = earnPointService.systemEarn(dto).pointEarning
 
+            /**
+             * 서비스는 더 이상 findExistingEarning으로 기존 적립건을 조회해 그대로 반환하지 않는다.
+             * 재시도 요청은 항상 새 적립건 insert를 시도하고, 같은 (walletId, earnType, sourceReferenceId)
+             * 조합은 DB 유니크 제약(uk_earning_source) 위반으로 커밋에 실패해 409로 응답한다
+             * (GlobalExceptionHandler 참고). 이 fake repository는 DB 제약을 흉내내지 않으므로,
+             * 여기서는 "앱 레이어에서 더 이상 dedup하지 않는다"는 사실만 검증한다.
+             */
             When("같은 요청을 재시도하면") {
-                val secondEarning: PointEarning = earnPointService.earn(dto).pointEarning
+                val secondEarning: PointEarning = earnPointService.systemEarn(dto).pointEarning
 
-                Then("새 적립건을 만들지 않고 기존 적립건을 그대로 반환한다") {
-                    secondEarning.id shouldBe firstEarning.id
-                    earningRepository.findAllByWalletId(walletId = wallet.id).size shouldBe 1
-                    wallet.balance.amount shouldBe BigDecimal(1_000)
+                Then("기존 적립건을 재사용하지 않고 새 적립건을 만든다") {
+                    secondEarning.id shouldNotBe firstEarning.id
+                    earningRepository.findAllByWalletId(walletId = wallet.id).size shouldBe 2
+                    wallet.balance.amount shouldBe BigDecimal(2_000)
                 }
 
-                Then("잔액 변동이 없으므로 이벤트가 추가로 발행되지 않는다") {
-                    eventPublisher.publishedEvents.size shouldBe 1
+                Then("새 적립이 발생했으므로 이벤트가 추가로 발행된다") {
+                    eventPublisher.publishedEvents.size shouldBe 2
                 }
             }
         }
@@ -145,7 +153,7 @@ class EarnPointServiceTest :
             When("적립을 시도하면") {
                 Then("예외가 발생하고 잔액은 변하지 않는다") {
                     shouldThrow<PointDomainException> {
-                        earnPointService.earn(
+                        earnPointService.systemEarn(
                             EarnPointDto(
                                 memberId = "member-1",
                                 amount = BigDecimal(10_001),
@@ -169,7 +177,7 @@ class EarnPointServiceTest :
                 service(walletRepository = walletRepository, earningRepository = earningRepository, eventPublisher = eventPublisher)
             val earning: PointEarning =
                 earnPointService
-                    .earn(
+                    .systemEarn(
                         EarnPointDto(
                             memberId = "member-1",
                             amount = BigDecimal(1_000),
@@ -207,7 +215,7 @@ class EarnPointServiceTest :
             val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
             val earning: PointEarning =
                 earnPointService
-                    .earn(
+                    .systemEarn(
                         EarnPointDto(
                             memberId = "member-1",
                             amount = BigDecimal(1_000),
@@ -236,7 +244,7 @@ class EarnPointServiceTest :
                 service(walletRepository = walletRepository, earningRepository = earningRepository, eventPublisher = eventPublisher)
             val earning: PointEarning =
                 earnPointService
-                    .earn(
+                    .systemEarn(
                         EarnPointDto(
                             memberId = "member-1",
                             amount = BigDecimal(1_000),
@@ -277,7 +285,7 @@ class EarnPointServiceTest :
                 service(walletRepository = walletRepository, earningRepository = earningRepository, eventPublisher = eventPublisher)
             val earning: PointEarning =
                 earnPointService
-                    .earn(
+                    .systemEarn(
                         EarnPointDto(
                             memberId = "member-1",
                             amount = BigDecimal(1_000),
@@ -308,7 +316,7 @@ class EarnPointServiceTest :
             walletRepository.seed(memberId = "member-1", wallet = wallet)
             val earningRepository: FakePointEarningRepository = FakePointEarningRepository()
             val earnPointService: EarnPointService = service(walletRepository = walletRepository, earningRepository = earningRepository)
-            earnPointService.earn(
+            earnPointService.systemEarn(
                 EarnPointDto(
                     memberId = "member-1",
                     amount = BigDecimal(1_000),
@@ -318,7 +326,7 @@ class EarnPointServiceTest :
             )
             val second: PointEarning =
                 earnPointService
-                    .earn(
+                    .systemEarn(
                         EarnPointDto(
                             memberId = "member-1",
                             amount = BigDecimal(500),
@@ -355,7 +363,7 @@ class EarnPointServiceTest :
                 service(walletRepository = walletRepository, earningRepository = earningRepository, usageRepository = usageRepository)
             val earning: PointEarning =
                 earnPointService
-                    .earn(
+                    .systemEarn(
                         EarnPointDto(
                             memberId = "member-1",
                             amount = BigDecimal(1_000),

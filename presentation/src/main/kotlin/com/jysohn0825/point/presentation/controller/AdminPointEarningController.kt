@@ -33,7 +33,7 @@ class AdminPointEarningController(
         @Valid @RequestBody request: ManualGrantPointRequest,
     ): PointEarningResponse =
         PointEarningResponse.of(
-            pointEarningResult = earnPointService.earn(request.to(memberId)),
+            pointEarningResult = earnPointService.manualEarn(request.to(memberId)),
             memberId = memberId,
         )
 
