@@ -26,8 +26,6 @@
 
 ## 빌드 및 실행 방법
 
-DB는 H2(파일 기반), 캐시/분산 락/분산 채번은 인메모리 구현체를 사용하므로 **Docker 없이** 바로 빌드/테스트/실행할 수 있습니다.
-
     ./gradlew build          # 빌드
     ./gradlew test           # 테스트
     ./gradlew :presentation:bootRun   # 로컬 실행 (기본 포트 8080)
