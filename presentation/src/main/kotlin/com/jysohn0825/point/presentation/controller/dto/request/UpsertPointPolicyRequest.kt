@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Positive
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 @Schema(description = "관리자 포인트 정책 생성/변경 요청")
 data class UpsertPointPolicyRequest(
@@ -25,15 +25,18 @@ data class UpsertPointPolicyRequest(
     @field:NotBlank
     @Schema(description = "정책을 등록한 관리자 식별자", example = "admin-01")
     val adminId: String,
-    @Schema(description = "정책 적용 시각. 미지정 시 즉시 적용되고, 미래값이면 예약 등록된다", nullable = true)
-    val appliedAt: LocalDateTime? = null,
+    @Schema(
+        description = "정책 적용 일자. 미지정 시 즉시 적용되고, 미래 날짜면 예약 등록된다.",
+        nullable = true,
+    )
+    val appliedAt: LocalDate? = null,
 ) {
     fun to(): UpsertPointPolicyDto =
         UpsertPointPolicyDto(
             maxEarnPerTransaction = this.maxEarnPerTransaction,
             maxHoldingAmount = this.maxHoldingAmount,
             defaultExpirationDays = this.defaultExpirationDays,
-            appliedAt = this.appliedAt ?: LocalDateTime.now(),
+            appliedAt = this.appliedAt ?: LocalDate.now(),
             createdByAdminId = this.adminId,
         )
 }

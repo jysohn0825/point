@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS point_policy (
     max_earn_per_transaction  DECIMAL(19,0)  NOT NULL                COMMENT '1회 적립 상한 (1~100,000)',
     max_holding_amount        DECIMAL(19,0)  NOT NULL                COMMENT '개인 보유한도 기본값',
     default_expiration_days   INT            NOT NULL                COMMENT '기본 유효기간 (일). 1~1824',
-    applied_at                TIMESTAMP      NOT NULL                COMMENT '적용 시각. 미래값 = 예약 등록',
+    applied_at                DATE           NOT NULL                COMMENT '적용 일자. 미래 날짜 = 예약 등록',
     created_by_admin_id       CHAR(36)       NOT NULL                COMMENT '등록 관리자',
     created_at                TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

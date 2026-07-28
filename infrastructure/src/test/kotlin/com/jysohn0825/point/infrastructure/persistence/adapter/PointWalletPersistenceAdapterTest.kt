@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.util.UUID
 
 @DataJpaTest
@@ -38,7 +38,7 @@ class PointWalletPersistenceAdapterTest(
                 Then("정책의 보유한도가 적용된다") {
                     policyAdapter.save(
                         policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(2_000_000))),
-                        appliedAt = LocalDateTime.now().minusDays(1),
+                        appliedAt = LocalDate.now().minusDays(1),
                         createdByAdminId = "admin-01",
                     )
                     entityManager.persist(
@@ -68,7 +68,7 @@ class PointWalletPersistenceAdapterTest(
                 Then("잔액이 저장된다") {
                     policyAdapter.save(
                         policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(1_000_000))),
-                        appliedAt = LocalDateTime.now().minusDays(1),
+                        appliedAt = LocalDate.now().minusDays(1),
                         createdByAdminId = "admin-01",
                     )
                     val wallet: PointWallet = pointWallet(balance = balance(BigDecimal(3_000)))

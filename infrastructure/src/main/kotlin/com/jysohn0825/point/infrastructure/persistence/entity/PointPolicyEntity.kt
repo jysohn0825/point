@@ -7,6 +7,7 @@ import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.Comment
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Entity
@@ -35,8 +36,8 @@ class PointPolicyEntity(
     @Comment("기본 유효기간 (일). 1~1824")
     val defaultExpirationDays: Int,
     @Column(name = "applied_at", nullable = false)
-    @Comment("적용 시각. 미래값 = 예약 등록")
-    val appliedAt: LocalDateTime,
+    @Comment("적용 일자. 미래 날짜 = 예약 등록")
+    val appliedAt: LocalDate,
     @Column(name = "created_by_admin_id", nullable = false, length = 36)
     @Comment("등록 관리자")
     val createdByAdminId: String,

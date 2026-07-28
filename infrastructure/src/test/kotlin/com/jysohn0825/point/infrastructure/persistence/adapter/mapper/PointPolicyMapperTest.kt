@@ -10,7 +10,7 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeBlank
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 class PointPolicyMapperTest :
     BehaviorSpec({
@@ -22,7 +22,7 @@ class PointPolicyMapperTest :
                     maxEarnPerTransaction = BigDecimal(50_000),
                     maxHoldingAmount = BigDecimal(1_000_000),
                     defaultExpirationDays = 365,
-                    appliedAt = LocalDateTime.of(2026, 1, 1, 0, 0),
+                    appliedAt = LocalDate.of(2026, 1, 1),
                     createdByAdminId = "admin-01",
                 )
 
@@ -51,7 +51,7 @@ class PointPolicyMapperTest :
                     PointPolicyMapper.of(
                         policy = policy,
                         policyVersion = 4,
-                        appliedAt = LocalDateTime.of(2026, 6, 1, 0, 0),
+                        appliedAt = LocalDate.of(2026, 6, 1),
                         createdByAdminId = "admin-02",
                     )
 
@@ -61,7 +61,7 @@ class PointPolicyMapperTest :
                     entity.maxEarnPerTransaction shouldBe BigDecimal(30_000)
                     entity.maxHoldingAmount shouldBe BigDecimal(500_000)
                     entity.defaultExpirationDays shouldBe 180
-                    entity.appliedAt shouldBe LocalDateTime.of(2026, 6, 1, 0, 0)
+                    entity.appliedAt shouldBe LocalDate.of(2026, 6, 1)
                     entity.createdByAdminId shouldBe "admin-02"
                 }
             }

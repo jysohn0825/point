@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 @DataJpaTest
 @Import(PointPolicyPersistenceAdapter::class, FakeCacheExecutor::class)
@@ -45,7 +45,7 @@ class PointPolicyPersistenceAdapterTest(
                             defaultExpirationPeriod = expirationPeriod(365),
                         )
 
-                    adapter.save(policy = policy, appliedAt = LocalDateTime.now().minusDays(1), createdByAdminId = "admin-01")
+                    adapter.save(policy = policy, appliedAt = LocalDate.now().minusDays(1), createdByAdminId = "admin-01")
                     entityManager.flush()
                     entityManager.clear()
 
@@ -63,17 +63,17 @@ class PointPolicyPersistenceAdapterTest(
                 Then("적용 시각이 지난 것 중 가장 최신 버전이 조회된다") {
                     adapter.save(
                         policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(500_000))),
-                        appliedAt = LocalDateTime.now().minusDays(10),
+                        appliedAt = LocalDate.now().minusDays(10),
                         createdByAdminId = "admin-01",
                     )
                     adapter.save(
                         policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(900_000))),
-                        appliedAt = LocalDateTime.now().minusDays(1),
+                        appliedAt = LocalDate.now().minusDays(1),
                         createdByAdminId = "admin-01",
                     )
                     adapter.save(
                         policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(1_500_000))),
-                        appliedAt = LocalDateTime.now().plusDays(30),
+                        appliedAt = LocalDate.now().plusDays(30),
                         createdByAdminId = "admin-01",
                     )
                     entityManager.flush()
@@ -82,6 +82,47 @@ class PointPolicyPersistenceAdapterTest(
                     val current: PointPolicy = adapter.getCurrent()
 
                     current.maxHoldingAmount.value shouldBe BigDecimal(900_000)
+                }
+            }
+        }
+
+        Given("오늘 날짜를 적용 시각으로 지정해 정책을 등록했을 때") {
+            When("현재 정책을 조회하면") {
+                Then("바로 적용된 것으로 간주되어 즉시 조회된다") {
+                    adapter.save(
+                        policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(700_000))),
+                        appliedAt = LocalDate.now(),
+                        createdByAdminId = "admin-01",
+                    )
+                    entityManager.flush()
+                    entityManager.clear()
+
+                    val current: PointPolicy = adapter.getCurrent()
+
+                    current.maxHoldingAmount.value shouldBe BigDecimal(700_000)
+                }
+            }
+        }
+
+        Given("같은 날짜로 정책이 여러 번 등록되었을 때") {
+            When("현재 정책을 조회하면") {
+                Then("가장 나중에 등록된(버전이 높은) 정책이 조회된다") {
+                    adapter.save(
+                        policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(300_000))),
+                        appliedAt = LocalDate.now(),
+                        createdByAdminId = "admin-01",
+                    )
+                    adapter.save(
+                        policy = pointPolicy(maxHoldingAmount = maxHoldingAmount(BigDecimal(800_000))),
+                        appliedAt = LocalDate.now(),
+                        createdByAdminId = "admin-01",
+                    )
+                    entityManager.flush()
+                    entityManager.clear()
+
+                    val current: PointPolicy = adapter.getCurrent()
+
+                    current.maxHoldingAmount.value shouldBe BigDecimal(800_000)
                 }
             }
         }

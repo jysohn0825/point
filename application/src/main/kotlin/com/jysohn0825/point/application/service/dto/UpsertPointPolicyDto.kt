@@ -1,12 +1,12 @@
 package com.jysohn0825.point.application.service.dto
 
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 data class UpsertPointPolicyDto(
     val maxEarnPerTransaction: BigDecimal,
     val maxHoldingAmount: BigDecimal,
     val defaultExpirationDays: Long,
-    val appliedAt: LocalDateTime,
+    val appliedAt: LocalDate,
     val createdByAdminId: String,
 )

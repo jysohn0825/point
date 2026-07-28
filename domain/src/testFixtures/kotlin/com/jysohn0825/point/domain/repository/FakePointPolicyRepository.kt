@@ -2,13 +2,13 @@ package com.jysohn0825.point.domain.repository
 
 import com.jysohn0825.point.domain.entity.PointPolicy
 import com.jysohn0825.point.domain.entity.pointPolicy
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 class FakePointPolicyRepository : PointPolicyRepository {
     var policy: PointPolicy = pointPolicy()
         private set
 
-    var lastSavedAppliedAt: LocalDateTime? = null
+    var lastSavedAppliedAt: LocalDate? = null
         private set
 
     var lastSavedCreatedByAdminId: String? = null
@@ -24,7 +24,7 @@ class FakePointPolicyRepository : PointPolicyRepository {
 
     override fun save(
         policy: PointPolicy,
-        appliedAt: LocalDateTime,
+        appliedAt: LocalDate,
         createdByAdminId: String,
     ) {
         this.policy = policy

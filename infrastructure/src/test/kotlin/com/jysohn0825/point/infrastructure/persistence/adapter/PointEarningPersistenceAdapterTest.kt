@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -39,7 +40,7 @@ class PointEarningPersistenceAdapterTest(
                     maxEarnPerTransaction = BigDecimal(50_000),
                     maxHoldingAmount = BigDecimal(1_000_000),
                     defaultExpirationDays = 365,
-                    appliedAt = LocalDateTime.now().minusDays(1),
+                    appliedAt = LocalDate.now().minusDays(1),
                     createdByAdminId = "admin-01",
                 ),
             )

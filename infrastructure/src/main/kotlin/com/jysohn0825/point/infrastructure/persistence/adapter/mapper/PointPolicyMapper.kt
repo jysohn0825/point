@@ -5,7 +5,7 @@ import com.jysohn0825.point.domain.vo.ExpirationPeriod
 import com.jysohn0825.point.domain.vo.MaxEarnPerTransaction
 import com.jysohn0825.point.domain.vo.MaxHoldingAmount
 import com.jysohn0825.point.infrastructure.persistence.entity.PointPolicyEntity
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.util.UUID
 
 class PointPolicyMapper {
@@ -21,7 +21,7 @@ class PointPolicyMapper {
         fun of(
             policy: PointPolicy,
             policyVersion: Int,
-            appliedAt: LocalDateTime,
+            appliedAt: LocalDate,
             createdByAdminId: String,
         ): PointPolicyEntity =
             PointPolicyEntity(

@@ -10,7 +10,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 class PointPolicyServiceTest :
     BehaviorSpec({
@@ -19,7 +19,7 @@ class PointPolicyServiceTest :
             val sut: PointPolicyService = PointPolicyService(policyRepository)
 
             When("관리자가 새 정책을 등록하면") {
-                val appliedAt: LocalDateTime = LocalDateTime.now()
+                val appliedAt: LocalDate = LocalDate.now()
                 val resultDto: PointPolicyResultDto =
                     sut.createOrUpdate(
                         dto =
@@ -60,7 +60,7 @@ class PointPolicyServiceTest :
                                     maxEarnPerTransaction = BigDecimal(200_000),
                                     maxHoldingAmount = BigDecimal(1_000_000),
                                     defaultExpirationDays = 180L,
-                                    appliedAt = LocalDateTime.now(),
+                                    appliedAt = LocalDate.now(),
                                     createdByAdminId = "admin-01",
                                 ),
                         )
