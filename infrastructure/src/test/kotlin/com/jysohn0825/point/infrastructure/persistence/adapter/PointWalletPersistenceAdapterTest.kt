@@ -4,7 +4,6 @@ import com.jysohn0825.point.domain.entity.PointWallet
 import com.jysohn0825.point.domain.entity.pointPolicy
 import com.jysohn0825.point.domain.entity.pointWallet
 import com.jysohn0825.point.domain.exception.PointDomainException
-import com.jysohn0825.point.domain.vo.PointAmount
 import com.jysohn0825.point.domain.vo.balance
 import com.jysohn0825.point.domain.vo.maxHoldingAmount
 import com.jysohn0825.point.infrastructure.persistence.entity.PointWalletEntity
